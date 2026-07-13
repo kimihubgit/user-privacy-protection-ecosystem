@@ -1,0 +1,22 @@
+# Environment
+.env
+venv/
+.venv/
+
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+
+# Data (sinh ra được, không cần commit)
+data/faiss_index/
+
+# Nếu muốn giữ PDF nguồn trong git thì xoá dòng dưới
+# data/pdf/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store

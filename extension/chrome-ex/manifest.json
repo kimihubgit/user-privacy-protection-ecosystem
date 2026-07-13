@@ -1,0 +1,184 @@
+{
+  "update_url": "https://clients2.google.com/service/update2/crx",
+  "manifest_version": 3,
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzcsxNe0BRgnsJGqiDNcJBCymnUr3wzFrr7mPVpqYDFQTUD6sgP97srvsuM4nMVfll2X8qT6bowHVlfbYQvgdklCtpOAI4xI2UOpri9QHVzNxSp3N8XnI+3Fcso0/tc8VBUbLCXS0S6zhxkkMorK5U9nAZY/sR5pz4gf7ygZi4ib8Y6LSMNog/Vs27mINq0h1oG7kH389DgGSe4F2uG3MOBEoCrW8iguBLRE4Su8ULytH79RJuHk3Viw/j3G3rWpWrylaUzDfWd+3GrvpZ5KSytH6JRnjW3b4g2UaTBBsbNFuqK5FvAcB2y0KR4qTXjMSATj8a063ovqB9V71kZQMSQIDAQAB",
+  "name": "KiGuard Detector",
+  "version": "1.0",
+  "short_name": "KiGuard",
+  "author": "Kimidev",
+  "homepage_url": "https://kide.vn",
+  "minimum_chrome_version": "88",
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "jid1-MnnxcxisBPnSXQ@jetpack",
+      "strict_min_version": "128.0"
+    },
+    "gecko_android": {
+      "strict_min_version": "128.0"
+    }
+  },
+  "incognito": "spanning",
+  "description": "Tiện ích Bảo vệ bạn khỏi các trang web lừa đảo hoặt có nguy cơ lừa đảo, giả mạo. Phát hiện và detect các thông tin có dấu hiệu lừa đảo, nội dung độc hại.",
+  "permissions": [
+    "proxy",
+    "storage",
+    "alarms",
+    "tabs",
+    "webNavigation",
+    "notifications",
+    "webRequest",
+    "webRequestAuthProvider",
+    "cookies",
+    "management",
+    "contextMenus",
+    "scripting",
+    "declarativeNetRequest",
+    "clipboardRead",
+    "privacy"
+  ],
+  "omnibox": {
+    "keyword": "hello"
+  },
+  "host_permissions": [
+    "*://*/*"
+  ],
+  "icons": {
+    "16": "assets/icons/ki16o.png",
+    "24": "assets/icons/ki24o.png",
+    "32": "assets/icons/ki32o.png",
+    "64": "assets/icons/ki64o.png",
+    "128": "assets/icons/ki128o.png"
+  },
+  "background": {
+    "service_worker": "/src/background/background.js",
+    "type": "module"
+  },
+  "commands": {
+    "open_app": {
+      "description": "Press Alt + S to open app",
+      "suggested_key": {
+        "chromeos": "Alt+S",
+        "default": "Alt+S",
+        "linux": "Alt+S",
+        "mac": "Alt+S",
+        "windows": "Alt+S"
+      }
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/content/modules/ScamShield.js",
+        "src/content/modules/ClickjackingShield.js",
+        "src/content/modules/TranslateShield.js",
+        "src/content/content.js"
+      ],
+      "css": [
+        "src/content/content.css"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://*.facebook.com/*",
+        "https://*.messenger.com/*"
+      ],
+      "exclude_matches": [
+        "https://m.facebook.com/*",
+        "https://touch.facebook.com/*",
+        "https://mobile.facebook.com/*",
+        "https://mbasic.facebook.com/*",
+        "https://graph.facebook.com/*",
+        "https://developers.facebook.com/*",
+        "https://code.facebook.com/*"
+      ],
+      "js": [
+        "src/content/modules/FbWsHook.js",
+        "src/content/modules/FbNoReload.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "https://*.facebook.com/*"
+      ],
+      "exclude_matches": [
+        "https://m.facebook.com/*",
+        "https://touch.facebook.com/*",
+        "https://mobile.facebook.com/*",
+        "https://mbasic.facebook.com/*",
+        "https://graph.facebook.com/*",
+        "https://developers.facebook.com/*",
+        "https://code.facebook.com/*"
+      ],
+      "js": [
+        "src/content/modules/FbHideSuggested.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.facebook.com/*"
+      ],
+      "exclude_matches": [
+        "https://m.facebook.com/*",
+        "https://touch.facebook.com/*",
+        "https://mobile.facebook.com/*",
+        "https://mbasic.facebook.com/*",
+        "https://graph.facebook.com/*",
+        "https://developers.facebook.com/*",
+        "https://code.facebook.com/*"
+      ],
+      "js": [
+        "src/content/modules/FbTimer.js"
+      ],
+      "run_at": "document_end"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "src/content/gpcWindowSetting.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "content_security_policy": {
+    "extension_page": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; script-src 'self' 'unsafe-eval'; object-src 'self'"
+  },
+  "optional_permissions": [
+    "contentSettings",
+    "history",
+    "downloads",
+    "bookmarks",
+    "topSites",
+    "tabGroups"
+  ],
+  "optional_host_permissions": [],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "rules",
+        "enabled": true,
+        "path": "rules/rules.json"
+      }
+    ]
+  },
+  "externally_connectable": {
+    "matches": [
+      "https://cookie.kimidev.net/*"
+    ]
+  },
+  "action": {
+    "default_title": "KiGuard",
+    "default_icon": "assets/icons/ki32o.png",
+    "default_popup": "src/popup/popup.html"
+  }
+}

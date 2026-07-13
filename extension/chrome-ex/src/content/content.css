@@ -1,0 +1,280 @@
+/* Cấu trúc overlay bao trùm toàn bộ màn hình */
+#scam-guard-warning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 2147483647;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #f8fafc;
+}
+
+/* Container chính của cảnh báo */
+#scam-guard-warning-overlay .scam-guard-container {
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    border: 1px solid #ef4444;
+    border-radius: 16px;
+    padding: 40px;
+    max-width: 600px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 25px 50px -12px rgba(239, 68, 68, 0.25);
+    animation: scam-guard-slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Biểu tượng cảnh báo */
+#scam-guard-warning-overlay .scam-guard-icon {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto 24px;
+    background-color: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ef4444;
+}
+
+#scam-guard-warning-overlay .scam-guard-icon svg {
+    width: 40px;
+    height: 40px;
+    animation: scam-guard-pulse 2s infinite;
+}
+
+/* Tiêu đề */
+#scam-guard-warning-overlay .scam-guard-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: #ef4444;
+    margin: 0 0 16px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+/* Nội dung cảnh báo */
+#scam-guard-warning-overlay .scam-guard-message {
+    font-size: 16px;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin: 0 0 32px;
+}
+
+#scam-guard-warning-overlay .scam-guard-message strong {
+    color: #f8fafc;
+    font-weight: 700;
+    padding: 2px 6px;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+
+/* Nút bấm */
+#scam-guard-warning-overlay .scam-guard-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+#scam-guard-warning-overlay .scam-guard-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 14px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+#scam-guard-warning-overlay .scam-guard-btn.primary {
+    background-color: #ef4444;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);
+}
+
+#scam-guard-warning-overlay .scam-guard-btn.primary:hover {
+    background-color: #dc2626;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px -1px rgba(239, 68, 68, 0.5);
+}
+
+#scam-guard-warning-overlay .scam-guard-btn.secondary {
+    background-color: transparent;
+    color: #94a3b8;
+    border: 1px solid #334155;
+}
+
+#scam-guard-warning-overlay .scam-guard-btn.secondary:hover {
+    background-color: #1e293b;
+    color: #cbd5e1;
+}
+
+/* Footer */
+#scam-guard-warning-overlay .scam-guard-footer {
+    margin-top: 24px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+/* Animations */
+@keyframes scam-guard-slide-up {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes scam-guard-pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* --- Clickjacking Warning --- */
+#kiguard-framing-warning-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(10px);
+    z-index: 2147483647;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Inter', 'Segoe UI', Roboto, sans-serif;
+    color: #f8fafc;
+    animation: kiguard-fade-in 0.3s ease;
+}
+
+#kiguard-framing-warning-overlay .kiguard-framing-box {
+    background: linear-gradient(145deg, #1e293b, #0f172a);
+    border: 1px solid #ef4444;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 450px;
+    width: 90%;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    box-shadow: 0 25px 50px -12px rgba(239, 68, 68, 0.25);
+    animation: scam-guard-slide-up 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#kiguard-framing-warning-overlay .kiguard-framing-icon {
+    width: 70px;
+    height: 70px;
+    background-color: rgba(239, 68, 68, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ef4444;
+}
+
+#kiguard-framing-warning-overlay .kiguard-framing-icon svg {
+    width: 36px;
+    height: 36px;
+}
+
+#kiguard-framing-warning-overlay h3 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 800;
+    color: #ef4444;
+    text-transform: uppercase;
+}
+
+#kiguard-framing-warning-overlay p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #cbd5e1;
+}
+
+#kiguard-framing-warning-overlay .kiguard-framing-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+}
+
+#kiguard-framing-warning-overlay .kiguard-btn {
+    border: none;
+    border-radius: 8px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+#kiguard-framing-warning-overlay .kiguard-btn.primary {
+    background-color: #ef4444;
+    color: white;
+    box-shadow: 0 4px 6px -1px rgba(239, 68, 68, 0.4);
+}
+
+#kiguard-framing-warning-overlay .kiguard-btn.primary:hover {
+    background-color: #dc2626;
+    transform: translateY(-2px);
+}
+
+#kiguard-framing-warning-overlay .kiguard-btn.secondary {
+    background-color: transparent;
+    color: #94a3b8;
+    border: 1px solid #334155;
+}
+
+#kiguard-framing-warning-overlay .kiguard-btn.secondary:hover {
+    background-color: #1e293b;
+    color: #cbd5e1;
+}
+
+/* Label for suspicious dynamic iframes */
+.kiguard-clickjacking-warning {
+    position: absolute;
+    background-color: #ef4444 !important;
+    color: #ffffff !important;
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    font-family: 'Inter', sans-serif !important;
+    border-radius: 4px !important;
+    z-index: 2147483647 !important;
+    pointer-events: none !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+    animation: kiguard-fade-in 0.25s ease !important;
+}
+
+@keyframes kiguard-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}

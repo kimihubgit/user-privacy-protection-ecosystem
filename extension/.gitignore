@@ -1,0 +1,44 @@
+# Node packages
+node_modules/
+.vitepress/dist
+# Build outputs
+dist/
+build/
+*.crx
+
+# Secrets & credentials
+.env
+.env.*
+*.pem
+!.env.example
+# Backups
+* - backup/
+backup/
+*.bak
+
+# System & IDE files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+
+# Python Caches & Virtualenvs
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+
+# IDEs & System files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Extension private keys and packages
+*.pem
+*.crx
+* - backup/
+backup/
+
