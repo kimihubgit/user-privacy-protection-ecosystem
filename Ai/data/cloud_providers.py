@@ -1,61 +1,383 @@
 """
-app.data.cloud_providers
-=========================
+Evidence Database
+-----------------
 
-⏳ Deferred/optional dataset — add to as detectors need it.
+Cloud Provider Database
 
-Cloud provider hosting reference data, distinct from raw ASN numbers
-(app.data.asn) in that this maps provider platforms to their commonly
-abused subdomain/hosting patterns. No logic.
+Knowledge Base dành cho Network Detector.
 
-Schema:
+Nguyên tắc:
+- Chỉ chứa dữ liệu
+- Không chứa Logic
+- Không chứa Rule
+- Không chứa Risk Score
+- Không chứa Confidence
 
-    {
-        "name": str,
-        "domains": [str, ...],   # provider-managed domains/subdomains
-        "risk_profile": str,     # "high" | "medium" | "low"
-    }
+Author: Anti Scam Detector
 """
 
-CLOUD_PROVIDERS = [
-    {
-        "name": "Amazon Web Services",
-        "domains": ["amazonaws.com", "cloudfront.net", "awsapps.com"],
-        "risk_profile": "medium",
+from __future__ import annotations
+
+CLOUD_PROVIDERS: dict[str, dict] = {
+
+    # ==========================================================
+    # Amazon Web Services
+    # ==========================================================
+
+    "aws": {
+
+        "provider": "Amazon Web Services",
+
+        "aliases": [
+
+            "Amazon",
+
+            "Amazon AWS",
+
+            "Amazon.com",
+
+            "AWS"
+
+        ]
+
     },
-    {
-        "name": "Google Cloud Platform",
-        "domains": ["googleusercontent.com", "appspot.com", "web.app", "firebaseapp.com"],
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Microsoft Azure
+    # ==========================================================
+
+    "azure": {
+
+        "provider": "Microsoft Azure",
+
+        "aliases": [
+
+            "Microsoft",
+
+            "Microsoft Azure",
+
+            "Azure"
+
+        ]
+
     },
-    {
-        "name": "Microsoft Azure",
-        "domains": ["azurewebsites.net", "blob.core.windows.net", "cloudapp.azure.com"],
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Google Cloud
+    # ==========================================================
+
+    "gcp": {
+
+        "provider": "Google Cloud",
+
+        "aliases": [
+
+            "Google",
+
+            "Google LLC",
+
+            "Google Cloud",
+
+            "Google Cloud Platform",
+
+            "GCP"
+
+        ]
+
     },
-    {
-        "name": "Cloudflare",
-        "domains": ["pages.dev", "workers.dev"],
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Cloudflare
+    # ==========================================================
+
+    "cloudflare": {
+
+        "provider": "Cloudflare",
+
+        "aliases": [
+
+            "Cloudflare",
+
+            "Cloudflare, Inc."
+
+        ]
+
     },
-    {
-        "name": "DigitalOcean",
-        "domains": ["ondigitalocean.app"],
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Oracle Cloud
+    # ==========================================================
+
+    "oracle": {
+
+        "provider": "Oracle Cloud",
+
+        "aliases": [
+
+            "Oracle",
+
+            "Oracle Corporation",
+
+            "Oracle Cloud"
+
+        ]
+
     },
-    {
-        "name": "Vercel",
-        "domains": ["vercel.app"],
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Alibaba Cloud
+    # ==========================================================
+
+    "alibaba": {
+
+        "provider": "Alibaba Cloud",
+
+        "aliases": [
+
+            "Alibaba",
+
+            "Alibaba Cloud"
+
+        ]
+
     },
-    {
-        "name": "Netlify",
-        "domains": ["netlify.app"],
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Tencent Cloud
+    # ==========================================================
+
+    "tencent": {
+
+        "provider": "Tencent Cloud",
+
+        "aliases": [
+
+            "Tencent",
+
+            "Tencent Cloud"
+
+        ]
+
     },
-    {
-        "name": "Alibaba Cloud",
-        "domains": ["aliyuncs.com"],
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Huawei Cloud
+    # ==========================================================
+
+    "huawei": {
+
+        "provider": "Huawei Cloud",
+
+        "aliases": [
+
+            "Huawei",
+
+            "Huawei Cloud"
+
+        ]
+
     },
+
+    # ==========================================================
+    # DigitalOcean
+    # ==========================================================
+
+    "digitalocean": {
+
+        "provider": "DigitalOcean",
+
+        "aliases": [
+
+            "DigitalOcean",
+
+            "Digital Ocean"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # OVHcloud
+    # ==========================================================
+
+    "ovh": {
+
+        "provider": "OVHcloud",
+
+        "aliases": [
+
+            "OVH",
+
+            "OVH SAS",
+
+            "OVHcloud"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Hetzner
+    # ==========================================================
+
+    "hetzner": {
+
+        "provider": "Hetzner",
+
+        "aliases": [
+
+            "Hetzner",
+
+            "Hetzner Online GmbH"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Vultr
+    # ==========================================================
+
+    "vultr": {
+
+        "provider": "Vultr",
+
+        "aliases": [
+
+            "Vultr",
+
+            "The Constant Company"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Linode
+    # ==========================================================
+
+    "linode": {
+
+        "provider": "Linode",
+
+        "aliases": [
+
+            "Linode"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Akamai
+    # ==========================================================
+
+    "akamai": {
+
+        "provider": "Akamai",
+
+        "aliases": [
+
+            "Akamai",
+
+            "Akamai Technologies"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Fastly
+    # ==========================================================
+
+    "fastly": {
+
+        "provider": "Fastly",
+
+        "aliases": [
+
+            "Fastly",
+
+            "Fastly Inc."
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Viettel IDC
+    # ==========================================================
+
+    "viettel": {
+
+        "provider": "Viettel IDC",
+
+        "aliases": [
+
+            "Viettel",
+
+            "Viettel IDC"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # VNPT
+    # ==========================================================
+
+    "vnpt": {
+
+        "provider": "VNPT",
+
+        "aliases": [
+
+            "VNPT"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # FPT
+    # ==========================================================
+
+    "fpt": {
+
+        "provider": "FPT",
+
+        "aliases": [
+
+            "FPT",
+
+            "FPT Telecom"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # CMC
+    # ==========================================================
+
+    "cmc": {
+
+        "provider": "CMC",
+
+        "aliases": [
+
+            "CMC",
+
+            "CMC Telecom"
+
+        ]
+
+    }
+
+}
+
+__all__ = [
+
+    "CLOUD_PROVIDERS"
+
 ]

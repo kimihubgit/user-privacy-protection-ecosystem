@@ -6,8 +6,10 @@ from __future__ import annotations
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+from pydantic import Field
 
+from app.presentation.api.schemas.indicator import Indicator
 
 class AnalyzeResponse(BaseModel):
 
@@ -31,14 +33,22 @@ class AnalyzeResponse(BaseModel):
     # Detail
     #
 
-    categories: list[str] = Field(default_factory=list)
+    categories: list[str] = Field(
+        default_factory=list
+    )
 
-    indicators: list[str] = Field(default_factory=list)
+    indicators: list[Indicator] = Field(
+        default_factory=list
+    )
 
-    reason: list[str] = Field(default_factory=list)
+    reason: list[str] = Field(
+        default_factory=list
+    )
 
     #
     # Collector
     #
 
-    checks: dict[str, Any] = Field(default_factory=dict)
+    checks: dict[str, Any] = Field(
+        default_factory=dict
+    )

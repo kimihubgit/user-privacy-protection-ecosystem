@@ -1,36 +1,295 @@
 """
-app.data.asn
-============
+Evidence Database
+-----------------
 
-Autonomous System (network) reference data used for hosting-context risk
-scoring. No logic.
+Autonomous System Number (ASN) Database
 
-Schema:
+Knowledge Base dành cho Network Detector.
 
-    {
-        "asn": int,           # AS number
-        "name": str,          # organization / network name
-        "risk_profile": str,  # "high" | "medium" | "low"
-    }
+Nguyên tắc:
+- Chỉ chứa dữ liệu
+- Không chứa Logic
+- Không chứa Rule
+- Không chứa Risk Score
+- Không chứa Confidence
+
+Author: Anti Scam Detector
 """
 
-ASN_REGISTRY = [
-    {"asn": 16509, "name": "Amazon.com, Inc. (AWS)", "risk_profile": "low"},
-    {"asn": 15169, "name": "Google LLC", "risk_profile": "low"},
-    {"asn": 8075, "name": "Microsoft Corporation", "risk_profile": "low"},
-    {"asn": 13335, "name": "Cloudflare, Inc.", "risk_profile": "medium"},
-    {"asn": 14061, "name": "DigitalOcean, LLC", "risk_profile": "medium"},
-    {"asn": 20473, "name": "The Constant Company (Vultr)", "risk_profile": "medium"},
-    {"asn": 63949, "name": "Akamai Connected Cloud (Linode)", "risk_profile": "medium"},
-    {"asn": 24940, "name": "Hetzner Online GmbH", "risk_profile": "medium"},
-    {"asn": 202425, "name": "IP Volume inc", "risk_profile": "high"},
-    {"asn": 209, "name": "Qwest / CenturyLink", "risk_profile": "low"},
-    {"asn": 4134, "name": "China Telecom", "risk_profile": "medium"},
-    {"asn": 45102, "name": "Alibaba (US) Technology Co., Ltd.", "risk_profile": "medium"},
-    {"asn": 197226, "name": "PIN Vietnam", "risk_profile": "low"},
-    {"asn": 45899, "name": "VNPT Corp", "risk_profile": "low"},
-    {"asn": 7552, "name": "Viettel Group", "risk_profile": "low"},
-    {"asn": 60068, "name": "Datacamp Limited (CDN77 / bulletproof-linked)", "risk_profile": "high"},
-    {"asn": 200019, "name": "Alexhost SRL", "risk_profile": "high"},
-    {"asn": 39351, "name": "SIA IPB / bulletproof hosting cluster", "risk_profile": "high"},
+from __future__ import annotations
+
+ASN_DATABASE: dict[str, dict] = {
+
+    # ==========================================================
+    # Cloudflare
+    # ==========================================================
+
+    "AS13335": {
+
+        "organization": "Cloudflare, Inc.",
+
+        "provider": "Cloudflare",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Google
+    # ==========================================================
+
+    "AS15169": {
+
+        "organization": "Google LLC",
+
+        "provider": "Google",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Amazon AWS
+    # ==========================================================
+
+    "AS16509": {
+
+        "organization": "Amazon.com, Inc.",
+
+        "provider": "Amazon Web Services",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Microsoft Azure
+    # ==========================================================
+
+    "AS8075": {
+
+        "organization": "Microsoft Corporation",
+
+        "provider": "Microsoft Azure",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Oracle Cloud
+    # ==========================================================
+
+    "AS31898": {
+
+        "organization": "Oracle Corporation",
+
+        "provider": "Oracle Cloud",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Akamai
+    # ==========================================================
+
+    "AS20940": {
+
+        "organization": "Akamai Technologies",
+
+        "provider": "Akamai",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Fastly
+    # ==========================================================
+
+    "AS54113": {
+
+        "organization": "Fastly, Inc.",
+
+        "provider": "Fastly",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # DigitalOcean
+    # ==========================================================
+
+    "AS14061": {
+
+        "organization": "DigitalOcean, LLC",
+
+        "provider": "DigitalOcean",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # OVHcloud
+    # ==========================================================
+
+    "AS16276": {
+
+        "organization": "OVH SAS",
+
+        "provider": "OVHcloud",
+
+        "country": "FR"
+
+    },
+
+    # ==========================================================
+    # Hetzner
+    # ==========================================================
+
+    "AS24940": {
+
+        "organization": "Hetzner Online GmbH",
+
+        "provider": "Hetzner",
+
+        "country": "DE"
+
+    },
+
+    # ==========================================================
+    # Vultr
+    # ==========================================================
+
+    "AS20473": {
+
+        "organization": "The Constant Company",
+
+        "provider": "Vultr",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Linode
+    # ==========================================================
+
+    "AS63949": {
+
+        "organization": "Linode LLC",
+
+        "provider": "Linode",
+
+        "country": "US"
+
+    },
+
+    # ==========================================================
+    # Alibaba Cloud
+    # ==========================================================
+
+    "AS45102": {
+
+        "organization": "Alibaba Cloud",
+
+        "provider": "Alibaba Cloud",
+
+        "country": "CN"
+
+    },
+
+    # ==========================================================
+    # Tencent Cloud
+    # ==========================================================
+
+    "AS132203": {
+
+        "organization": "Tencent Cloud",
+
+        "provider": "Tencent Cloud",
+
+        "country": "CN"
+
+    },
+
+    # ==========================================================
+    # Huawei Cloud
+    # ==========================================================
+
+    "AS136907": {
+
+        "organization": "Huawei Cloud",
+
+        "provider": "Huawei Cloud",
+
+        "country": "CN"
+
+    },
+
+    # ==========================================================
+    # Viettel IDC
+    # ==========================================================
+
+    "AS7552": {
+
+        "organization": "Viettel Group",
+
+        "provider": "Viettel IDC",
+
+        "country": "VN"
+
+    },
+
+    # ==========================================================
+    # VNPT
+    # ==========================================================
+
+    "AS45899": {
+
+        "organization": "VNPT",
+
+        "provider": "VNPT",
+
+        "country": "VN"
+
+    },
+
+    # ==========================================================
+    # FPT Telecom
+    # ==========================================================
+
+    "AS18403": {
+
+        "organization": "FPT Telecom",
+
+        "provider": "FPT",
+
+        "country": "VN"
+
+    },
+
+    # ==========================================================
+    # CMC Telecom
+    # ==========================================================
+
+    "AS131429": {
+
+        "organization": "CMC Telecom",
+
+        "provider": "CMC",
+
+        "country": "VN"
+
+    }
+
+}
+
+__all__ = [
+
+    "ASN_DATABASE"
+
 ]

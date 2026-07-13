@@ -16,17 +16,26 @@ class LLMAnalyzer:
 
         self.llm = GeminiLLM()
 
-    def analyze(self, prompt: str) -> str:
+    def analyze(
+        self,
+        prompt: str
+    ) -> str:
 
         logger.info("=" * 80)
 
         logger.info("LLM Analysis Started")
 
-        logger.info(f"Prompt Length : {len(prompt)}")
+        logger.info(
+            f"Prompt Length : {len(prompt)}"
+        )
 
-        response = self.llm.generate(prompt)
+        response = self.llm.generate(
+            prompt
+        )
 
-        logger.info(f"Response Length : {len(response)}")
+        logger.info(
+            f"Response Length : {len(response)}"
+        )
 
         logger.info("LLM Analysis Finished")
 
