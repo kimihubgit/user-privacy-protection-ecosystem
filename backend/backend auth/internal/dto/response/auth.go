@@ -8,6 +8,7 @@ type UserResponse struct {
 	Email     string     `json:"email"`
 	Name      string     `json:"name,omitempty"`
 	Avatar    string     `json:"avatar,omitempty"`
+	Role      string     `json:"role"`
 	CreatedAt *time.Time `json:"-"`
 }
 
@@ -17,6 +18,7 @@ type GetMeResponse struct {
 	Email     string     `json:"email"`
 	Name      string     `json:"name,omitempty"`
 	Avatar    string     `json:"avatar,omitempty"`
+	Role      string     `json:"role"`
 	CreatedAt *time.Time `json:"created_at,omitempty"`
 }
 

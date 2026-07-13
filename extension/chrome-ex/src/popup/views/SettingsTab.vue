@@ -296,12 +296,20 @@
           <a href="https://blog.kimidev.net" target="_blank" style="color: var(--primary-blue); text-decoration: none; font-weight: 500;">{{ authorName }}</a>
         </span>
       </div>
-      <button @click="openDonate" class="btn-sync-action" style="background-color: var(--danger-light); color: var(--danger); border: none; cursor: pointer;">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--danger);">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
-        <span>{{ t('settings.donate_btn') }}</span>
-      </button>
+      <div style="display: flex; gap: 6px;">
+        <button @click="$emit('show-feedback')" class="btn-sync-action" style="background-color: var(--primary-light); color: var(--primary-blue); border: none; cursor: pointer;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--primary-blue);">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>{{ t('settings.feedback_btn') || 'Góp ý' }}</span>
+        </button>
+        <button @click="openDonate" class="btn-sync-action" style="background-color: var(--danger-light); color: var(--danger); border: none; cursor: pointer;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--danger);">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+          </svg>
+          <span>{{ t('settings.donate_btn') }}</span>
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -313,7 +321,7 @@ import { CONFIG } from '../../config.js';
 
 export default {
   name: 'SettingsTab',
-  emits: ['recheck-domain', 'update-tracker-ui', 'update-ad-ui'],
+  emits: ['recheck-domain', 'update-tracker-ui', 'update-ad-ui', 'show-feedback'],
   setup(props, { emit }) {
     const { t, currentLang, setLanguage } = useI18n();
     const activeSettingsTab = ref('security');

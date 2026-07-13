@@ -54,6 +54,7 @@ func (s *service) Login(ctx context.Context, req request.LoginRequest) (*respons
 			Email:     u.Email,
 			Name:      u.Name,
 			Avatar:    u.Avatar,
+			Role:      u.Role,
 			CreatedAt: &u.CreatedAt,
 		},
 	}, nil
@@ -76,6 +77,7 @@ func (s *service) SocialLogin(ctx context.Context, req request.SocialLoginReques
 				Email:     u.Email,
 				Name:      u.Name,
 				Avatar:    u.Avatar,
+				Role:      u.Role,
 				CreatedAt: &u.CreatedAt,
 			},
 		}, nil
@@ -112,6 +114,7 @@ func (s *service) SocialLogin(ctx context.Context, req request.SocialLoginReques
 					Email:     u.Email,
 					Name:      u.Name,
 					Avatar:    u.Avatar,
+					Role:      u.Role,
 					CreatedAt: &u.CreatedAt,
 				},
 			}, nil
@@ -178,6 +181,7 @@ func (s *service) SocialLogin(ctx context.Context, req request.SocialLoginReques
 			Email:     newUser.Email,
 			Name:      newUser.Name,
 			Avatar:    newUser.Avatar,
+			Role:      newUser.Role,
 			CreatedAt: &newUser.CreatedAt,
 		},
 	}, nil

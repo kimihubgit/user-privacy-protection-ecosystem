@@ -46,6 +46,7 @@ func (h *UserHandler) GetMe(c *gin.Context) {
 		Email:    u.Email,
 		Name:     u.Name,
 		Avatar:   u.Avatar,
+		Role:     u.Role,
 	})
 }
 

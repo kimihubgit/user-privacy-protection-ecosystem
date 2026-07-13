@@ -3,6 +3,18 @@ import { api } from '../lib/api';
 
 const AuthContext = createContext(null);
 
+const getRole = (name, email) => {
+  const nameLower = (name || '').toLowerCase();
+  const emailLower = (email || '').toLowerCase();
+  if (nameLower.includes('admin') || emailLower === 'admin@chongluadao.vn') {
+    return 'admin';
+  }
+  if (nameLower.includes('moderator') || nameLower.includes('support') || emailLower.includes('support@')) {
+    return 'moderator';
+  }
+  return 'user';
+};
+
 export function AuthProvider({ children, addToast }) {
   const [token, setToken] = useState(() => localStorage.getItem('token'));
   const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'));
@@ -10,7 +22,8 @@ export function AuthProvider({ children, addToast }) {
     const name = localStorage.getItem('userName') || '';
     const email = localStorage.getItem('userEmail') || '';
     const avatar = localStorage.getItem('userAvatar') || '';
-    return { name, email, avatar, role: name.toLowerCase().includes('admin') || email === 'admin@chongluadao.vn' ? 'admin' : 'user' };
+    const role = localStorage.getItem('userRole') || getRole(name, email);
+    return { name, email, avatar, role };
   });
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
@@ -19,6 +32,7 @@ export function AuthProvider({ children, addToast }) {
     if (userData.name) localStorage.setItem('userName', userData.name);
     if (userData.email) localStorage.setItem('userEmail', userData.email);
     if (userData.avatar) localStorage.setItem('userAvatar', userData.avatar);
+    if (userData.role) localStorage.setItem('userRole', userData.role);
 
     setToken(tokenValue);
     setIsLoggedIn(true);
@@ -26,7 +40,7 @@ export function AuthProvider({ children, addToast }) {
       name: userData.name || '',
       email: userData.email || '',
       avatar: userData.avatar || '',
-      role: (userData.name || '').toLowerCase().includes('admin') || userData.email === 'admin@chongluadao.vn' ? 'admin' : 'user'
+      role: userData.role || getRole(userData.name || '', userData.email || '')
     });
 
     window.dispatchEvent(new Event('auth-change'));
@@ -45,6 +59,7 @@ export function AuthProvider({ children, addToast }) {
       localStorage.removeItem('userName');
       localStorage.removeItem('userEmail');
       localStorage.removeItem('userAvatar');
+      localStorage.removeItem('userRole');
       
       setToken(null);
       setIsLoggedIn(false);
@@ -72,31 +87,46 @@ export function AuthProvider({ children, addToast }) {
           });
           return;
         }
+        if (currentToken.startsWith('mock-moderator-')) {
+          setIsLoggedIn(true);
+          setUser({
+            name: localStorage.getItem('userName') || 'Tư Vấn Viên',
+            email: localStorage.getItem('userEmail') || 'support@chongluadao.vn',
+            avatar: '',
+            role: 'moderator'
+          });
+          return;
+        }
+
         try {
           const res = await api.getMe(currentToken);
           let nameToSet = '';
           let emailToSet = '';
           let avatarToSet = '';
+          let roleToSet = 'user';
 
           if (res.user) {
             nameToSet = res.user.name || res.user.username || '';
             emailToSet = res.user.email || '';
             avatarToSet = res.user.avatar || '';
+            roleToSet = res.user.role || 'user';
           } else {
             nameToSet = res.name || res.username || '';
             emailToSet = res.email || '';
             avatarToSet = res.avatar || '';
+            roleToSet = res.role || 'user';
           }
 
           if (nameToSet) localStorage.setItem('userName', nameToSet);
           if (emailToSet) localStorage.setItem('userEmail', emailToSet);
           if (avatarToSet) localStorage.setItem('userAvatar', avatarToSet);
+          if (roleToSet) localStorage.setItem('userRole', roleToSet);
 
           setUser({
             name: nameToSet,
             email: emailToSet,
             avatar: avatarToSet,
-            role: nameToSet.toLowerCase().includes('admin') || emailToSet === 'admin@chongluadao.vn' ? 'admin' : 'user'
+            role: roleToSet
           });
           setIsLoggedIn(true);
         } catch (error) {

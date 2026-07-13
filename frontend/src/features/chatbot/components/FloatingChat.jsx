@@ -3,18 +3,31 @@ import { useNavigate } from 'react-router-dom';
 import { MessageSquareCode, X } from 'lucide-react';
 import { useChatbot } from '../../../hooks';
 
+const renderMessageText = (text) => {
+  if (!text) return '';
+  return text.split('\n').map((line, index) => {
+    if (line.startsWith('## ')) {
+      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{line.replace('## ', '')}</h4>;
+    }
+    if (line.startsWith('- ')) {
+      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{line.replace('- ', '')}</li>;
+    }
+    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{line}</p>;
+  });
+};
+
 export default function FloatingChat({
   isAiChatOpen,
   setIsAiChatOpen,
   showScrollTop
 }) {
   const navigate = useNavigate();
-  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply } = useChatbot();
+  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply, askChatbot } = useChatbot();
   const [chatMessages, setChatMessages] = useState([
     { sender: 'bot', text: 'Xin chào! Tôi là Trợ lý AI của Chống Lừa Đảo. Tôi có thể giúp gì cho bạn?' }
   ]);
 
-  const handleSendMessage = (e) => {
+  const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!chatInput.trim()) return;
 
@@ -24,11 +37,18 @@ export default function FloatingChat({
     setChatInput('');
     setIsThinking(true);
 
-    setTimeout(() => {
+    try {
+      let replyText = await askChatbot(query);
+      if (!replyText) {
+        replyText = getAgentReply(query, 'ai');
+      }
+      setChatMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
+    } catch (err) {
       const replyText = getAgentReply(query, 'ai');
       setChatMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
+    } finally {
       setIsThinking(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -82,7 +102,7 @@ export default function FloatingChat({
                   {msg.sender === 'bot' ? 'AI' : 'U'}
                 </div>
                 <div className="chat-bubble">
-                  {msg.text}
+                  {renderMessageText(msg.text)}
                 </div>
               </div>
             ))}

@@ -108,6 +108,7 @@ func (h *PasskeyHandler) RegisterFinish(c *gin.Context) {
 			Email:     user.Email,
 			Name:      user.Name,
 			Avatar:    user.Avatar,
+			Role:      user.Role,
 			CreatedAt: &user.CreatedAt,
 		},
 	})
@@ -168,6 +169,7 @@ func (h *PasskeyHandler) LoginFinish(c *gin.Context) {
 			Email:     user.Email,
 			Name:      user.Name,
 			Avatar:    user.Avatar,
+			Role:      user.Role,
 			CreatedAt: &user.CreatedAt,
 		},
 	})

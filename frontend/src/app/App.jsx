@@ -15,6 +15,7 @@ const AiChatbotFullPage = lazy(() => import('../pages/AiChatbot'));
 const UserDashboard = lazy(() => import('../pages/Dashboard'));
 const AdminLogin = lazy(() => import('../pages/AdminLogin'));
 const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
+const ModeratorDashboard = lazy(() => import('../pages/ModeratorDashboard'));
 
 import { useToast } from '../hooks/useToast';
 
@@ -75,7 +76,7 @@ export default function App() {
     const fetchProfile = async () => {
       const token = localStorage.getItem('token');
       if (token) {
-        if (token.startsWith('mock-admin-')) {
+        if (token.startsWith('mock-admin-') || token.startsWith('mock-moderator-')) {
           setIsLoggedIn(true);
           return;
         }
@@ -235,9 +236,15 @@ export default function App() {
               </ProtectedRoute>
             } />
             <Route path="/admin/login" element={<AdminLogin addToast={addToast} />} />
-            <Route path="/admin" element={
+            <Route path="/admin/*" element={
               <ProtectedRoute requiredRole="admin">
                 <AdminDashboard addToast={addToast} onLogout={handleLogout} />
+              </ProtectedRoute>
+            } />
+
+            <Route path="/moderator" element={
+              <ProtectedRoute requiredRole="moderator">
+                <ModeratorDashboard addToast={addToast} onLogout={handleLogout} />
               </ProtectedRoute>
             } />
             <Route path="*" element={<Navigate to="/" replace />} />

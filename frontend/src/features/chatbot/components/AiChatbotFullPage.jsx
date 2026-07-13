@@ -84,10 +84,23 @@ const QUICK_PROMPTS = [
   }
 ];
 
+const renderMessageText = (text) => {
+  if (!text) return '';
+  return text.split('\n').map((line, index) => {
+    if (line.startsWith('## ')) {
+      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{line.replace('## ', '')}</h4>;
+    }
+    if (line.startsWith('- ')) {
+      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{line.replace('- ', '')}</li>;
+    }
+    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{line}</p>;
+  });
+};
+
 export default function AiChatbotFullPage({ addToast }) {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply } = useChatbot();
+  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply, askChatbot } = useChatbot();
   const [conversations, setConversations] = useState([
     { id: '1', title: 'Hội thoại chính', agent: 'ai', messages: [] }
   ]);
@@ -139,7 +152,7 @@ export default function AiChatbotFullPage({ addToast }) {
     }
   };
 
-  const handleSendMessage = (textToSend) => {
+  const handleSendMessage = async (textToSend) => {
     const text = textToSend || chatInput;
     if (!text.trim()) return;
 
@@ -170,9 +183,11 @@ export default function AiChatbotFullPage({ addToast }) {
 
     setIsThinking(true);
 
-    // Mock AI reply based on agent persona and message context
-    setTimeout(() => {
-      const replyText = getAgentReply(text, selectedAgentId);
+    try {
+      let replyText = await askChatbot(text);
+      if (!replyText) {
+        replyText = getAgentReply(text, selectedAgentId);
+      }
 
       setConversations(prev => prev.map(c => {
         if (c.id === activeConvId) {
@@ -183,8 +198,20 @@ export default function AiChatbotFullPage({ addToast }) {
         }
         return c;
       }));
+    } catch (err) {
+      const replyText = getAgentReply(text, selectedAgentId);
+      setConversations(prev => prev.map(c => {
+        if (c.id === activeConvId) {
+          return {
+            ...c,
+            messages: [...c.messages, { sender: 'bot', text: replyText }]
+          };
+        }
+        return c;
+      }));
+    } finally {
       setIsThinking(false);
-    }, 1000);
+    }
   };
 
   const handleInputKeyDown = (e) => {
@@ -337,7 +364,7 @@ export default function AiChatbotFullPage({ addToast }) {
                     {msg.sender === 'user' ? 'U' : selectedAgent.name[0]}
                   </div>
                   <div className="chat-msg-bubble">
-                    {msg.text}
+                    {renderMessageText(msg.text)}
                   </div>
                 </div>
               ))}

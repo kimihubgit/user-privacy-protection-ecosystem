@@ -131,6 +131,7 @@ func (s *service) Register(ctx context.Context, req request.RegisterRequest) (*r
 			Email:    newUser.Email,
 			Name:     newUser.Name,
 			Avatar:   newUser.Avatar,
+			Role:     newUser.Role,
 		},
 	}, nil
 }
