@@ -1,78 +1,269 @@
 """
-app.data.categories
-====================
+Evidence Database
+-----------------
 
-Central taxonomy of threat/content categories used across brands,
-keywords, and detector output labels. No logic.
+Category Database
 
-Schema:
+Knowledge Base dành cho toàn bộ hệ thống.
 
-    CATEGORIES[key] = {
-        "label": str,          # human-readable label
-        "description": str,    # short definition
-        "default_severity": str,  # "critical" | "high" | "medium" | "low"
-    }
+Nguyên tắc:
+- Chỉ chứa dữ liệu
+- Không chứa Logic
+- Không chứa Rule
+- Không chứa Risk Score
+- Không chứa Confidence
+
+Author: Anti Scam Detector
 """
 
-CATEGORIES = {
-    "phishing": {
-        "label": "Phishing",
-        "description": "Generic credential-harvesting or identity-theft lure.",
-        "default_severity": "high",
+from __future__ import annotations
+
+CATEGORIES: dict[str, dict] = {
+
+    # ==========================================================
+    # Unknown
+    # ==========================================================
+
+    "unknown": {
+
+        "display_name": "Unknown",
+
+        "description": "Cannot determine website category"
+
     },
-    "banking": {
-        "label": "Banking Fraud",
-        "description": "Impersonation of banks or financial institutions.",
-        "default_severity": "critical",
+
+    # ==========================================================
+    # Business
+    # ==========================================================
+
+    "business": {
+
+        "display_name": "Business",
+
+        "description": "Business and corporate website"
+
     },
-    "payment": {
-        "label": "Payment Fraud",
-        "description": "Impersonation of payment processors, wallets, or checkout flows.",
-        "default_severity": "high",
-    },
-    "crypto": {
-        "label": "Cryptocurrency Scam",
-        "description": "Wallet-drainer, fake exchange, or crypto giveaway scam content.",
-        "default_severity": "critical",
-    },
-    "malware": {
-        "label": "Malware Distribution",
-        "description": "Drive-by-download or trojanized software delivery.",
-        "default_severity": "critical",
-    },
-    "gambling": {
-        "label": "Unlicensed Gambling",
-        "description": "Unlicensed or region-restricted online betting/casino content.",
-        "default_severity": "medium",
-    },
-    "adult": {
-        "label": "Adult Content",
-        "description": "Age-restricted content classification (content-category only).",
-        "default_severity": "low",
-    },
-    "technology": {
-        "label": "Technology / SaaS",
-        "description": "Impersonation of technology, cloud, or SaaS brands.",
-        "default_severity": "high",
-    },
-    "social": {
-        "label": "Social Media",
-        "description": "Impersonation of social media or messaging platforms.",
-        "default_severity": "high",
-    },
-    "ecommerce": {
-        "label": "E-commerce / Logistics",
-        "description": "Impersonation of marketplaces, retailers, or delivery couriers.",
-        "default_severity": "medium",
-    },
-    "government": {
-        "label": "Government / Public Service",
-        "description": "Impersonation of government agencies or public services.",
-        "default_severity": "critical",
-    },
+
+    # ==========================================================
+    # Education
+    # ==========================================================
+
     "education": {
-        "label": "Education",
-        "description": "Impersonation of educational institutions or e-learning platforms.",
-        "default_severity": "low",
+
+        "display_name": "Education",
+
+        "description": "School, university or online learning"
+
     },
+
+    # ==========================================================
+    # Government
+    # ==========================================================
+
+    "government": {
+
+        "display_name": "Government",
+
+        "description": "Government organization"
+
+    },
+
+    # ==========================================================
+    # Banking
+    # ==========================================================
+
+    "banking": {
+
+        "display_name": "Banking",
+
+        "description": "Banking and financial institution"
+
+    },
+
+    # ==========================================================
+    # Payment
+    # ==========================================================
+
+    "payment": {
+
+        "display_name": "Payment",
+
+        "description": "Payment service"
+
+    },
+
+    # ==========================================================
+    # E-Commerce
+    # ==========================================================
+
+    "ecommerce": {
+
+        "display_name": "E-Commerce",
+
+        "description": "Online shopping"
+
+    },
+
+    # ==========================================================
+    # Technology
+    # ==========================================================
+
+    "technology": {
+
+        "display_name": "Technology",
+
+        "description": "Technology company or product"
+
+    },
+
+    # ==========================================================
+    # Social
+    # ==========================================================
+
+    "social": {
+
+        "display_name": "Social",
+
+        "description": "Social media platform"
+
+    },
+
+    # ==========================================================
+    # Cryptocurrency
+    # ==========================================================
+
+    "crypto": {
+
+        "display_name": "Cryptocurrency",
+
+        "description": "Blockchain, crypto, Web3"
+
+    },
+
+    # ==========================================================
+    # News
+    # ==========================================================
+
+    "news": {
+
+        "display_name": "News",
+
+        "description": "News and media"
+
+    },
+
+    # ==========================================================
+    # Entertainment
+    # ==========================================================
+
+    "entertainment": {
+
+        "display_name": "Entertainment",
+
+        "description": "Movies, music, streaming"
+
+    },
+
+    # ==========================================================
+    # Healthcare
+    # ==========================================================
+
+    "healthcare": {
+
+        "display_name": "Healthcare",
+
+        "description": "Healthcare and medical"
+
+    },
+
+    # ==========================================================
+    # Travel
+    # ==========================================================
+
+    "travel": {
+
+        "display_name": "Travel",
+
+        "description": "Travel and tourism"
+
+    },
+
+    # ==========================================================
+    # Gaming
+    # ==========================================================
+
+    "gaming": {
+
+        "display_name": "Gaming",
+
+        "description": "Games and gaming services"
+
+    },
+
+    # ==========================================================
+    # Gambling
+    # ==========================================================
+
+    "gambling": {
+
+        "display_name": "Gambling",
+
+        "description": "Betting and gambling"
+
+    },
+
+    # ==========================================================
+    # Adult
+    # ==========================================================
+
+    "adult": {
+
+        "display_name": "Adult",
+
+        "description": "Adult content"
+
+    },
+
+    # ==========================================================
+    # Malware
+    # ==========================================================
+
+    "malware": {
+
+        "display_name": "Malware",
+
+        "description": "Malware distribution"
+
+    },
+
+    # ==========================================================
+    # Phishing
+    # ==========================================================
+
+    "phishing": {
+
+        "display_name": "Phishing",
+
+        "description": "Credential theft"
+
+    },
+
+    # ==========================================================
+    # Scam
+    # ==========================================================
+
+    "scam": {
+
+        "display_name": "Scam",
+
+        "description": "Fraud and scam"
+
+    }
+
 }
+
+__all__ = [
+
+    "CATEGORIES"
+
+]

@@ -6,10 +6,10 @@ Rule-based OSINT Analysis
 
 from __future__ import annotations
 
-from app.infrastructure.osint.providers.chongluadao_provider import ChongLuaDaoProvider
+from app.osint.providers.chongluadao_provider import ChongLuaDaoProvider
 
-from app.domain.entities.collector import CollectorResult
-from app.domain.entities.check_result import CheckResult
+from app.schemas.collector_result import CollectorResult
+from app.schemas.check_result import CheckResult
 
 
 class OSINTChecker:
@@ -24,9 +24,14 @@ class OSINTChecker:
 
         self.provider = ChongLuaDaoProvider()
 
-    def check(self, collector: CollectorResult) -> CheckResult:
+    def check(
+        self,
+        collector: CollectorResult
+    ) -> CheckResult:
 
-        result = self.provider.lookup(collector.final_url or collector.url)
+        result = self.provider.lookup(
+            collector.final_url or collector.url
+        )
 
         # =====================================
         # Provider Error
@@ -35,12 +40,25 @@ class OSINTChecker:
         if not result["success"]:
 
             return CheckResult(
+
                 name="osint_checker",
+
                 score=0,
+
                 confidence=0.0,
+
                 passed=True,
+
                 reasons=[],
-                metadata={"provider": "ChongLuaDao", "available": False},
+
+                metadata={
+
+                    "provider": "ChongLuaDao",
+
+                    "available": False
+
+                }
+
             )
 
         data = result.get("data", {})
@@ -52,19 +70,36 @@ class OSINTChecker:
         if not data:
 
             return CheckResult(
+
                 name="osint_checker",
+
                 score=0,
+
                 confidence=0.0,
+
                 passed=True,
+
                 reasons=[],
-                metadata={"provider": "ChongLuaDao", "available": True},
+
+                metadata={
+
+                    "provider": "ChongLuaDao",
+
+                    "available": True
+
+                }
+
             )
 
         api_status = data.get("status", 0)
 
-        api_result = str(data.get("result", "")).lower()
+        api_result = str(
+            data.get("result", "")
+        ).lower()
 
-        details = str(data.get("details", ""))
+        details = str(
+            data.get("details", "")
+        )
 
         # =====================================
         # Malicious
@@ -73,12 +108,25 @@ class OSINTChecker:
         if api_status == 200 and api_result == "malicious":
 
             return CheckResult(
+
                 name="osint_checker",
+
                 score=100,
+
                 confidence=1.0,
+
                 passed=False,
+
                 reasons=[details],
-                metadata={"provider": "ChongLuaDao", "result": api_result},
+
+                metadata={
+
+                    "provider": "ChongLuaDao",
+
+                    "result": api_result
+
+                }
+
             )
 
         # =====================================
@@ -88,12 +136,25 @@ class OSINTChecker:
         if api_result == "suspicious":
 
             return CheckResult(
+
                 name="osint_checker",
+
                 score=60,
+
                 confidence=1.0,
+
                 passed=False,
+
                 reasons=[details],
-                metadata={"provider": "ChongLuaDao", "result": api_result},
+
+                metadata={
+
+                    "provider": "ChongLuaDao",
+
+                    "result": api_result
+
+                }
+
             )
 
         # =====================================
@@ -101,10 +162,23 @@ class OSINTChecker:
         # =====================================
 
         return CheckResult(
+
             name="osint_checker",
+
             score=0,
+
             confidence=1.0,
+
             passed=True,
+
             reasons=[],
-            metadata={"provider": "ChongLuaDao", "result": api_result},
+
+            metadata={
+
+                "provider": "ChongLuaDao",
+
+                "result": api_result
+
+            }
+
         )

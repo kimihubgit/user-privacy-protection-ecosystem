@@ -1,31 +1,178 @@
 """
-Generic phishing / social-engineering lure keywords (URL paths, subject
-lines, page titles). Schema documented in app.data.keywords.__init__.
+Evidence Database
+-----------------
+
+Phishing Keyword Database
+
+Knowledge Base dành cho Keyword Detector.
+
+Nguyên tắc:
+- Chỉ chứa dữ liệu
+- Không chứa Rule
+- Không chứa Risk Score
+- Không chứa Confidence
+- Không chứa Logic
+
+Author: Anti Scam Detector
 """
 
-PHISHING_KEYWORDS = [
-    {"keyword": "verify-account", "category": "phishing", "severity": "high"},
-    {"keyword": "verify your account", "category": "phishing", "severity": "high"},
-    {"keyword": "confirm-identity", "category": "phishing", "severity": "high"},
-    {"keyword": "account-suspended", "category": "phishing", "severity": "critical"},
-    {"keyword": "account-locked", "category": "phishing", "severity": "critical"},
-    {"keyword": "unusual-activity", "category": "phishing", "severity": "high"},
-    {"keyword": "security-alert", "category": "phishing", "severity": "high"},
-    {"keyword": "update-billing", "category": "phishing", "severity": "medium"},
-    {"keyword": "update-payment", "category": "phishing", "severity": "medium"},
-    {"keyword": "login-required", "category": "phishing", "severity": "medium"},
-    {"keyword": "signin-verify", "category": "phishing", "severity": "high"},
-    {"keyword": "password-expired", "category": "phishing", "severity": "medium"},
-    {"keyword": "reset-password", "category": "phishing", "severity": "medium"},
-    {"keyword": "click-here-now", "category": "phishing", "severity": "medium"},
-    {"keyword": "urgent-action-required", "category": "phishing", "severity": "high"},
-    {"keyword": "limited-time-offer", "category": "phishing", "severity": "low"},
-    {"keyword": "your-package-is-on-hold", "category": "phishing", "severity": "medium"},
-    {"keyword": "delivery-failed", "category": "phishing", "severity": "medium"},
-    {"keyword": "invoice-attached", "category": "phishing", "severity": "medium"},
-    {"keyword": "tai-khoan-bi-khoa", "category": "phishing", "severity": "critical"},
-    {"keyword": "xac-minh-tai-khoan", "category": "phishing", "severity": "high"},
-    {"keyword": "canh-bao-bao-mat", "category": "phishing", "severity": "high"},
-    {"keyword": "cap-nhat-thong-tin", "category": "phishing", "severity": "medium"},
-    {"keyword": "khoa-tai-khoan", "category": "phishing", "severity": "critical"},
+from __future__ import annotations
+
+PHISHING_KEYWORDS: dict[str, dict] = {
+
+    "account": {
+        "description": "Account",
+        "keywords": [
+            "account",
+            "tai khoan",
+            "tài khoản",
+            "my account",
+            "your account",
+            "customer account",
+            "member account"
+        ]
+    },
+
+    "login": {
+        "description": "Login",
+        "keywords": [
+            "login",
+            "log in",
+            "sign in",
+            "signin",
+            "dang nhap",
+            "đăng nhập",
+            "member login",
+            "customer login"
+        ]
+    },
+
+    "password": {
+        "description": "Password",
+        "keywords": [
+            "password",
+            "mat khau",
+            "mật khẩu",
+            "passcode",
+            "pin",
+            "security code"
+        ]
+    },
+
+    "otp": {
+        "description": "One Time Password",
+        "keywords": [
+            "otp",
+            "one time password",
+            "verification code",
+            "authentication code",
+            "sms code"
+        ]
+    },
+
+    "verification": {
+        "description": "Verification",
+        "keywords": [
+            "verify",
+            "verification",
+            "verified",
+            "confirm",
+            "confirmation",
+            "validate",
+            "authenticate",
+            "identity verification",
+            "account verification"
+        ]
+    },
+
+    "security": {
+        "description": "Security",
+        "keywords": [
+            "security",
+            "secure",
+            "protection",
+            "protect",
+            "safe login",
+            "secure login",
+            "security alert",
+            "security center"
+        ]
+    },
+
+    "urgent": {
+        "description": "Urgent Message",
+        "keywords": [
+            "urgent",
+            "immediately",
+            "important",
+            "attention",
+            "warning",
+            "alert",
+            "critical",
+            "action required",
+            "limited time"
+        ]
+    },
+
+    "suspension": {
+        "description": "Account Suspension",
+        "keywords": [
+            "suspend",
+            "suspended",
+            "disabled",
+            "blocked",
+            "locked",
+            "freeze",
+            "restricted"
+        ]
+    },
+
+    "recovery": {
+        "description": "Account Recovery",
+        "keywords": [
+            "recover",
+            "recovery",
+            "restore",
+            "reset password",
+            "unlock account"
+        ]
+    },
+
+    "payment": {
+        "description": "Payment Request",
+        "keywords": [
+            "payment required",
+            "pay now",
+            "confirm payment",
+            "billing",
+            "invoice",
+            "transaction failed"
+        ]
+    },
+
+    "banking": {
+        "description": "Online Banking",
+        "keywords": [
+            "internet banking",
+            "mobile banking",
+            "online banking"
+        ]
+    },
+
+    "credential": {
+        "description": "Credential Request",
+        "keywords": [
+            "username",
+            "email address",
+            "phone number",
+            "credit card",
+            "cvv",
+            "expiration date"
+        ]
+    }
+
+}
+
+__all__ = [
+    "PHISHING_KEYWORDS"
 ]

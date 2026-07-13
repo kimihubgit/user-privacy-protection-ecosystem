@@ -1,74 +1,190 @@
 """
 Response Validator
 
-Chuẩn hóa và kiểm tra kết quả trả về từ LLM.
-Đảm bảo các trường đúng kiểu và nằm trong phạm vi hợp lệ.
+Kiểm tra và chuẩn hóa kết quả trả về từ LLM.
 """
 
 from __future__ import annotations
 
-
-def _clamp(value, lo, hi):
-    return max(lo, min(value, hi))
-
+from app.presentation.api.schemas.llm_result import LLMResult
 
 class ResponseValidator:
-    ALLOWED_STATUS = {"safe", "malicious"}
-    ALLOWED_LEVEL = {"Low", "Medium", "High"}
 
-    def validate(self, result: dict) -> dict:
-        # --- risk_score ---
+    ALLOWED_STATUS = {
+        "safe",
+        "suspicious",
+        "malicious",
+        "unknown",
+    }
+
+    ALLOWED_LEVEL = {
+        "Low",
+        "Medium",
+        "High",
+    }
+
+    def validate(
+        self,
+        result: LLMResult,
+    ) -> LLMResult:
+
+        #
+        # Risk Score
+        #
+
         try:
-            score = _clamp(int(result.get("risk_score", 50)), 0, 100)
-        except (TypeError, ValueError):
-            score = 50
-        result["risk_score"] = score
+            result.risk_score = int(result.risk_score)
+        except Exception:
+            result.risk_score = 50
 
-        # --- status — phải nhất quán với score ---
-        status = str(result.get("status", "")).lower()
+        result.risk_score = max(
+            0,
+            min(result.risk_score, 100),
+        )
+
+        #
+        # Status
+        #
+
+        status = str(result.status).lower()
+
         if status not in self.ALLOWED_STATUS:
-            status = "safe" if score <= 20 else "malicious"
-        result["status"] = status
 
-        # --- level — phải nhất quán với score ---
-        level = result.get("level", "")
-        if level not in self.ALLOWED_LEVEL:
-            if score <= 20:
-                level = "Low"
-            elif score <= 60:
-                level = "Medium"
+            if result.risk_score <= 20:
+                result.status = "safe"
+
+            elif result.risk_score <= 60:
+                result.status = "suspicious"
+
             else:
-                level = "High"
-        result["level"] = level
+                result.status = "malicious"
 
-        # --- confidence ---
+        else:
+
+            result.status = status
+
+        #
+        # Level
+        #
+
+        if result.level not in self.ALLOWED_LEVEL:
+
+            if result.risk_score <= 20:
+
+                result.level = "Low"
+
+            elif result.risk_score <= 60:
+
+                result.level = "Medium"
+
+            else:
+
+                result.level = "High"
+
+        #
+        # Confidence
+        #
+
         try:
-            confidence = _clamp(float(result.get("confidence", 0.5)), 0.0, 1.0)
-        except (TypeError, ValueError):
-            confidence = 0.5
-        result["confidence"] = confidence
 
-        # --- categories ---
-        categories = result.get("categories", [])
-        result["categories"] = (
-            [str(categories)] if not isinstance(categories, list) else categories
+            result.confidence = float(
+                result.confidence
+            )
+
+        except Exception:
+
+            result.confidence = 0.5
+
+        result.confidence = max(
+            0.0,
+            min(result.confidence, 1.0),
         )
 
-        # --- indicators ---
-        indicators = result.get("indicators", [])
-        result["indicators"] = (
-            [str(indicators)] if not isinstance(indicators, list) else indicators
-        )
+        #
+        # Categories
+        #
 
-        # --- reason — giữ tối đa 1 câu ---
-        reason = result.get("reason", [])
-        if isinstance(reason, str):
-            reason = [reason]
-        elif not isinstance(reason, list):
-            reason = []
-        result["reason"] = reason[:1]
+        if result.categories is None:
 
-        # --- analysis_type ---
-        result.setdefault("analysis_type", "LLM")
+            result.categories = []
+
+        elif not isinstance(
+            result.categories,
+            list,
+        ):
+
+            result.categories = [
+                str(result.categories)
+            ]
+
+        #
+        # Indicators
+        #
+        # Indicator đã được parser chuyển thành
+        # List[Indicator], chỉ cần đảm bảo
+        # không bị None.
+        #
+
+        if result.indicators is None:
+
+            result.indicators = []
+
+        #
+        # Reason
+        #
+
+        if result.reason is None:
+
+            result.reason = []
+
+        elif isinstance(
+            result.reason,
+            str,
+        ):
+
+            result.reason = [
+                result.reason
+            ]
+
+        elif not isinstance(
+            result.reason,
+            list,
+        ):
+
+            result.reason = []
+
+        #
+        # Chỉ giữ 1 đoạn giải thích
+        #
+
+        if len(result.reason) > 1:
+
+            result.reason = [
+                result.reason[0]
+            ]
+
+        #
+        # Summary
+        #
+
+        if not result.summary:
+
+            if result.reason:
+
+                result.summary = result.reason[0]
+
+            else:
+
+                result.summary = (
+                    "Không có giải thích."
+                )
+
+        #
+        # Analysis Type
+        #
+
+        if not result.analysis_type:
+
+            result.analysis_type = "LLM"
 
         return result

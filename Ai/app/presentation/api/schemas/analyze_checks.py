@@ -1,8 +1,7 @@
 from pydantic import BaseModel
 
 from app.presentation.api.schemas.collector_response import CollectorResponse
-from app.domain.entities.check_result import CheckResult
-
+from app.presentation.api.schemas.check_result import CheckResult
 
 class AnalyzeChecks(BaseModel):
 

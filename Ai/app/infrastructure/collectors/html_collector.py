@@ -37,27 +37,53 @@ class HTMLCollector:
 
         self.session = requests.Session()
 
-        self.session.headers.update({"User-Agent": self.USER_AGENT})
+        self.session.headers.update({
 
-    def collect(self, url: str) -> Dict:
+            "User-Agent": self.USER_AGENT
 
-        logger.info(f"Collect HTML : {url}")
+        })
+
+    def collect(
+        self,
+        url: str
+    ) -> Dict:
+
+        logger.info(
+            f"Collect HTML : {url}"
+        )
 
         result = {
+
             "html": "",
+
             "title": "",
+
             "visible_text": "",
+
             "status_code": 0,
+
             "final_url": "",
+
             "content_type": "",
+
             "response_headers": {},
-            "redirect_chain": [],
+
+            "redirect_chain": []
+
         }
 
         try:
 
             response = self.session.get(
-                url, timeout=self.TIMEOUT, allow_redirects=True, verify=True
+
+                url,
+
+                timeout=self.TIMEOUT,
+
+                allow_redirects=True,
+
+                verify=True
+
             )
 
             response.raise_for_status()
@@ -66,23 +92,51 @@ class HTMLCollector:
 
             html = response.text
 
-            soup = BeautifulSoup(html, "lxml")
+            soup = BeautifulSoup(
+
+                html,
+
+                "lxml"
+
+            )
 
             title = ""
 
             if soup.title:
 
-                title = soup.title.get_text(strip=True)
+                title = soup.title.get_text(
+
+                    strip=True
+
+                )
 
             #
             # Remove script/style
             #
 
-            for tag in soup(["script", "style", "noscript"]):
+            for tag in soup(
+
+                [
+
+                    "script",
+
+                    "style",
+
+                    "noscript"
+
+                ]
+
+            ):
 
                 tag.decompose()
 
-            visible_text = soup.get_text(separator=" ", strip=True)
+            visible_text = soup.get_text(
+
+                separator=" ",
+
+                strip=True
+
+            )
 
             result["html"] = html
 
@@ -94,24 +148,55 @@ class HTMLCollector:
 
             result["final_url"] = response.url
 
-            result["content_type"] = response.headers.get("Content-Type", "")
+            result["content_type"] = response.headers.get(
 
-            result["response_headers"] = dict(response.headers)
+                "Content-Type",
+
+                ""
+
+            )
+
+            result["response_headers"] = dict(
+
+                response.headers
+
+            )
 
             result["redirect_chain"] = [
-                {"status": item.status_code, "url": item.url}
+
+                {
+
+                    "status": item.status_code,
+
+                    "url": item.url
+
+                }
+
                 for item in response.history
+
             ]
 
-            logger.info("HTML Collector Finished")
+            logger.info(
+
+                "HTML Collector Finished"
+
+            )
 
         except Timeout:
 
-            logger.error(f"Timeout : {url}")
+            logger.error(
+
+                f"Timeout : {url}"
+
+            )
 
         except RequestException as ex:
 
-            logger.error(f"Request Failed : {ex}")
+            logger.error(
+
+                f"Request Failed : {ex}"
+
+            )
 
         except Exception as ex:
 

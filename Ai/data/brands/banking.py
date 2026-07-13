@@ -1,126 +1,571 @@
 """
-Banking / financial institution brands commonly impersonated in phishing.
-Schema documented in app.data.brands.__init__.
+Evidence Database
+-----------------
+
+Banking Brand Database
+
+Knowledge Base dành cho Brand Detector.
+
+Nguyên tắc:
+- Chỉ chứa dữ liệu.
+- Không chứa business logic.
+- Không chứa Risk Score.
+- Không chứa Confidence.
+- Không chứa Rule.
+
+Author: Anti Scam Detector
 """
 
-BANKING_BRANDS = [
-    {
+from __future__ import annotations
+
+BANKING_BRANDS: dict[str, dict] = {
+
+    # ==========================================================
+    # Vietcombank
+    # ==========================================================
+
+    "vietcombank": {
+
         "display_name": "Vietcombank",
-        "domains": ["vietcombank.com.vn"],
-        "aliases": ["vietcombank", "vcb", "vcbdigibank"],
-        "category": "banking",
-        "risk_profile": "critical",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "vietcombank.com.vn",
+
+            "vcb.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "vcb",
+
+            "ngân hàng ngoại thương",
+
+            "ngan hang ngoai thuong",
+
+            "vietcom bank"
+
+        ]
+
     },
-    {
-        "display_name": "Techcombank",
-        "domains": ["techcombank.com.vn"],
-        "aliases": ["techcombank", "tcb"],
-        "category": "banking",
-        "risk_profile": "critical",
-    },
-    {
+
+    # ==========================================================
+    # BIDV
+    # ==========================================================
+
+    "bidv": {
+
         "display_name": "BIDV",
-        "domains": ["bidv.com.vn"],
-        "aliases": ["bidv", "bidvonline"],
-        "category": "banking",
-        "risk_profile": "critical",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "bidv.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "bank for investment and development of vietnam"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # VietinBank
+    # ==========================================================
+
+    "vietinbank": {
+
         "display_name": "VietinBank",
-        "domains": ["vietinbank.vn"],
-        "aliases": ["vietinbank", "ctg"],
-        "category": "banking",
-        "risk_profile": "critical",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "vietinbank.vn"
+
+        ],
+
+        "aliases": [
+
+            "vietin",
+
+            "ctg",
+
+            "incombank"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Agribank
+    # ==========================================================
+
+    "agribank": {
+
         "display_name": "Agribank",
-        "domains": ["agribank.com.vn"],
-        "aliases": ["agribank"],
-        "category": "banking",
-        "risk_profile": "critical",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "agribank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "agri bank",
+
+            "ngân hàng nông nghiệp",
+
+            "ngan hang nong nghiep"
+
+        ]
+
     },
-    {
-        "display_name": "ACB",
-        "domains": ["acb.com.vn"],
-        "aliases": ["acb", "acbonline"],
-        "category": "banking",
-        "risk_profile": "high",
+
+    # ==========================================================
+    # Techcombank
+    # ==========================================================
+
+    "techcombank": {
+
+        "display_name": "Techcombank",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "techcombank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "tcb"
+
+        ]
+
     },
-    {
-        "display_name": "Sacombank",
-        "domains": ["sacombank.com.vn"],
-        "aliases": ["sacombank"],
-        "category": "banking",
-        "risk_profile": "high",
+
+    # ==========================================================
+    # ACB
+    # ==========================================================
+
+    "acb": {
+
+        "display_name": "Asia Commercial Bank",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "acb.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "asia commercial bank"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # MB Bank
+    # ==========================================================
+
+    "mbbank": {
+
         "display_name": "MB Bank",
-        "domains": ["mbbank.com.vn"],
-        "aliases": ["mbbank", "mb bank"],
-        "category": "banking",
-        "risk_profile": "high",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "mbbank.com.vn",
+
+            "mbbank.com"
+
+        ],
+
+        "aliases": [
+
+            "mb",
+
+            "military bank",
+
+            "quan doi"
+
+        ]
+
     },
-    {
-        "display_name": "TPBank",
-        "domains": ["tpb.vn"],
-        "aliases": ["tpbank"],
-        "category": "banking",
-        "risk_profile": "high",
-    },
-    {
+
+    # ==========================================================
+    # VPBank
+    # ==========================================================
+
+    "vpbank": {
+
         "display_name": "VPBank",
-        "domains": ["vpbank.com.vn"],
-        "aliases": ["vpbank"],
-        "category": "banking",
-        "risk_profile": "high",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "vpbank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "viet nam prosperity bank"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Sacombank
+    # ==========================================================
+
+    "sacombank": {
+
+        "display_name": "Sacombank",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "sacombank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "sacom bank"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # HDBank
+    # ==========================================================
+
+    "hdbank": {
+
+        "display_name": "HDBank",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "hdbank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "hd bank"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # TPBank
+    # ==========================================================
+
+    "tpbank": {
+
+        "display_name": "TPBank",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "tpb.vn",
+
+            "tpbank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "tien phong bank"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # SHB
+    # ==========================================================
+
+    "shb": {
+
+        "display_name": "SHB",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "shb.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "saigon hanoi bank"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # SeABank
+    # ==========================================================
+
+    "seabank": {
+
+        "display_name": "SeABank",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "seabank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "sea bank"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # OCB
+    # ==========================================================
+
+    "ocb": {
+
+        "display_name": "OCB",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "ocb.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "orient commercial bank"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Eximbank
+    # ==========================================================
+
+    "eximbank": {
+
+        "display_name": "Eximbank",
+
+        "country": "VN",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "eximbank.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "viet nam export import bank"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # HSBC
+    # ==========================================================
+
+    "hsbc": {
+
         "display_name": "HSBC",
-        "domains": ["hsbc.com"],
-        "aliases": ["hsbc"],
-        "category": "banking",
-        "risk_profile": "critical",
+
+        "country": "GB",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "hsbc.com",
+
+            "hsbc.com.vn"
+
+        ],
+
+        "aliases": [
+
+            "hongkong shanghai banking corporation"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Citibank
+    # ==========================================================
+
+    "citibank": {
+
         "display_name": "Citibank",
-        "domains": ["citibank.com", "citi.com"],
-        "aliases": ["citibank", "citi"],
-        "category": "banking",
-        "risk_profile": "critical",
+
+        "country": "US",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "citibank.com"
+
+        ],
+
+        "aliases": [
+
+            "citi"
+
+        ]
+
     },
-    {
-        "display_name": "JPMorgan Chase",
-        "domains": ["chase.com", "jpmorgan.com"],
-        "aliases": ["chase", "jpmorgan chase"],
-        "category": "banking",
-        "risk_profile": "critical",
-    },
-    {
+
+    # ==========================================================
+    # Bank of America
+    # ==========================================================
+
+    "bankofamerica": {
+
         "display_name": "Bank of America",
-        "domains": ["bankofamerica.com"],
-        "aliases": ["bank of america", "bofa"],
-        "category": "banking",
-        "risk_profile": "critical",
+
+        "country": "US",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "bankofamerica.com"
+
+        ],
+
+        "aliases": [
+
+            "boa"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Chase
+    # ==========================================================
+
+    "chase": {
+
+        "display_name": "Chase",
+
+        "country": "US",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "chase.com"
+
+        ],
+
+        "aliases": [
+
+            "jp morgan chase",
+
+            "jpmorgan"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Wells Fargo
+    # ==========================================================
+
+    "wellsfargo": {
+
         "display_name": "Wells Fargo",
-        "domains": ["wellsfargo.com"],
-        "aliases": ["wells fargo", "wellsfargo"],
-        "category": "banking",
-        "risk_profile": "critical",
-    },
-    {
-        "display_name": "Standard Chartered",
-        "domains": ["sc.com"],
-        "aliases": ["standard chartered", "scb"],
-        "category": "banking",
-        "risk_profile": "high",
-    },
-    {
-        "display_name": "DBS Bank",
-        "domains": ["dbs.com"],
-        "aliases": ["dbs", "dbs bank"],
-        "category": "banking",
-        "risk_profile": "high",
-    },
-]
+
+        "country": "US",
+
+        "category": "Banking",
+
+        "official_domains": [
+
+            "wellsfargo.com"
+
+        ],
+
+        "aliases": [
+
+            "wells"
+
+        ]
+
+    }
+
+}

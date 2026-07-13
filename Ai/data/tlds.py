@@ -1,92 +1,285 @@
 """
-app.data.tlds
-=============
+Evidence Database
+-----------------
 
-Top-level-domain reference data used for risk scoring context. No logic.
+Top Level Domain Database
+
+Knowledge Base dành cho URL Detector.
+
+Nguyên tắc:
+- Chỉ chứa dữ liệu
+- Không chứa Rule
+- Không chứa Logic
+- Không chứa Risk Score
+- Không chứa Confidence
+
+Author: Anti Scam Detector
 """
 
-# TLDs statistically over-represented in phishing/spam campaigns due to
-# low registration cost and weak vetting (industry-reported, e.g. Spamhaus
-# "most abused TLD" style lists). Pure reference data, not a verdict.
-HIGH_RISK_TLDS = [
-    ".top",
-    ".xyz",
-    ".click",
-    ".cam",
-    ".rest",
-    ".gq",
-    ".cf",
-    ".ml",
-    ".ga",
-    ".tk",
-    ".buzz",
-    ".icu",
-    ".work",
-    ".support",
-    ".fit",
-    ".loan",
-    ".men",
-    ".date",
-    ".party",
-    ".stream",
-    ".download",
-    ".racing",
-    ".win",
-    ".bid",
-    ".review",
-    ".science",
-    ".webcam",
-    ".accountant",
-]
+from __future__ import annotations
 
-# TLDs with generally stronger registration/vetting requirements or high
-# reputational cost, commonly treated as lower baseline risk.
-LOW_RISK_TLDS = [
+# ==========================================================
+# Government
+# ==========================================================
+
+GOVERNMENT_TLDS = {
+
     ".gov",
-    ".edu",
-    ".mil",
+
     ".gov.vn",
-    ".edu.vn",
-    ".int",
-    ".ac.uk",
+
+    ".gouv.fr",
+
     ".gov.uk",
-]
 
-# Common legitimate general-purpose / country-code TLDs (neutral baseline).
-COMMON_TLDS = [
-    ".com",
-    ".net",
+    ".gov.au",
+
+    ".gov.sg",
+
+    ".gov.jp",
+
+    ".gov.kr"
+
+}
+
+# ==========================================================
+# Education
+# ==========================================================
+
+EDUCATION_TLDS = {
+
+    ".edu",
+
+    ".edu.vn",
+
+    ".ac.uk",
+
+    ".edu.au",
+
+    ".ac.jp",
+
+    ".edu.sg"
+
+}
+
+# ==========================================================
+# Organization
+# ==========================================================
+
+ORGANIZATION_TLDS = {
+
     ".org",
-    ".info",
-    ".biz",
-    ".co",
-    ".io",
-    ".vn",
-    ".com.vn",
-    ".us",
-    ".uk",
-    ".de",
-    ".fr",
-    ".jp",
-    ".cn",
-    ".sg",
-    ".au",
-    ".ca",
-    ".in",
-]
 
-# New gTLDs frequently used in typosquatting because they allow brand-like
-# second-level domains (e.g. "login-microsoft.security").
-BRANDABLE_NEW_GTLDS = [
-    ".app",
+    ".ngo"
+
+}
+
+# ==========================================================
+# Commercial
+# ==========================================================
+
+COMMERCIAL_TLDS = {
+
+    ".com",
+
+    ".co",
+
+    ".biz",
+
     ".shop",
-    ".store",
-    ".online",
-    ".site",
-    ".website",
+
+    ".store"
+
+}
+
+# ==========================================================
+# Technology
+# ==========================================================
+
+TECHNOLOGY_TLDS = {
+
+    ".app",
+
+    ".dev",
+
     ".tech",
-    ".digital",
-    ".security",
+
+    ".cloud",
+
+    ".ai",
+
+    ".software"
+
+}
+
+# ==========================================================
+# Network
+# ==========================================================
+
+NETWORK_TLDS = {
+
+    ".net",
+
+    ".network"
+
+}
+
+# ==========================================================
+# Country
+# ==========================================================
+
+COUNTRY_TLDS = {
+
+    ".vn",
+
+    ".us",
+
+    ".uk",
+
+    ".jp",
+
+    ".kr",
+
+    ".cn",
+
+    ".sg",
+
+    ".tw",
+
+    ".hk",
+
+    ".de",
+
+    ".fr",
+
+    ".ru",
+
+    ".ca",
+
+    ".au"
+
+}
+
+# ==========================================================
+# Common New gTLD
+# ==========================================================
+
+NEW_GTLD = {
+
+    ".online",
+
+    ".site",
+
+    ".website",
+
+    ".world",
+
+    ".today",
+
     ".live",
-    ".vip",
+
+    ".life",
+
+    ".group",
+
+    ".company",
+
+    ".email",
+
+    ".support",
+
+    ".services",
+
+    ".digital",
+
+    ".solutions"
+
+}
+
+# ==========================================================
+# Dynamic DNS
+# ==========================================================
+
+DYNAMIC_DNS = {
+
+    ".ddns.net",
+
+    ".duckdns.org",
+
+    ".no-ip.org",
+
+    ".hopto.org",
+
+    ".servehttp.com"
+
+}
+
+# ==========================================================
+# Short Domain
+# ==========================================================
+
+SHORT_TLDS = {
+
+    ".cc",
+
+    ".to",
+
+    ".io",
+
+    ".me"
+
+}
+
+# ==========================================================
+# Export
+# ==========================================================
+
+ALL_TLDS = (
+
+    GOVERNMENT_TLDS
+
+    | EDUCATION_TLDS
+
+    | ORGANIZATION_TLDS
+
+    | COMMERCIAL_TLDS
+
+    | TECHNOLOGY_TLDS
+
+    | NETWORK_TLDS
+
+    | COUNTRY_TLDS
+
+    | NEW_GTLD
+
+    | DYNAMIC_DNS
+
+    | SHORT_TLDS
+
+)
+
+__all__ = [
+
+    "GOVERNMENT_TLDS",
+
+    "EDUCATION_TLDS",
+
+    "ORGANIZATION_TLDS",
+
+    "COMMERCIAL_TLDS",
+
+    "TECHNOLOGY_TLDS",
+
+    "NETWORK_TLDS",
+
+    "COUNTRY_TLDS",
+
+    "NEW_GTLD",
+
+    "DYNAMIC_DNS",
+
+    "SHORT_TLDS",
+
+    "ALL_TLDS"
+
 ]
