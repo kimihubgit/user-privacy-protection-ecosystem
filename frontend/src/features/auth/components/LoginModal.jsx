@@ -56,6 +56,7 @@ export default function LoginModal({
     let nameToSet = defaultName || 'Khải Nguyễn';
     const emailToSet = res.user ? (res.user.email || '') : (res.email || '');
     const avatarToSet = res.user ? (res.user.avatar || '') : (res.avatar || '');
+    const roleToSet = res.user ? (res.user.role || 'user') : (res.role || 'user');
 
     if (res.user) {
       nameToSet = res.user.name || res.user.username || nameToSet;
@@ -74,6 +75,14 @@ export default function LoginModal({
         setUserAvatar(avatarToSet);
       }
     }
+    localStorage.setItem('userRole', roleToSet);
+  };
+
+  const getRedirectPath = (res) => {
+    const role = res.user ? (res.user.role || 'user') : (res.role || 'user');
+    if (role === 'admin') return '/admin';
+    if (role === 'moderator') return '/moderator';
+    return '/dashboard';
   };
 
   if (!isOpen) return null;
@@ -95,7 +104,7 @@ export default function LoginModal({
       window.dispatchEvent(new Event('auth-change'));
       addToast('Đăng nhập bằng Passkey thành công!', 'success');
       onClose();
-      navigate('/dashboard');
+      navigate(getRedirectPath(res));
     } catch (error) {
       console.error(error);
       addToast(error.message || 'Xác thực Passkey thất bại!', 'error');
@@ -140,7 +149,7 @@ export default function LoginModal({
       window.dispatchEvent(new Event('auth-change'));
       addToast('Đăng nhập bằng Google thành công!', 'success');
       onClose();
-      navigate('/dashboard');
+      navigate(getRedirectPath(res));
     } catch (err) {
       console.error(err);
       addToast(err.message || 'Đăng nhập Google thất bại!', 'error');
@@ -192,7 +201,7 @@ export default function LoginModal({
       window.dispatchEvent(new Event('auth-change'));
       addToast('Đăng nhập bằng GitHub thành công!', 'success');
       onClose();
-      navigate('/dashboard');
+      navigate(getRedirectPath(res));
     } catch (err) {
       console.error(err);
       addToast(err.message || 'Đăng nhập GitHub thất bại!', 'error');
@@ -211,23 +220,6 @@ export default function LoginModal({
         return;
       }
 
-      // Mock admin login — only available in development builds (stripped in production)
-      if (import.meta.env.DEV && usernameInput.trim().toLowerCase() === 'admin' && passwordInput.trim() === 'admin123') {
-        localStorage.setItem('token', 'mock-admin-token-' + Date.now());
-        localStorage.setItem('userName', 'Quản trị viên');
-        localStorage.setItem('userEmail', 'admin@chongluadao.vn');
-        setIsLoggedIn(true);
-        window.dispatchEvent(new Event('auth-change'));
-        setUserName('Quản trị viên');
-        if (setUserAvatar) {
-          setUserAvatar('');
-        }
-        addToast('Đăng nhập Quản trị viên thành công! (DEV Mode)', 'success');
-        onClose();
-        navigate('/admin');
-        return;
-      }
-
       try {
         const res = await api.login(usernameInput.trim(), passwordInput);
 
@@ -242,7 +234,8 @@ export default function LoginModal({
         setIsLoggedIn(true);
         window.dispatchEvent(new Event('auth-change'));
         onClose();
-        navigate('/dashboard');
+        navigate(getRedirectPath(res));
+
       } catch (error) {
         addToast(error.message || 'Tên đăng nhập hoặc mật khẩu không chính xác!', 'error');
       }

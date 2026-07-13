@@ -168,7 +168,7 @@
 
       <!-- Tab Pane: Settings -->
       <div :class="['tab-pane', { active: activeTab === 'settings' }]" id="tab-settings" style="height: 100%;">
-        <SettingsTab @recheck-domain="checkActiveTabDomain" />
+        <SettingsTab @recheck-domain="checkActiveTabDomain" @show-feedback="showFeedbackOverlay = true" />
       </div>
     </div>
 
@@ -177,6 +177,7 @@
 
     <!-- Overlays -->
     <TermsOverlay v-if="isLoaded && !termsAccepted" @accept="acceptTerms" />
+    <FeedbackOverlay v-else-if="showFeedbackOverlay" @close="showFeedbackOverlay = false" />
     <CwsOverlay 
       v-else-if="isLoaded && isCwsPage" 
       :cwsDownloading="cwsDownloading"
@@ -206,6 +207,7 @@ import AuthenticatorTab from './views/AuthenticatorTab.vue';
 import StatsTab from './views/StatsTab.vue';
 import SettingsTab from './views/SettingsTab.vue';
 import TermsOverlay from './components/TermsOverlay.vue';
+import FeedbackOverlay from './components/FeedbackOverlay.vue';
 import CwsOverlay from './components/CwsOverlay.vue';
 
 export default {
@@ -220,6 +222,7 @@ export default {
     StatsTab,
     SettingsTab,
     TermsOverlay,
+    FeedbackOverlay,
     CwsOverlay
   },
   setup() {
@@ -230,6 +233,7 @@ export default {
     // States
     const activeTab = ref('dashboard');
     const globalEnabled = ref(true);
+    const showFeedbackOverlay = ref(false);
     const trackerActive = ref(true);
     const adActive = ref(true);
 
@@ -541,7 +545,8 @@ export default {
       acceptTerms,
       triggerViewSource,
       triggerDownloadZip,
-      triggerDownloadCrx
+      triggerDownloadCrx,
+      showFeedbackOverlay
     };
   }
 };

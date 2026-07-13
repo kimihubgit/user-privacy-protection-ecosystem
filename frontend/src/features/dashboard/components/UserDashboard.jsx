@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import './UserDashboard.css';
 import { api } from '../../../lib/api';
+import { useAuth } from '../../../context/AuthContext';
 
 // Import tab subcomponents
 import UserOverviewTab from './UserOverviewTab';
@@ -30,13 +31,17 @@ export default function UserDashboard({ addToast, onLogout }) {
   const [userAvatar] = useState(() => localStorage.getItem('userAvatar') || '');
   const accountType = 'Hội viên tiêu chuẩn';
 
-  // Safeguard: Redirect admin to /admin dashboard
+  const { user } = useAuth();
+
+  // Safeguard: Redirect admin & moderator to their dashboards
   useEffect(() => {
-    const isUserAdmin = userName.toLowerCase().includes('admin') || localStorage.getItem('userEmail') === 'admin@chongluadao.vn';
-    if (isUserAdmin) {
+    if (user.role === 'admin') {
       navigate('/admin');
+    } else if (user.role === 'moderator') {
+      navigate('/moderator');
     }
-  }, [userName, navigate]);
+  }, [user.role, navigate]);
+
 
   // Interactive settings state
   const [notifyEmail, setNotifyEmail] = useState(true);

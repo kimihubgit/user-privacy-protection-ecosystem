@@ -49,11 +49,32 @@ export function useChatbot() {
     }
   }, []);
 
+  const askChatbot = useCallback(async (question) => {
+    try {
+      const response = await fetch('/chat-api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ question })
+      });
+      if (!response.ok) {
+        throw new Error('Không thể kết nối đến máy chủ Chatbot!');
+      }
+      const data = await response.json();
+      return data.response;
+    } catch (e) {
+      console.warn('Chatbot API connection failed, using offline fallback.', e);
+      return null;
+    }
+  }, []);
+
   return {
     chatInput,
     setChatInput,
     isThinking,
     setIsThinking,
-    getAgentReply
+    getAgentReply,
+    askChatbot
   };
 }

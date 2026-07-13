@@ -20,6 +20,8 @@ type User struct {
 	Password       string                `bson:"password,omitempty" json:"-"`
 	Name           string                `bson:"name" json:"name"`
 	Role           string                `bson:"role" json:"role"`
+	Status         string                `bson:"status" json:"status"`
+	IPAddress      string                `bson:"ip_address" json:"ip_address"`
 	Avatar         string                `bson:"avatar" json:"avatar"`
 	CreatedAt      time.Time             `bson:"created_at" json:"created_at"`
 	UpdatedAt      time.Time             `bson:"updated_at" json:"updated_at"`

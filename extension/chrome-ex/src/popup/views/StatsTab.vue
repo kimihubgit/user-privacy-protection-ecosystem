@@ -56,6 +56,42 @@
         </div>
       </div>
 
+      <!-- Section: Visual Bar Chart (Ads, Trackers, Phishing) -->
+      <div class="card chart-card">
+        <h3 class="chart-title">{{ t('stats.chart_title') || 'BIỂU ĐỒ HOẠT ĐỘNG BẢO VỆ' }}</h3>
+        
+        <div class="bar-chart-container">
+          <div 
+            v-for="(bar, idx) in chartData" 
+            :key="idx" 
+            class="chart-bar-col"
+          >
+            <div class="chart-bar-wrapper">
+              <!-- Tooltip on hover -->
+              <div class="chart-tooltip">
+                <span class="tooltip-value">{{ bar.value }}</span>
+                <span class="tooltip-label">{{ bar.label }}</span>
+              </div>
+              
+              <!-- Color column -->
+              <div 
+                class="chart-bar-fill"
+                :style="{ 
+                  height: `${bar.percentage}%`,
+                  background: bar.gradient
+                }"
+              ></div>
+            </div>
+            
+            <!-- Label below the bar -->
+            <div class="chart-bar-label-group">
+              <span class="chart-bar-icon" :style="{ color: bar.color }" v-html="bar.icon"></span>
+              <span class="chart-bar-text-abbr">{{ bar.abbr }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Section 2: Shield Statistics Grid -->
       <div class="stats-grid">
         <!-- Card 1: Ads Blocked -->
@@ -118,41 +154,48 @@
         </div>
       </div>
 
-      <!-- Section 3: Top Visited Sites (Các trang web thường dùng nhất) -->
-      <div class="top-visited-section">
-        <div class="history-header">
-          <span>{{ t('stats.top_visited_title') || 'Các trang hay truy cập nhất' }}</span>
-          <span class="badge badge-light-blue" style="font-size: 9px; font-weight: 700;">Top {{ sortedTopSites.length }}</span>
+      <!-- Section 3: Top Visited Sites (Biểu đồ cột đứng với favicon của Website) -->
+      <div class="card chart-card">
+        <div class="chart-header-row">
+          <h3 class="chart-title">{{ t('stats.top_visited_title') || 'CÁC TRANG TRUY CẬP NHIỀU NHẤT' }}</h3>
+          <span class="badge badge-light-blue" style="font-size: 8px; font-weight: 700; padding: 2px 5px;">Top {{ sortedTopSites.length }}</span>
         </div>
         
-        <div class="top-sites-list">
-          <div v-if="sortedTopSites.length === 0" class="empty-state" style="padding: 16px 12px;">
+        <div class="bar-chart-container">
+          <div v-if="sortedTopSites.length === 0" class="empty-state" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 12px 0;">
             {{ t('stats.history_empty') || 'Chưa ghi nhận lịch sử duyệt web.' }}
           </div>
           <div 
             v-else
             v-for="(site, idx) in sortedTopSites" 
             :key="idx" 
-            class="top-site-item"
+            class="chart-bar-col"
           >
-            <div class="top-site-main">
-              <div class="top-site-info">
-                <span class="top-site-name" :title="site.domain">{{ site.domain }}</span>
-                <span :class="['badge-status', getStatusClass(site.status)]" style="font-size: 7px; padding: 1px 4px; margin-left: 6px; line-height: 1;">
-                  {{ getStatusLabel(site.status) }}
-                </span>
+            <div class="chart-bar-wrapper">
+              <!-- Tooltip on hover -->
+              <div class="chart-tooltip">
+                <span class="tooltip-value">{{ site.count }} {{ t('stats.visits_count') || 'lần' }}</span>
+                <span class="tooltip-label" style="text-transform: none; font-size: 8px;">{{ site.domain }}</span>
               </div>
-              <span class="top-site-count">{{ site.count }} {{ t('stats.visits_count') || 'lần' }}</span>
-            </div>
-            <!-- Relative progress bar -->
-            <div class="top-site-progress-bar-bg">
+              
+              <!-- Color column proportional to visit counts -->
               <div 
-                class="top-site-progress-bar-fill"
+                class="chart-bar-fill"
                 :style="{ 
-                  width: `${(site.count / maxVisitCount) * 100}%`,
-                  backgroundColor: getStatusColor(site.status)
+                  height: `${(site.count / maxVisitCount) * 100}%`,
+                  background: getStatusBarGradient(site.status)
                 }"
               ></div>
+            </div>
+            
+            <!-- Favicon below the bar -->
+            <div class="chart-bar-label-group">
+              <img 
+                :src="`https://www.google.com/s2/favicons?sz=32&domain=${site.domain}`"
+                @error="handleFaviconError"
+                class="site-favicon-img"
+                :title="site.domain"
+              />
             </div>
           </div>
         </div>
@@ -269,6 +312,56 @@ export default {
       return Math.max(...sortedTopSites.value.map(s => s.count), 1);
     });
 
+    // Computed for Bar Chart (Ads, Trackers, etc.)
+    const chartData = computed(() => {
+      const maxVal = Math.max(
+        stats.value.adsBlocked,
+        stats.value.trackersBlocked,
+        stats.value.scamChecked,
+        stats.value.scamBlocked,
+        1 // Tránh chia cho 0
+      );
+
+      return [
+        {
+          label: t('stats.ads_blocked') || 'Quảng cáo đã chặn',
+          abbr: t('stats.chart_ads') || 'Quảng cáo',
+          value: stats.value.adsBlocked,
+          percentage: (stats.value.adsBlocked / maxVal) * 100,
+          color: 'var(--warning)',
+          gradient: 'linear-gradient(to top, rgba(241, 188, 25, 0.15), var(--warning))',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="9" x2="15" y2="15"></line><line x1="15" y1="9" x2="9" y2="15"></line></svg>`
+        },
+        {
+          label: t('stats.trackers_blocked') || 'Trackers đã chặn',
+          abbr: 'Trackers',
+          value: stats.value.trackersBlocked,
+          percentage: (stats.value.trackersBlocked / maxVal) * 100,
+          color: 'var(--primary-blue)',
+          gradient: 'linear-gradient(to top, rgba(62, 151, 255, 0.15), var(--primary-blue))',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>`
+        },
+        {
+          label: t('stats.scam_checked') || 'Websites đã kiểm tra',
+          abbr: 'Kiểm tra',
+          value: stats.value.scamChecked,
+          percentage: (stats.value.scamChecked / maxVal) * 100,
+          color: 'var(--accent-teal)',
+          gradient: 'linear-gradient(to top, rgba(80, 205, 137, 0.15), var(--accent-teal))',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8"></path><path d="M12 8v8"></path></svg>`
+        },
+        {
+          label: t('stats.scam_blocked') || 'Web độc hại đã chặn',
+          abbr: 'Độc hại',
+          value: stats.value.scamBlocked,
+          percentage: (stats.value.scamBlocked / maxVal) * 100,
+          color: 'var(--danger)',
+          gradient: 'linear-gradient(to top, rgba(241, 65, 108, 0.15), var(--danger))',
+          icon: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path></svg>`
+        }
+      ];
+    });
+
     // Helper functions
     const getTodayString = () => {
       const d = new Date();
@@ -319,6 +412,16 @@ export default {
       return 'var(--accent-teal)';
     };
 
+    const getStatusBarGradient = (status) => {
+      if (status === 'unsafe') return 'linear-gradient(to top, rgba(241, 65, 108, 0.15), var(--danger))';
+      if (status === 'not_found') return 'linear-gradient(to top, rgba(241, 188, 25, 0.15), var(--warning))';
+      return 'linear-gradient(to top, rgba(80, 205, 137, 0.15), var(--accent-teal))';
+    };
+
+    const handleFaviconError = (event) => {
+      event.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="%23888" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+    };
+
     const clearHistory = () => {
       chrome.storage.local.set({ navHistory: [], topVisitedSites: {} }, () => {
         historyList.value = [];
@@ -359,6 +462,7 @@ export default {
       historyList,
       sortedTopSites,
       maxVisitCount,
+      chartData,
       ringOffset,
       ringColor,
       formatTime,
@@ -366,6 +470,8 @@ export default {
       getStatusClass,
       getStatusLabel,
       getStatusColor,
+      getStatusBarGradient,
+      handleFaviconError,
       clearHistory
     };
   }
@@ -502,6 +608,166 @@ export default {
   color: #ffffff;
 }
 
+/* Visual Bar Chart Card */
+.chart-card {
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.chart-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chart-header-row .chart-title {
+  margin: 0;
+}
+
+.chart-title {
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+  margin: 0 0 10px 0;
+}
+
+.bar-chart-container {
+  display: flex;
+  height: 110px;
+  align-items: flex-end;
+  justify-content: space-around;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 8px;
+  margin-top: 4px;
+  box-sizing: border-box;
+}
+
+.chart-bar-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  position: relative;
+  justify-content: flex-end;
+  flex: 1;
+}
+
+.chart-bar-wrapper {
+  position: relative;
+  width: 22px;
+  height: calc(100% - 22px);
+  display: flex;
+  align-items: flex-end;
+  cursor: pointer;
+}
+
+.chart-bar-fill {
+  width: 100%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.15s;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.chart-bar-wrapper:hover .chart-bar-fill {
+  filter: brightness(1.2);
+}
+
+/* Custom Tooltip */
+.chart-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  background-color: rgba(20, 20, 35, 0.96);
+  border: 1px solid var(--border-light);
+  padding: 5px 8px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
+  white-space: nowrap;
+  z-index: 100;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.chart-bar-wrapper:hover .chart-tooltip {
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.chart-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px;
+  border-style: solid;
+  border-color: rgba(20, 20, 35, 0.96) transparent transparent transparent;
+}
+
+.tooltip-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 13px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.1;
+}
+
+.tooltip-label {
+  font-size: 8px;
+  color: var(--text-desc);
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+.chart-bar-label-group {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 6px;
+  justify-content: center;
+}
+
+.chart-bar-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chart-bar-icon svg {
+  display: block;
+}
+
+.chart-bar-text-abbr {
+  font-size: 9px;
+  color: var(--text-desc);
+  font-weight: 700;
+}
+
+/* Favicon specific styles */
+.site-favicon-img {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 1.5px;
+  border: 1px solid var(--border-light);
+  display: block;
+}
+
 /* Stats grid */
 .stats-grid {
   display: grid;
@@ -583,73 +849,6 @@ export default {
   font-size: 9.5px;
   color: var(--text-desc);
   font-weight: 600;
-}
-
-/* Top Visited Sites */
-.top-visited-section {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.01);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.top-sites-list {
-  padding: 8px 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.top-site-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.top-site-main {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.top-site-info {
-  display: flex;
-  align-items: center;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.top-site-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.top-site-count {
-  font-size: 9px;
-  color: var(--text-muted);
-  font-weight: 700;
-}
-
-.top-site-progress-bar-bg {
-  width: 100%;
-  height: 6px;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.top-site-progress-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  transition: width 0.3s ease;
 }
 
 /* History logs */

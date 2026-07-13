@@ -17,11 +17,18 @@ export default function ProtectedRoute({ children, requiredRole }) {
   }
 
   // Role-based access control
-  if (requiredRole === 'admin') {
-    if (user.role !== 'admin') {
+  if (requiredRole) {
+    if (user.role !== requiredRole) {
+      if (user.role === 'admin') {
+        return <Navigate to="/admin" replace />;
+      }
+      if (user.role === 'moderator') {
+        return <Navigate to="/moderator" replace />;
+      }
       return <Navigate to="/dashboard" replace />;
     }
   }
 
   return children;
 }
+

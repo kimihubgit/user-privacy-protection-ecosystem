@@ -120,18 +120,28 @@ func (h *AdminHandler) ListUsers(c *gin.Context) {
 		Name      string             `json:"name"`
 		Role      string             `json:"role"`
 		Status    string             `json:"status"`
+		IPAddress string             `json:"ip_address"`
 		CreatedAt time.Time          `json:"created_at"`
 	}
 
 	userItems := []UserItem{}
 	for _, u := range users {
+		status := u.Status
+		if status == "" {
+			status = "active"
+		}
+		ipAddr := u.IPAddress
+		if ipAddr == "" {
+			ipAddr = "127.0.0.1"
+		}
 		userItems = append(userItems, UserItem{
 			ID:        u.ID,
 			Username:  u.Username,
 			Email:     u.Email,
 			Name:      u.Name,
 			Role:      u.Role,
-			Status:    "active", // Default status active matches "Hoạt động"
+			Status:    status,
+			IPAddress: ipAddr,
 			CreatedAt: u.CreatedAt,
 		})
 	}
@@ -207,6 +217,15 @@ func (h *AdminHandler) GetUserDetails(c *gin.Context) {
 		}
 	}
 
+	status := user.Status
+	if status == "" {
+		status = "active"
+	}
+	ipAddr := user.IPAddress
+	if ipAddr == "" {
+		ipAddr = "127.0.0.1"
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"data": gin.H{
@@ -215,7 +234,8 @@ func (h *AdminHandler) GetUserDetails(c *gin.Context) {
 				"name":       user.Name,
 				"email":      user.Email,
 				"role":       user.Role,
-				"status":     "active",
+				"status":     status,
+				"ip_address": ipAddr,
 				"created_at": user.CreatedAt,
 			},
 			"stats": gin.H{
