@@ -1,32 +1,75 @@
-# If you prefer the allow list template instead of the deny list, see community template:
-# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
-#
-# Binaries for programs and plugins
+# Dependency directories
+node_modules/
+jspm_packages/
+web_modules/
+# vendor/
+
+# Environments
+.env
+.env.*
+!.env.example
+!.env.dist
+
+# Python
+.venv/
+venv/
+env/
+ENV/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Go
+*.test
+coverage.*
+*.coverprofile
+profile.cov
+go.work
+go.work.sum
+
+# Compilations / executables
 *.exe
 *.exe~
 *.dll
 *.so
 *.dylib
-
-# Test binary, built with `go test -c`
-*.test
-
-# Code coverage profiles and other test artifacts
 *.out
-coverage.*
-*.coverprofile
-profile.cov
+*.app
+*.bin
 
-# Dependency directories (remove the comment below to include it)
-# vendor/
+# Build outputs
+dist/
+build/
+out/
+.next/
+.nuxt/
+.vitepress/dist
+.vitepress/cache
+.astro/
 
-# Go workspace file
-go.work
-go.work.sum
+# IDEs and editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
-# env file
-.env
+# System files
+Thumbs.db
+desktop.ini
+.DS_Store
 
-# Editor/IDE
-# .idea/
-# .vscode/
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+*.log

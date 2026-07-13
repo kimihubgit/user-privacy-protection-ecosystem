@@ -1,0 +1,57 @@
+:root {
+    --bg-app: #151521;
+    /* Metronic Dark main background */
+    --bg-card: #1e1e2d;
+    /* Metronic Dark card background */
+    --sidebar-bg: #11111d;
+    /* Metronic Dark sidebar background */
+    --text-title: #ffffff;
+    /* Pure white titles */
+    --text-desc: #a1a5b7;
+    /* Metronic grey description text */
+    --text-muted: #5e6278;
+    /* Metronic muted text color */
+
+    --primary-blue: #009ef7;
+    /* Metronic brand blue */
+    --primary-blue-hover: #187de4;
+    --primary-light: rgba(0, 158, 247, 0.1);
+
+    --accent-indigo: #8950fc;
+    /* Metronic secondary purple */
+    --accent-teal: #50cd89;
+    /* Metronic success green */
+    --accent-teal-light: rgba(80, 205, 137, 0.1);
+
+    --danger: #f1416c;
+    /* Metronic danger red */
+    --danger-light: rgba(241, 65, 108, 0.1);
+
+    --warning: #f1bc19;
+    /* Metronic warning yellow */
+    --warning-light: rgba(241, 188, 25, 0.1);
+
+    --border-light: #2b2b40;
+    /* Thin crisp Metronic border */
+    --font-stack: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    
+    --bg-input: #1b1b29;
+    --text-input: #ffffff;
+}
+
+body.light-theme {
+    --bg-app: #f5f8fa;
+    --bg-card: #ffffff;
+    --sidebar-bg: #1e1e2d;
+    --text-title: #181c32;
+    --text-desc: #5e6278;
+    --text-muted: #a1a5b7;
+    --border-light: #eff2f5;
+    
+    --primary-light: rgba(0, 158, 247, 0.08);
+    --accent-teal-light: rgba(80, 205, 137, 0.08);
+    --danger-light: rgba(241, 65, 108, 0.08);
+
+    --bg-input: #eff2f5;
+    --text-input: #181c32;
+}

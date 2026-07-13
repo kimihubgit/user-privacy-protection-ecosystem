@@ -1,0 +1,19 @@
+Simple Checker
+https://t.me/simplechecker_bot
+
+– Email: digomozer@icloud.com
+– Verified: false
+– Profile: Mari🇮🇹
+– Plan: Premium
+– Next billing: 18 de maio de 2026
+– Extra members: false
+– Country: BR
+– Payments: 1 | CC (MASTERCARD 4015)
+– Cookies: C:\Users\tuanl\Downloads\Telegram Desktop\@CartelJohnDoe\@CartelJohnDoe\[FR]_5rnfwvyi54j9z8prck956fwmEYY3351_@CartelJohnDoe\cookies\Cookies_(11878).txt
+
+.netflix.com	TRUE	/	FALSE	1788827906	OptanonAlertBoxClosed	2025-09-08T00:38:26.994Z
+.netflix.com	TRUE	/	FALSE	1788827895	nfvdid	BQFmAAEBEG9stlPZCpQ5WEjNum7kKexgQscUZLe46FdrggW7ZyzjjWByRqQpESFES4JEwfJy3uQ-DHihYqfzm3gQFasROVr2wj8IDUyfQnx9Dz4R8IvkVB6hkblfZ0TrLJG8PF4KH5E76sBPpQFKCPNNoKQQaMym
+.netflix.com	TRUE	/	TRUE	1804551437	NetflixId	ct%3DBgjHlOvcAxLUA56gAVedFS9elQ7WHzJptZx8KwW4_oEhrzDyw-1meixIIf3OWIVaBwGwhMpCi9u4D4MpMZFOt3x398pMt7LbQ81BUWUpWcgyJkzm1otZCXst7YZoGYR-sUDpgQhoRTUOYLJ7-__cRLvlIDFqQheB-fh5qWgi5Yb_d4m5PrQl-NvUlpLQI4BVysfDw3V4b-MckBM_EU8xIf7IYAnY-ph4Dzk4hpOS4xvm0m95P46HqeAC34zVAYjga7GH7-CiQ6W-XrMLElE3X0EuuIvMIarUiHGiXKNApvvLiEnM_oz2kvcYuqwr_VvXfBFuEGL5w8AviM8tKqwFrz_sHHyvpYxxa3Prn6S4g-3uaDjDJMjaPB_QAdU3gdXCvpRXAyRpQ_yB85ENMqEt-b61bLL6Q798BWTrlEJ3Y_YECivyoxTkFicnkb8vPevHcDy6BMXGubGCYWXeHsZThPBm0FJGvtKYb4Yps-05H91MOuSCbISGf7d7Xv9t1yqeP7bCF5D-prKBvWfYEJ4hhJkDDsdS3w7nM6oU8FUt_bvyzqeHevm1MFNMxLkeL1szjr-aBCDZ-4f0CoZGUIKATvO_zHH74rQLO16fVMDxGGCOmOYVjwHEOwcAcIlrcBgGIg4KDMHYYwkpd8cBlWIniA..%26ch%3DAQEAEAABABTuAyUlUvSAlp9lGzkSW3DSGaIzv9rqs9M.%26v%3D3%26pg%3DVEOAOYYPKVFBVB75IUWTLIMEWY
+.netflix.com	TRUE	/	FALSE	1780791438	netflix-sans-bold-3-loaded	true
+.netflix.com	TRUE	/	FALSE	1780791438	netflix-sans-normal-3-loaded	true
+.netflix.com	TRUE	/	FALSE	1804551438	OptanonConsent	isGpcEnabled=0&datestamp=Sun+Mar+08+2026+21%3A17%3A18+GMT-0300+(Hor%C3%A1rio+Padr%C3%A3o+de+Bras%C3%ADlia)&version=202601.1.0&browserGpcFlag=0&isIABGlobal=false&hosts=&consentId=e4fddb10-0ab8-4d41-8ec9-9403be002363&interactionCount=2&isAnonUser=1&landingPath=NotLandingPage&groups=C0001%3A1%2CC0002%3A1%2CC0003%3A1%2CC0004%3A1&intType=3&geolocation=BR%3BSP&AwaitingReconsent=false

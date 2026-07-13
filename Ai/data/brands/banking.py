@@ -1,0 +1,126 @@
+"""
+Banking / financial institution brands commonly impersonated in phishing.
+Schema documented in app.data.brands.__init__.
+"""
+
+BANKING_BRANDS = [
+    {
+        "display_name": "Vietcombank",
+        "domains": ["vietcombank.com.vn"],
+        "aliases": ["vietcombank", "vcb", "vcbdigibank"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "Techcombank",
+        "domains": ["techcombank.com.vn"],
+        "aliases": ["techcombank", "tcb"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "BIDV",
+        "domains": ["bidv.com.vn"],
+        "aliases": ["bidv", "bidvonline"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "VietinBank",
+        "domains": ["vietinbank.vn"],
+        "aliases": ["vietinbank", "ctg"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "Agribank",
+        "domains": ["agribank.com.vn"],
+        "aliases": ["agribank"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "ACB",
+        "domains": ["acb.com.vn"],
+        "aliases": ["acb", "acbonline"],
+        "category": "banking",
+        "risk_profile": "high",
+    },
+    {
+        "display_name": "Sacombank",
+        "domains": ["sacombank.com.vn"],
+        "aliases": ["sacombank"],
+        "category": "banking",
+        "risk_profile": "high",
+    },
+    {
+        "display_name": "MB Bank",
+        "domains": ["mbbank.com.vn"],
+        "aliases": ["mbbank", "mb bank"],
+        "category": "banking",
+        "risk_profile": "high",
+    },
+    {
+        "display_name": "TPBank",
+        "domains": ["tpb.vn"],
+        "aliases": ["tpbank"],
+        "category": "banking",
+        "risk_profile": "high",
+    },
+    {
+        "display_name": "VPBank",
+        "domains": ["vpbank.com.vn"],
+        "aliases": ["vpbank"],
+        "category": "banking",
+        "risk_profile": "high",
+    },
+    {
+        "display_name": "HSBC",
+        "domains": ["hsbc.com"],
+        "aliases": ["hsbc"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "Citibank",
+        "domains": ["citibank.com", "citi.com"],
+        "aliases": ["citibank", "citi"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "JPMorgan Chase",
+        "domains": ["chase.com", "jpmorgan.com"],
+        "aliases": ["chase", "jpmorgan chase"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "Bank of America",
+        "domains": ["bankofamerica.com"],
+        "aliases": ["bank of america", "bofa"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "Wells Fargo",
+        "domains": ["wellsfargo.com"],
+        "aliases": ["wells fargo", "wellsfargo"],
+        "category": "banking",
+        "risk_profile": "critical",
+    },
+    {
+        "display_name": "Standard Chartered",
+        "domains": ["sc.com"],
+        "aliases": ["standard chartered", "scb"],
+        "category": "banking",
+        "risk_profile": "high",
+    },
+    {
+        "display_name": "DBS Bank",
+        "domains": ["dbs.com"],
+        "aliases": ["dbs", "dbs bank"],
+        "category": "banking",
+        "risk_profile": "high",
+    },
+]

@@ -1,0 +1,685 @@
+.connection-flow-section {
+  position: relative;
+  width: 100%;
+  padding: 6rem 0;
+  background-color: var(--bg-dark);
+  overflow: hidden;
+  border-top: 1px solid rgba(0, 0, 0, 0.03);
+}
+
+.flow-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 4.5rem;
+}
+
+.flow-badge {
+  display: inline-block;
+
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #23b56c;
+  background: rgba(35, 181, 108, 0.08);
+  padding: 0.35rem 0.85rem;
+  border-radius: 20px;
+  margin-bottom: 1rem;
+}
+
+.flow-title {
+
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.flow-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* Diagram Container Layout */
+.flow-diagram-container {
+  position: relative;
+  width: 100%;
+  max-width: 1000px;
+  height: 400px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Sources and Destinations Labels */
+.column-header-tag {
+  position: absolute;
+  top: -20px;
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  padding: 0.35rem 0.85rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
+  z-index: 10;
+  user-select: none;
+}
+
+.tag-sources {
+  left: 20px;
+}
+
+.tag-destinations {
+  right: 20px;
+}
+
+.flow-svg-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* SVG Connection Lines (Thick Translucent Tubes) */
+.flow-tube-bg {
+  fill: none;
+  stroke: rgba(88, 101, 242, 0.07);
+  /* Translucent purple */
+  stroke-width: 28px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: stroke 0.35s ease;
+}
+
+.tube-active-green {
+  stroke: rgba(35, 181, 108, 0.13) !important;
+}
+
+.tube-active-blue {
+  stroke: rgba(0, 180, 216, 0.13) !important;
+}
+
+/* Static dashed guide line in the center of the tube (Inactive/Dormant state) */
+.flow-dashed-static {
+  fill: none;
+  stroke: rgba(11, 26, 48, 0.08);
+  stroke-width: 2px;
+  stroke-dasharray: 6, 8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* Active laser pulse line that shoots from origin to target and disappears */
+.flow-pulse-line {
+  fill: none;
+  stroke-width: 28px;
+  /* Match the exact thickness of the transmission tubes */
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+/* Curved paths (Length ~260px): Longer, slower streams with dashed repeating pattern */
+.flow-pulse-line.curved-path.normal {
+  stroke-dasharray: 12, 10, 12, 10, 12, 10, 12, 280;
+  /* Dashed energy stream */
+  animation: shootCurvedNormal 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.flow-pulse-line.curved-path.fast {
+  stroke-dasharray: 10, 8, 10, 8, 10, 8, 10, 280;
+  animation: shootCurvedFast 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Straight paths (Length ~200px): Calibrated to prevent dead time with dashed pattern */
+.flow-pulse-line.straight-path.normal {
+  stroke-dasharray: 10, 8, 10, 8, 10, 220;
+  /* Dashed energy stream */
+  animation: shootStraightNormal 3.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.flow-pulse-line.straight-path.fast {
+  stroke-dasharray: 8, 6, 8, 6, 8, 220;
+  animation: shootStraightFast 1.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Keyframes tightly matched to start and end points of path traversal */
+@keyframes shootCurvedNormal {
+  0% {
+    stroke-dashoffset: 78;
+    /* Start entering immediately */
+  }
+
+  100% {
+    stroke-dashoffset: -280;
+    /* Exit completely past the end */
+  }
+}
+
+@keyframes shootCurvedFast {
+  0% {
+    stroke-dashoffset: 64;
+  }
+
+  100% {
+    stroke-dashoffset: -280;
+  }
+}
+
+@keyframes shootStraightNormal {
+  0% {
+    stroke-dashoffset: 46;
+  }
+
+  100% {
+    stroke-dashoffset: -220;
+  }
+}
+
+@keyframes shootStraightFast {
+  0% {
+    stroke-dashoffset: 36;
+  }
+
+  100% {
+    stroke-dashoffset: -220;
+  }
+}
+
+/* Path decorators (Floating card components on the curves) */
+.flow-path-decorator {
+  position: absolute;
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  border-radius: 8px;
+  padding: 0.3rem 0.5rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  z-index: 8;
+  pointer-events: none;
+  user-select: none;
+  animation: decoratorFloat 4s ease-in-out infinite;
+}
+
+.left-top-decorator {
+  left: 285px;
+  top: 90px;
+}
+
+.left-top-decorator .dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.dot-red {
+  background-color: #ea4335;
+}
+
+.dot-green {
+  background-color: #34a853;
+}
+
+.dot-blue {
+  background-color: #4285f4;
+}
+
+.left-bottom-decorator {
+  left: 275px;
+  top: 280px;
+  color: #ef4444;
+  gap: 0.4rem;
+}
+
+.right-mid-decorator {
+  right: 285px;
+  top: 185px;
+  background: #ffffff;
+  color: #0b1a30;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  border: 1.5px solid rgba(0, 0, 0, 0.05);
+}
+
+.font-text {
+  font-size: 0.72rem;
+}
+
+.font-small {
+  font-size: 0.58rem;
+  opacity: 0.6;
+}
+
+@keyframes decoratorFloat {
+
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* Columns containing card nodes */
+.flow-nodes-column {
+  position: relative;
+  z-index: 5;
+  height: 100%;
+  width: 260px;
+}
+
+.column-left {
+  /* Aligns cards to the right of the left column (closest to central paths) */
+}
+
+.column-right {
+  /* Aligns cards to the left of the right column (closest to central paths) */
+}
+
+/* Individual node card styles */
+.flow-node-card {
+  position: absolute;
+  background: var(--bg-card);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 0.85rem 1.15rem;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  width: 250px;
+  height: 80px;
+  box-sizing: border-box;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  cursor: pointer;
+}
+
+/* Desktop Y-coordinate placement matching path coordinates (80px, 200px, 320px centers) */
+.flow-nodes-column .flow-node-card:nth-child(1) {
+  top: 40px;
+}
+
+.flow-nodes-column .flow-node-card:nth-child(2) {
+  top: 160px;
+}
+
+.flow-nodes-column .flow-node-card:nth-child(3) {
+  top: 280px;
+}
+
+/* Horizontal offset alignments */
+.column-left .flow-node-card {
+  right: 0;
+  flex-direction: row-reverse;
+}
+
+.column-right .flow-node-card {
+  left: 0;
+}
+
+/* Card hover effects customized by side */
+.column-left .flow-node-card:hover,
+.column-left .node-highlight {
+  border-color: rgba(35, 181, 108, 0.35);
+  box-shadow: 0 12px 30px rgba(35, 181, 108, 0.12), 0 0 0 1px rgba(35, 181, 108, 0.15);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.column-right .flow-node-card:hover,
+.column-right .node-highlight {
+  border-color: rgba(0, 180, 216, 0.35);
+  box-shadow: 0 12px 30px rgba(0, 180, 216, 0.12), 0 0 0 1px rgba(0, 180, 216, 0.15);
+  transform: translateY(-3px) scale(1.02);
+}
+
+.node-icon-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  flex-shrink: 0;
+}
+
+.flow-node-card:hover .node-icon-wrapper {
+  transform: scale(1.1) rotate(-3deg);
+}
+
+/* Brand specific icon wrapper styles */
+.card-chrome .node-icon-wrapper {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.card-zalo .node-icon-wrapper {
+  background: #0068ff;
+}
+
+.card-telegram .node-icon-wrapper {
+  background: #229ed9;
+}
+
+.card-discord .node-icon-wrapper {
+  background: #5865f2;
+}
+
+.card-messenger .node-icon-wrapper {
+  background: linear-gradient(135deg, #00c6ff 0%, #0072ff 50%, #f355da 100%);
+}
+
+.card-api .node-icon-wrapper {
+  background: #23b56c;
+}
+
+/* Typography styles - consistent left alignment */
+.node-info-text {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  text-align: left;
+  align-items: flex-start;
+  overflow: hidden;
+  width: 100%;
+}
+
+.node-info-text h4 {
+
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 0.15rem 0;
+  line-height: 1.25;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.node-info-text span {
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+/* Tooltip popover for node details */
+.node-detail-popover {
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%) translateY(5px);
+  width: 220px;
+  background: #0b1a30;
+  color: #fff;
+  padding: 0.75rem;
+  border-radius: 10px;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  pointer-events: none;
+  opacity: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transition: all 0.25s ease;
+  z-index: 20;
+}
+
+.node-detail-popover::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 5px;
+  border-style: solid;
+  border-color: #0b1a30 transparent transparent transparent;
+}
+
+.flow-node-card:hover .node-detail-popover {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Center Hub core designs */
+.flow-hub-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 220px;
+  height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.hub-center-badge {
+  position: relative;
+  width: 125px;
+  height: 125px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 10px 35px rgba(0, 0, 0, 0.13);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.hub-inner-hexagon {
+  width: 85px;
+  height: 85px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hub-hexagon-svg {
+  width: 100%;
+  height: 100%;
+}
+
+.rotating-hexa {
+  transform-origin: 50px 50px;
+  animation: radarRotate 12s linear infinite;
+}
+
+.core-star-glow {
+  filter: drop-shadow(0 0 5px rgba(35, 181, 108, 0.8));
+}
+
+/* Wave Pulsing Rings around Center */
+.hub-pulse-ring {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1.5px solid rgba(35, 181, 108, 0.61);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.ring-1 {
+  animation: hubPulseRing 4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+.ring-2 {
+  animation: hubPulseRing 4s cubic-bezier(0.16, 1, 0.3, 1) infinite -1.3s;
+}
+
+.ring-3 {
+  animation: hubPulseRing 4s cubic-bezier(0.16, 1, 0.3, 1) infinite -2.6s;
+}
+
+@keyframes hubPulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* Capsule badge styled like reference image */
+.flow-center-capsule {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: #5865F2;
+  /* Premium brand purple/blue */
+  padding: 0.45rem 1.25rem;
+  border-radius: 8px;
+  margin-top: 1.25rem;
+  z-index: 5;
+  box-shadow: 0 4px 15px rgba(88, 101, 242, 0.25);
+  white-space: nowrap;
+}
+
+/* Product Hunt Badge bottom footer wrapper */
+.flow-footer-badges {
+  margin-top: 4rem;
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  max-width: 1000px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.product-hunt-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #ffffff;
+  border: 1px solid rgba(255, 97, 84, 0.2);
+  border-radius: 12px;
+  padding: 0.5rem 0.85rem;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(255, 97, 84, 0.04);
+  transition: all 0.25s ease;
+}
+
+.product-hunt-pill:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 97, 84, 0.4);
+  box-shadow: 0 8px 16px rgba(255, 97, 84, 0.08);
+}
+
+.ph-badge-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ph-badge-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1.25;
+}
+
+.ph-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.ph-award {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #ff6154;
+}
+
+/* Responsiveness media queries */
+@media (max-width: 992px) {
+  .flow-diagram-container {
+    height: auto;
+    flex-direction: column;
+    gap: 3.5rem;
+    padding-top: 2rem;
+  }
+
+  .column-header-tag {
+    position: relative;
+    top: auto;
+    margin-bottom: 0.5rem;
+  }
+
+  .tag-sources,
+  .tag-destinations {
+    left: auto;
+    right: auto;
+  }
+
+  .flow-svg-canvas,
+  .flow-path-decorator,
+  .flow-packets-group {
+    display: none;
+    /* Hide paths, path decorators and flowing packets on mobile/tablet */
+  }
+
+  .flow-nodes-column {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+    width: 100%;
+    gap: 1.25rem;
+    align-items: center;
+    padding: 0;
+  }
+
+  .flow-node-card {
+    position: relative;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .flow-hub-core {
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
+    margin: 1.5rem 0;
+  }
+
+  .flow-footer-badges {
+    justify-content: center;
+    margin-top: 3rem;
+  }
+}
