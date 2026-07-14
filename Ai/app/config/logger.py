@@ -8,8 +8,8 @@ logger.add(
     level="INFO",
     colorize=True,
     format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | "
-    "<level>{level}</level> | "
-    "{message}",
+           "<level>{level}</level> | "
+           "{message}"
 )
 
 __all__ = ["logger"]

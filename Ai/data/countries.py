@@ -1,44 +1,436 @@
 """
-app.data.countries
-===================
+Evidence Database
+-----------------
 
-Country reference data (ISO codes + optional risk banding for hosting /
-registrant geolocation context). No logic.
+Country Database
 
-Schema:
+Knowledge Base dành cho Domain Detector
+và Network Detector.
 
-    {
-        "iso2": str,
-        "iso3": str,
-        "name": str,
-        "risk_profile": str,  # "high" | "medium" | "low" -- infra-abuse
-                               # reporting context only, not a statement
-                               # about the country or its people.
-    }
+Nguyên tắc:
+- Chỉ chứa dữ liệu
+- Không chứa Logic
+- Không chứa Rule
+- Không chứa Risk Score
+- Không chứa Confidence
+
+Author: Anti Scam Detector
 """
 
-COUNTRIES = [
-    {"iso2": "VN", "iso3": "VNM", "name": "Vietnam", "risk_profile": "low"},
-    {"iso2": "US", "iso3": "USA", "name": "United States", "risk_profile": "low"},
-    {"iso2": "GB", "iso3": "GBR", "name": "United Kingdom", "risk_profile": "low"},
-    {"iso2": "SG", "iso3": "SGP", "name": "Singapore", "risk_profile": "low"},
-    {"iso2": "JP", "iso3": "JPN", "name": "Japan", "risk_profile": "low"},
-    {"iso2": "KR", "iso3": "KOR", "name": "South Korea", "risk_profile": "low"},
-    {"iso2": "AU", "iso3": "AUS", "name": "Australia", "risk_profile": "low"},
-    {"iso2": "DE", "iso3": "DEU", "name": "Germany", "risk_profile": "low"},
-    {"iso2": "FR", "iso3": "FRA", "name": "France", "risk_profile": "low"},
-    {"iso2": "CA", "iso3": "CAN", "name": "Canada", "risk_profile": "low"},
-    {"iso2": "CN", "iso3": "CHN", "name": "China", "risk_profile": "medium"},
-    {"iso2": "RU", "iso3": "RUS", "name": "Russia", "risk_profile": "medium"},
-    {"iso2": "IN", "iso3": "IND", "name": "India", "risk_profile": "medium"},
-    {"iso2": "BR", "iso3": "BRA", "name": "Brazil", "risk_profile": "medium"},
-    {"iso2": "NG", "iso3": "NGA", "name": "Nigeria", "risk_profile": "medium"},
-    {"iso2": "ID", "iso3": "IDN", "name": "Indonesia", "risk_profile": "medium"},
-    {"iso2": "PH", "iso3": "PHL", "name": "Philippines", "risk_profile": "medium"},
-    {"iso2": "PA", "iso3": "PAN", "name": "Panama", "risk_profile": "medium"},
-    {"iso2": "SC", "iso3": "SYC", "name": "Seychelles", "risk_profile": "high"},
-    {"iso2": "BZ", "iso3": "BLZ", "name": "Belize", "risk_profile": "high"},
-    {"iso2": "KY", "iso3": "CYM", "name": "Cayman Islands", "risk_profile": "high"},
-    {"iso2": "MD", "iso3": "MDA", "name": "Moldova", "risk_profile": "high"},
-    {"iso2": "KP", "iso3": "PRK", "name": "North Korea", "risk_profile": "high"},
+from __future__ import annotations
+
+COUNTRIES = {
+
+    # ==========================================================
+    # Vietnam
+    # ==========================================================
+
+    "VN": {
+
+        "name": "Vietnam",
+
+        "alpha2": "VN",
+
+        "alpha3": "VNM"
+
+    },
+
+    # ==========================================================
+    # United States
+    # ==========================================================
+
+    "US": {
+
+        "name": "United States",
+
+        "alpha2": "US",
+
+        "alpha3": "USA"
+
+    },
+
+    # ==========================================================
+    # Singapore
+    # ==========================================================
+
+    "SG": {
+
+        "name": "Singapore",
+
+        "alpha2": "SG",
+
+        "alpha3": "SGP"
+
+    },
+
+    # ==========================================================
+    # Japan
+    # ==========================================================
+
+    "JP": {
+
+        "name": "Japan",
+
+        "alpha2": "JP",
+
+        "alpha3": "JPN"
+
+    },
+
+    # ==========================================================
+    # South Korea
+    # ==========================================================
+
+    "KR": {
+
+        "name": "South Korea",
+
+        "alpha2": "KR",
+
+        "alpha3": "KOR"
+
+    },
+
+    # ==========================================================
+    # China
+    # ==========================================================
+
+    "CN": {
+
+        "name": "China",
+
+        "alpha2": "CN",
+
+        "alpha3": "CHN"
+
+    },
+
+    # ==========================================================
+    # Taiwan
+    # ==========================================================
+
+    "TW": {
+
+        "name": "Taiwan",
+
+        "alpha2": "TW",
+
+        "alpha3": "TWN"
+
+    },
+
+    # ==========================================================
+    # Hong Kong
+    # ==========================================================
+
+    "HK": {
+
+        "name": "Hong Kong",
+
+        "alpha2": "HK",
+
+        "alpha3": "HKG"
+
+    },
+
+    # ==========================================================
+    # United Kingdom
+    # ==========================================================
+
+    "GB": {
+
+        "name": "United Kingdom",
+
+        "alpha2": "GB",
+
+        "alpha3": "GBR"
+
+    },
+
+    # ==========================================================
+    # Germany
+    # ==========================================================
+
+    "DE": {
+
+        "name": "Germany",
+
+        "alpha2": "DE",
+
+        "alpha3": "DEU"
+
+    },
+
+    # ==========================================================
+    # France
+    # ==========================================================
+
+    "FR": {
+
+        "name": "France",
+
+        "alpha2": "FR",
+
+        "alpha3": "FRA"
+
+    },
+
+    # ==========================================================
+    # Canada
+    # ==========================================================
+
+    "CA": {
+
+        "name": "Canada",
+
+        "alpha2": "CA",
+
+        "alpha3": "CAN"
+
+    },
+
+    # ==========================================================
+    # Australia
+    # ==========================================================
+
+    "AU": {
+
+        "name": "Australia",
+
+        "alpha2": "AU",
+
+        "alpha3": "AUS"
+
+    },
+
+    # ==========================================================
+    # New Zealand
+    # ==========================================================
+
+    "NZ": {
+
+        "name": "New Zealand",
+
+        "alpha2": "NZ",
+
+        "alpha3": "NZL"
+
+    },
+
+    # ==========================================================
+    # India
+    # ==========================================================
+
+    "IN": {
+
+        "name": "India",
+
+        "alpha2": "IN",
+
+        "alpha3": "IND"
+
+    },
+
+    # ==========================================================
+    # Indonesia
+    # ==========================================================
+
+    "ID": {
+
+        "name": "Indonesia",
+
+        "alpha2": "ID",
+
+        "alpha3": "IDN"
+
+    },
+
+    # ==========================================================
+    # Malaysia
+    # ==========================================================
+
+    "MY": {
+
+        "name": "Malaysia",
+
+        "alpha2": "MY",
+
+        "alpha3": "MYS"
+
+    },
+
+    # ==========================================================
+    # Thailand
+    # ==========================================================
+
+    "TH": {
+
+        "name": "Thailand",
+
+        "alpha2": "TH",
+
+        "alpha3": "THA"
+
+    },
+
+    # ==========================================================
+    # Philippines
+    # ==========================================================
+
+    "PH": {
+
+        "name": "Philippines",
+
+        "alpha2": "PH",
+
+        "alpha3": "PHL"
+
+    },
+
+    # ==========================================================
+    # Brazil
+    # ==========================================================
+
+    "BR": {
+
+        "name": "Brazil",
+
+        "alpha2": "BR",
+
+        "alpha3": "BRA"
+
+    },
+
+    # ==========================================================
+    # Russia
+    # ==========================================================
+
+    "RU": {
+
+        "name": "Russia",
+
+        "alpha2": "RU",
+
+        "alpha3": "RUS"
+
+    },
+
+    # ==========================================================
+    # Netherlands
+    # ==========================================================
+
+    "NL": {
+
+        "name": "Netherlands",
+
+        "alpha2": "NL",
+
+        "alpha3": "NLD"
+
+    },
+
+    # ==========================================================
+    # Switzerland
+    # ==========================================================
+
+    "CH": {
+
+        "name": "Switzerland",
+
+        "alpha2": "CH",
+
+        "alpha3": "CHE"
+
+    },
+
+    # ==========================================================
+    # Ireland
+    # ==========================================================
+
+    "IE": {
+
+        "name": "Ireland",
+
+        "alpha2": "IE",
+
+        "alpha3": "IRL"
+
+    },
+
+    # ==========================================================
+    # Luxembourg
+    # ==========================================================
+
+    "LU": {
+
+        "name": "Luxembourg",
+
+        "alpha2": "LU",
+
+        "alpha3": "LUX"
+
+    },
+
+    # ==========================================================
+    # United Arab Emirates
+    # ==========================================================
+
+    "AE": {
+
+        "name": "United Arab Emirates",
+
+        "alpha2": "AE",
+
+        "alpha3": "ARE"
+
+    },
+
+    # ==========================================================
+    # Seychelles
+    # ==========================================================
+
+    "SC": {
+
+        "name": "Seychelles",
+
+        "alpha2": "SC",
+
+        "alpha3": "SYC"
+
+    },
+
+    # ==========================================================
+    # Malta
+    # ==========================================================
+
+    "MT": {
+
+        "name": "Malta",
+
+        "alpha2": "MT",
+
+        "alpha3": "MLT"
+
+    },
+
+    # ==========================================================
+    # Cayman Islands
+    # ==========================================================
+
+    "KY": {
+
+        "name": "Cayman Islands",
+
+        "alpha2": "KY",
+
+        "alpha3": "CYM"
+
+    }
+
+}
+
+__all__ = [
+
+    "COUNTRIES"
+
 ]

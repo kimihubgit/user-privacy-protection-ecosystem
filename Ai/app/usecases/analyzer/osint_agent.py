@@ -39,7 +39,9 @@ class OSINTAgent:
         self.chongluadao = ChongLuaDaoProvider()
 
     @staticmethod
-    def normalize_url(url: str) -> str:
+    def normalize_url(
+        url: str
+    ) -> str:
         """
         Chuẩn hóa URL.
 
@@ -67,26 +69,58 @@ class OSINTAgent:
 
         return f"{scheme}://{hostname}"
 
-    def check(self, url: str) -> dict:
+    def check(
+        self,
+        url: str
+    ) -> dict:
 
         logger.info("=" * 80)
 
         logger.info("OSINT Agent")
 
-        normalized_url = self.normalize_url(url)
+        normalized_url = self.normalize_url(
+            url
+        )
 
-        logger.info(f"Normalized URL : {normalized_url}")
+        logger.info(
+            f"Normalized URL : {normalized_url}"
+        )
 
-        result = self.chongluadao.check(normalized_url)
+        result = self.chongluadao.check(
+            normalized_url
+        )
 
-        status = str(result.get("result", "no result")).lower()
+        status = str(
+            result.get(
+                "result",
+                "no result"
+            )
+        ).lower()
 
-        if status not in {"safe", "malicious", "no result"}:
+        if status not in {
+
+            "safe",
+
+            "malicious",
+
+            "no result"
+
+        }:
 
             status = "no result"
 
-        logger.info(f"OSINT Result : {status}")
+        logger.info(
+            f"OSINT Result : {status}"
+        )
 
         logger.info("=" * 80)
 
-        return {"source": "ChongLuaDao", "result": status, "detail": result}
+        return {
+
+            "source": "ChongLuaDao",
+
+            "result": status,
+
+            "detail": result
+
+        }

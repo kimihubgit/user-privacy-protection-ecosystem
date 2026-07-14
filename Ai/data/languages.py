@@ -1,32 +1,281 @@
 """
-app.data.languages
-===================
+Evidence Database
+-----------------
 
-Language reference data for content-language detection context. No logic.
+Language Database
 
-Schema:
+Knowledge Base dành cho Content Detector.
 
-    {
-        "code": str,   # ISO 639-1 code
-        "name": str,   # English name
-    }
+Nguyên tắc:
+- Chỉ chứa dữ liệu
+- Không chứa Logic
+- Không chứa Rule
+- Không chứa Risk Score
+- Không chứa Confidence
+
+Author: Anti Scam Detector
 """
 
-LANGUAGES = [
-    {"code": "vi", "name": "Vietnamese"},
-    {"code": "en", "name": "English"},
-    {"code": "zh", "name": "Chinese"},
-    {"code": "ja", "name": "Japanese"},
-    {"code": "ko", "name": "Korean"},
-    {"code": "th", "name": "Thai"},
-    {"code": "id", "name": "Indonesian"},
-    {"code": "ms", "name": "Malay"},
-    {"code": "tl", "name": "Filipino"},
-    {"code": "fr", "name": "French"},
-    {"code": "de", "name": "German"},
-    {"code": "es", "name": "Spanish"},
-    {"code": "pt", "name": "Portuguese"},
-    {"code": "ru", "name": "Russian"},
-    {"code": "ar", "name": "Arabic"},
-    {"code": "hi", "name": "Hindi"},
+from __future__ import annotations
+
+LANGUAGES: dict[str, dict] = {
+
+    # ==========================================================
+    # Vietnamese
+    # ==========================================================
+
+    "vi": {
+
+        "name": "Vietnamese",
+
+        "native_name": "Tiếng Việt",
+
+        "country": [
+
+            "VN"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # English
+    # ==========================================================
+
+    "en": {
+
+        "name": "English",
+
+        "native_name": "English",
+
+        "country": [
+
+            "US",
+
+            "GB",
+
+            "AU",
+
+            "CA",
+
+            "SG"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Chinese
+    # ==========================================================
+
+    "zh": {
+
+        "name": "Chinese",
+
+        "native_name": "中文",
+
+        "country": [
+
+            "CN",
+
+            "HK",
+
+            "TW",
+
+            "SG"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Japanese
+    # ==========================================================
+
+    "ja": {
+
+        "name": "Japanese",
+
+        "native_name": "日本語",
+
+        "country": [
+
+            "JP"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Korean
+    # ==========================================================
+
+    "ko": {
+
+        "name": "Korean",
+
+        "native_name": "한국어",
+
+        "country": [
+
+            "KR"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # French
+    # ==========================================================
+
+    "fr": {
+
+        "name": "French",
+
+        "native_name": "Français",
+
+        "country": [
+
+            "FR"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # German
+    # ==========================================================
+
+    "de": {
+
+        "name": "German",
+
+        "native_name": "Deutsch",
+
+        "country": [
+
+            "DE"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Spanish
+    # ==========================================================
+
+    "es": {
+
+        "name": "Spanish",
+
+        "native_name": "Español",
+
+        "country": [
+
+            "ES",
+
+            "MX"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Portuguese
+    # ==========================================================
+
+    "pt": {
+
+        "name": "Portuguese",
+
+        "native_name": "Português",
+
+        "country": [
+
+            "PT",
+
+            "BR"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Russian
+    # ==========================================================
+
+    "ru": {
+
+        "name": "Russian",
+
+        "native_name": "Русский",
+
+        "country": [
+
+            "RU"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Thai
+    # ==========================================================
+
+    "th": {
+
+        "name": "Thai",
+
+        "native_name": "ไทย",
+
+        "country": [
+
+            "TH"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Indonesian
+    # ==========================================================
+
+    "id": {
+
+        "name": "Indonesian",
+
+        "native_name": "Bahasa Indonesia",
+
+        "country": [
+
+            "ID"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Malay
+    # ==========================================================
+
+    "ms": {
+
+        "name": "Malay",
+
+        "native_name": "Bahasa Melayu",
+
+        "country": [
+
+            "MY"
+
+        ]
+
+    }
+
+}
+
+__all__ = [
+
+    "LANGUAGES"
+
 ]

@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 
-from app.domain.entities.collector import RedirectItem
-
+from app.presentation.api.schemas.collector_result import RedirectItem
 
 class CollectorResponse(BaseModel):
 
