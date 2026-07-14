@@ -1,77 +1,491 @@
 """
-Social media / messaging brands commonly impersonated in phishing.
-Schema documented in app.data.brands.__init__.
+Evidence Database
+-----------------
+
+Social Media Brand Database
+
+Knowledge Base dành cho Brand Detector.
+
+Nguyên tắc:
+- Chỉ chứa dữ liệu.
+- Không chứa business logic.
+- Không chứa Risk Score.
+- Không chứa Confidence.
+- Không chứa Rule.
+
+Author: Anti Scam Detector
 """
 
-SOCIAL_BRANDS = [
-    {
+from __future__ import annotations
+
+SOCIAL_BRANDS: dict[str, dict] = {
+
+    # ==========================================================
+    # Facebook
+    # ==========================================================
+
+    "facebook": {
+
         "display_name": "Facebook",
-        "domains": ["facebook.com", "fb.com"],
-        "aliases": ["facebook", "fb"],
-        "category": "social",
-        "risk_profile": "critical",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "facebook.com",
+
+            "fb.com"
+
+        ],
+
+        "aliases": [
+
+            "fb",
+
+            "facebook inc",
+
+            "meta"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Messenger
+    # ==========================================================
+
+    "messenger": {
+
+        "display_name": "Messenger",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "messenger.com"
+
+        ],
+
+        "aliases": [
+
+            "facebook messenger"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Instagram
+    # ==========================================================
+
+    "instagram": {
+
         "display_name": "Instagram",
-        "domains": ["instagram.com"],
-        "aliases": ["instagram", "ig"],
-        "category": "social",
-        "risk_profile": "high",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "instagram.com"
+
+        ],
+
+        "aliases": [
+
+            "insta",
+
+            "ig"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Threads
+    # ==========================================================
+
+    "threads": {
+
+        "display_name": "Threads",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "threads.net"
+
+        ],
+
+        "aliases": [
+
+            "meta threads"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # WhatsApp
+    # ==========================================================
+
+    "whatsapp": {
+
         "display_name": "WhatsApp",
-        "domains": ["whatsapp.com"],
-        "aliases": ["whatsapp"],
-        "category": "social",
-        "risk_profile": "high",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "whatsapp.com"
+
+        ],
+
+        "aliases": [
+
+            "whats app"
+
+        ]
+
     },
-    {
-        "display_name": "Telegram",
-        "domains": ["telegram.org"],
-        "aliases": ["telegram"],
-        "category": "social",
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # X (Twitter)
+    # ==========================================================
+
+    "twitter": {
+
+        "display_name": "X",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "x.com",
+
+            "twitter.com"
+
+        ],
+
+        "aliases": [
+
+            "twitter",
+
+            "x",
+
+            "tweet"
+
+        ]
+
     },
-    {
-        "display_name": "X (Twitter)",
-        "domains": ["x.com", "twitter.com"],
-        "aliases": ["twitter", "x"],
-        "category": "social",
-        "risk_profile": "high",
-    },
-    {
+
+    # ==========================================================
+    # TikTok
+    # ==========================================================
+
+    "tiktok": {
+
         "display_name": "TikTok",
-        "domains": ["tiktok.com"],
-        "aliases": ["tiktok"],
-        "category": "social",
-        "risk_profile": "high",
+
+        "country": "CN",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "tiktok.com"
+
+        ],
+
+        "aliases": [
+
+            "tik tok",
+
+            "douyin"
+
+        ]
+
     },
-    {
-        "display_name": "Zalo",
-        "domains": ["zalo.me"],
-        "aliases": ["zalo"],
-        "category": "social",
-        "risk_profile": "high",
+
+    # ==========================================================
+    # YouTube
+    # ==========================================================
+
+    "youtube": {
+
+        "display_name": "YouTube",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "youtube.com",
+
+            "youtu.be"
+
+        ],
+
+        "aliases": [
+
+            "youtube studio"
+
+        ]
+
     },
-    {
-        "display_name": "Snapchat",
-        "domains": ["snapchat.com"],
-        "aliases": ["snapchat", "snap"],
-        "category": "social",
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Telegram
+    # ==========================================================
+
+    "telegram": {
+
+        "display_name": "Telegram",
+
+        "country": "AE",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "telegram.org"
+
+        ],
+
+        "aliases": [
+
+            "telegram messenger"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Discord
+    # ==========================================================
+
+    "discord": {
+
         "display_name": "Discord",
-        "domains": ["discord.com", "discord.gg"],
-        "aliases": ["discord"],
-        "category": "social",
-        "risk_profile": "medium",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "discord.com",
+
+            "discord.gg"
+
+        ],
+
+        "aliases": [
+
+            "discordapp"
+
+        ]
+
     },
-    {
+
+    # ==========================================================
+    # Reddit
+    # ==========================================================
+
+    "reddit": {
+
+        "display_name": "Reddit",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "reddit.com"
+
+        ],
+
+        "aliases": [
+
+            "redd.it"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # LinkedIn
+    # ==========================================================
+
+    "linkedin": {
+
+        "display_name": "LinkedIn",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "linkedin.com"
+
+        ],
+
+        "aliases": [
+
+            "linked in"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Snapchat
+    # ==========================================================
+
+    "snapchat": {
+
+        "display_name": "Snapchat",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "snapchat.com"
+
+        ],
+
+        "aliases": [
+
+            "snap"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Pinterest
+    # ==========================================================
+
+    "pinterest": {
+
         "display_name": "Pinterest",
-        "domains": ["pinterest.com"],
-        "aliases": ["pinterest"],
-        "category": "social",
-        "risk_profile": "low",
+
+        "country": "US",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "pinterest.com"
+
+        ],
+
+        "aliases": [
+
+            "pin"
+
+        ]
+
     },
-]
+
+    # ==========================================================
+    # WeChat
+    # ==========================================================
+
+    "wechat": {
+
+        "display_name": "WeChat",
+
+        "country": "CN",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "wechat.com",
+
+            "weixin.qq.com"
+
+        ],
+
+        "aliases": [
+
+            "weixin"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # LINE
+    # ==========================================================
+
+    "line": {
+
+        "display_name": "LINE",
+
+        "country": "JP",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "line.me"
+
+        ],
+
+        "aliases": [
+
+            "line messenger"
+
+        ]
+
+    },
+
+    # ==========================================================
+    # Zalo
+    # ==========================================================
+
+    "zalo": {
+
+        "display_name": "Zalo",
+
+        "country": "VN",
+
+        "category": "Social",
+
+        "official_domains": [
+
+            "zalo.me",
+
+            "zaloapp.com"
+
+        ],
+
+        "aliases": [
+
+            "zalo pay",
+
+            "zalo pc"
+
+        ]
+
+    }
+
+}

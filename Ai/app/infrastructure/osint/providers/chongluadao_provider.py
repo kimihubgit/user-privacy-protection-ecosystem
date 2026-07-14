@@ -34,62 +34,117 @@ class ChongLuaDaoProvider(BaseProvider):
     TIMEOUT = 10
 
     HEADERS = {
+
         "Content-Type": "application/json",
+
         "Origin": "https://chongluadao.vn",
-        "Referer": "https://chongluadao.vn/",
+
+        "Referer": "https://chongluadao.vn/"
+
     }
 
-    def check(self, url: str) -> dict[str, Any]:
+    def check(
+        self,
+        url: str
+    ) -> dict[str, Any]:
 
-        logger.info(f"ChongLuaDao lookup : {url}")
+        logger.info(
+            f"ChongLuaDao lookup : {url}"
+        )
 
         try:
 
             response = requests.post(
+
                 self.API_URL,
-                json={"url": url},
+
+                json={
+                    "url": url
+                },
+
                 headers=self.HEADERS,
-                timeout=self.TIMEOUT,
+
+                timeout=self.TIMEOUT
+
             )
 
             response.raise_for_status()
 
             data = response.json()
 
-            result = str(data.get("result", "no result")).lower()
+            result = str(
+
+                data.get(
+                    "result",
+                    "no result"
+                )
+
+            ).lower()
 
             #
             # Chuẩn hóa kết quả
             #
 
-            if result not in {"safe", "malicious", "no result"}:
+            if result not in {
+
+                "safe",
+
+                "malicious",
+
+                "no result"
+
+            }:
 
                 result = "no result"
 
-            logger.info(f"ChongLuaDao result : {result}")
+            logger.info(
+                f"ChongLuaDao result : {result}"
+            )
 
-            return {"result": result, "source": "ChongLuaDao", "raw": data}
+            return {
+
+                "result": result,
+
+                "source": "ChongLuaDao",
+
+                "raw": data
+
+            }
 
         except requests.Timeout:
 
-            logger.error("ChongLuaDao timeout.")
+            logger.error(
+                "ChongLuaDao timeout."
+            )
 
             return {
+
                 "result": "no result",
+
                 "source": "ChongLuaDao",
+
                 "raw": {},
-                "error": "timeout",
+
+                "error": "timeout"
+
             }
 
         except requests.RequestException as ex:
 
-            logger.error(f"ChongLuaDao request failed : {ex}")
+            logger.error(
+                f"ChongLuaDao request failed : {ex}"
+            )
 
             return {
+
                 "result": "no result",
+
                 "source": "ChongLuaDao",
+
                 "raw": {},
-                "error": str(ex),
+
+                "error": str(ex)
+
             }
 
         except Exception as ex:
@@ -97,8 +152,13 @@ class ChongLuaDaoProvider(BaseProvider):
             logger.exception(ex)
 
             return {
+
                 "result": "no result",
+
                 "source": "ChongLuaDao",
+
                 "raw": {},
-                "error": str(ex),
+
+                "error": str(ex)
+
             }

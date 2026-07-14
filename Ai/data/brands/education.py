@@ -1,57 +1,389 @@
 """
-Education / e-learning brands commonly impersonated in phishing
-(student portals, scholarship scams, credential harvesting via LMS lures).
-Schema documented in app.data.brands.__init__.
+Evidence Database
+-----------------
+
+Education Brand Database
+
+Knowledge Base dành cho Brand Detector.
+
+Nguyên tắc:
+- Chỉ chứa dữ liệu.
+- Không chứa business logic.
+- Không chứa Risk Score.
+- Không chứa Confidence.
+- Không chứa Rule.
+
+Author: Anti Scam Detector
 """
 
-EDUCATION_BRANDS = [
-    {
+from __future__ import annotations
+
+EDUCATION_BRANDS: dict[str, dict] = {
+
+    # ==========================================================
+    # Coursera
+    # ==========================================================
+
+    "coursera": {
+
         "display_name": "Coursera",
-        "domains": ["coursera.org"],
-        "aliases": ["coursera"],
-        "category": "education",
-        "risk_profile": "low",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "coursera.org"
+
+        ],
+
+        "aliases": [
+
+            "coursera online"
+
+        ],
+
+        "weak_aliases": []
+
     },
-    {
+
+    # ==========================================================
+    # Udemy
+    # ==========================================================
+
+    "udemy": {
+
+        "display_name": "Udemy",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "udemy.com"
+
+        ],
+
+        "aliases": [],
+
+        "weak_aliases": []
+
+    },
+
+    # ==========================================================
+    # edX
+    # ==========================================================
+
+    "edx": {
+
         "display_name": "edX",
-        "domains": ["edx.org"],
-        "aliases": ["edx"],
-        "category": "education",
-        "risk_profile": "low",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "edx.org"
+
+        ],
+
+        "aliases": [
+
+            "ed x"
+
+        ],
+
+        "weak_aliases": []
+
     },
-    {
-        "display_name": "Google Classroom",
-        "domains": ["classroom.google.com"],
-        "aliases": ["google classroom"],
-        "category": "education",
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Khan Academy
+    # ==========================================================
+
+    "khanacademy": {
+
+        "display_name": "Khan Academy",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "khanacademy.org"
+
+        ],
+
+        "aliases": [
+
+            "khan academy"
+
+        ],
+
+        "weak_aliases": []
+
     },
-    {
-        "display_name": "Microsoft Teams for Education",
-        "domains": ["teams.microsoft.com"],
-        "aliases": ["ms teams", "teams for education"],
-        "category": "education",
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # Duolingo
+    # ==========================================================
+
+    "duolingo": {
+
+        "display_name": "Duolingo",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "duolingo.com"
+
+        ],
+
+        "aliases": [],
+
+        "weak_aliases": []
+
     },
-    {
-        "display_name": "Bo Giao duc va Dao tao (MOET)",
-        "domains": ["moet.gov.vn"],
-        "aliases": ["bo gd&dt", "moet"],
-        "category": "education",
-        "risk_profile": "medium",
+
+    # ==========================================================
+    # FutureLearn
+    # ==========================================================
+
+    "futurelearn": {
+
+        "display_name": "FutureLearn",
+
+        "country": "GB",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "futurelearn.com"
+
+        ],
+
+        "aliases": [
+
+            "future learn"
+
+        ],
+
+        "weak_aliases": []
+
     },
-    {
-        "display_name": "Blackboard",
-        "domains": ["blackboard.com"],
-        "aliases": ["blackboard"],
-        "category": "education",
-        "risk_profile": "low",
+
+    # ==========================================================
+    # Udacity
+    # ==========================================================
+
+    "udacity": {
+
+        "display_name": "Udacity",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "udacity.com"
+
+        ],
+
+        "aliases": [],
+
+        "weak_aliases": []
+
     },
-    {
-        "display_name": "Canvas LMS",
-        "domains": ["instructure.com"],
-        "aliases": ["canvas", "canvas lms"],
-        "category": "education",
-        "risk_profile": "low",
+
+    # ==========================================================
+    # MIT OpenCourseWare
+    # ==========================================================
+
+    "mitocw": {
+
+        "display_name": "MIT OpenCourseWare",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "ocw.mit.edu"
+
+        ],
+
+        "aliases": [
+
+            "mit ocw",
+
+            "mit open courseware"
+
+        ],
+
+        "weak_aliases": []
+
     },
-]
+
+    # ==========================================================
+    # Harvard Online
+    # ==========================================================
+
+    "harvard": {
+
+        "display_name": "Harvard University",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "harvard.edu",
+
+            "online-learning.harvard.edu"
+
+        ],
+
+        "aliases": [
+
+            "harvard online"
+
+        ],
+
+        "weak_aliases": []
+
+    },
+
+    # ==========================================================
+    # Stanford
+    # ==========================================================
+
+    "stanford": {
+
+        "display_name": "Stanford University",
+
+        "country": "US",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "stanford.edu"
+
+        ],
+
+        "aliases": [
+
+            "stanford online"
+
+        ],
+
+        "weak_aliases": []
+
+    },
+
+    # ==========================================================
+    # Đại học Quốc gia TP.HCM
+    # ==========================================================
+
+    "vnuhcm": {
+
+        "display_name": "Đại học Quốc gia TP.HCM",
+
+        "country": "VN",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "vnuhcm.edu.vn"
+
+        ],
+
+        "aliases": [
+
+            "vnu hcm",
+
+            "đhqg tp.hcm"
+
+        ],
+
+        "weak_aliases": []
+
+    },
+
+    # ==========================================================
+    # Đại học Quốc gia Hà Nội
+    # ==========================================================
+
+    "vnu": {
+
+        "display_name": "Đại học Quốc gia Hà Nội",
+
+        "country": "VN",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "vnu.edu.vn"
+
+        ],
+
+        "aliases": [
+
+            "vnu hanoi",
+
+            "đhqg hà nội"
+
+        ],
+
+        "weak_aliases": []
+
+    },
+
+    # ==========================================================
+    # Nguyễn Tất Thành University
+    # ==========================================================
+
+    "nttu": {
+
+        "display_name": "Nguyễn Tất Thành University",
+
+        "country": "VN",
+
+        "category": "Education",
+
+        "official_domains": [
+
+            "ntt.edu.vn"
+
+        ],
+
+        "aliases": [
+
+            "nguyen tat thanh university",
+
+            "đại học nguyễn tất thành"
+
+        ],
+
+        "weak_aliases": [
+
+            "nttu"
+
+        ]
+
+    }
+
+}

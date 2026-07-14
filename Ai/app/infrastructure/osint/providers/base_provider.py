@@ -25,7 +25,10 @@ class BaseProvider(ABC):
     """
 
     @abstractmethod
-    def check(self, url: str) -> dict[str, Any]:
+    def check(
+        self,
+        url: str
+    ) -> dict[str, Any]:
         """
         Query URL.
 
