@@ -4,50 +4,13 @@ import { Plus, ChevronLeft, Settings, HelpCircle, Send, Image, Minimize2, LogOut
 import './AiChatbotFullPage.css';
 import { useChatbot } from '../../../hooks';
 
-const AGENTS = [
-  {
-    id: 'ai',
-    name: 'AI',
-    color: '#23b56c',
-    label: 'Trợ lý chung',
-    welcome: 'Xin chào! Tôi là Trợ lý AI của Chống Lừa Đảo. Tôi có thể giúp bạn kiểm tra độ an toàn của các đường link, IP, SĐT, email và tư vấn phòng chống các hình thức lừa đảo trực tuyến phổ biến.'
-  },
-  {
-    id: 'hoangminh',
-    name: 'Hoàng Minh',
-    color: '#ef4444',
-    label: 'Tài chính & Ngân hàng',
-    welcome: 'Chào bạn! Tôi là Hoàng Minh, chuyên gia tư vấn an toàn tài chính. Hãy chia sẻ với tôi nếu bạn gặp cuộc gọi mạo danh cơ quan công an/ngân hàng, dụ dỗ đầu tư tài chính lãi cao, hoặc nhận tin nhắn gửi mã OTP giả mạo.'
-  },
-  {
-    id: 'minhan',
-    name: 'Minh An',
-    color: '#007aff',
-    label: 'Mạng xã hội & OTP',
-    welcome: 'Hi! Minh An đây, chuyên gia bảo mật mạng xã hội. Tôi có thể hỗ trợ bạn nhận diện các group Telegram lừa đảo làm nhiệm vụ online, fanpage giả mạo, link tặng quà trúng thưởng, hay hướng dẫn bảo mật tài khoản Facebook.'
-  },
-  {
-    id: 'tieulam',
-    name: 'Tiểu Lâm',
-    color: '#f59e0b',
-    label: 'Rò rỉ dữ liệu',
-    welcome: 'Xin chào! Tôi là Tiểu Lâm, trợ lý kiểm tra lộ lọt dữ liệu cá nhân. Nếu bạn nghi ngờ địa chỉ email, mật khẩu hoặc số CCCD của mình bị rò rỉ trên internet hoặc chợ đen, tôi sẽ hướng dẫn bạn các bước xử lý khân cấp.'
-  },
-  {
-    id: 'tieumy',
-    name: 'Tiểu Mỹ',
-    color: '#8b5cf6',
-    label: 'Phân tích ảnh chụp',
-    welcome: 'Chào bạn! Tôi là Tiểu Mỹ. Tôi chuyên phân tích hình ảnh tin nhắn đe dọa, hóa đơn chuyển tiền giả (fake bill). Bạn hãy mô tả nội dung ảnh chụp hoặc dán văn bản tin nhắn nghi ngờ vào đây để tôi kiểm tra.'
-  },
-  {
-    id: 'tieuhong',
-    name: 'Tiểu Hồng',
-    color: '#ec4899',
-    label: 'Hỗ trợ tố cáo',
-    welcome: 'Chào bạn! Tôi là Tiểu Hồng, cố vấn pháp lý cộng đồng. Tôi sẽ hướng dẫn bạn chi tiết quy trình thu thập bằng chứng kỹ thuật số, lập vi bằng, viết đơn trình báo và liên hệ các cơ quan Công an có thẩm quyền để tố cáo lừa đảo.'
-  }
-];
+const AGENT = {
+  id: 'ai',
+  name: 'AI',
+  color: '#23b56c',
+  label: 'Trợ lý chung',
+  welcome: 'Xin chào! Tôi là Trợ lý AI của Chống Lừa Đảo. Tôi có thể giúp bạn kiểm tra độ an toàn của các đường link, IP, SĐT, email và tư vấn phòng chống các hình thức lừa đảo trực tuyến phổ biến.'
+};
 
 const QUICK_PROMPTS = [
   {
@@ -84,69 +47,58 @@ const QUICK_PROMPTS = [
   }
 ];
 
+// Parse **bold** trong một dòng văn bản thành <strong>, tránh hiện ký tự ** thô
+const renderInlineText = (line) => {
+  const parts = line.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+};
+
 const renderMessageText = (text) => {
   if (!text) return '';
   return text.split('\n').map((line, index) => {
     if (line.startsWith('## ')) {
-      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{line.replace('## ', '')}</h4>;
+      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{renderInlineText(line.replace('## ', ''))}</h4>;
     }
     if (line.startsWith('- ')) {
-      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{line.replace('- ', '')}</li>;
+      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{renderInlineText(line.replace('- ', ''))}</li>;
     }
-    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{line}</p>;
+    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{renderInlineText(line)}</p>;
   });
 };
 
 export default function AiChatbotFullPage({ addToast }) {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply, askChatbot } = useChatbot();
+  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply, askChatbot, askChatbotImage } = useChatbot();
   const [conversations, setConversations] = useState([
-    { id: '1', title: 'Hội thoại chính', agent: 'ai', messages: [] }
+    { id: '1', title: 'Hội thoại chính', messages: [] }
   ]);
   const [activeConvId, setActiveConvId] = useState('1');
-  const [selectedAgentId, setSelectedAgentId] = useState('ai');
 
   const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   const activeConv = conversations.find(c => c.id === activeConvId) || conversations[0];
-  const selectedAgent = AGENTS.find(a => a.id === selectedAgentId) || AGENTS[0];
 
   // Auto-scroll to bottom of messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [activeConv?.messages, isThinking]);
 
-  // Adjust active agent when switching conversations
-  useEffect(() => {
-    if (activeConv) {
-      setTimeout(() => setSelectedAgentId(activeConv.agent), 0);
-    }
-  }, [activeConvId, activeConv]);
-
-
-  const handleSelectAgent = (agentId) => {
-    setSelectedAgentId(agentId);
-    // Update active conversation's agent
-    setConversations(prev => prev.map(c => {
-      if (c.id === activeConvId) {
-        return { ...c, agent: agentId };
-      }
-      return c;
-    }));
-  };
-
   const handleNewConversation = () => {
     const newId = (conversations.length + 1).toString();
     const newConv = {
       id: newId,
       title: `Hội thoại ${newId}`,
-      agent: 'ai',
       messages: []
     };
     setConversations(prev => [...prev, newConv]);
     setActiveConvId(newId);
-    setSelectedAgentId('ai');
     if (addToast) {
       addToast('Đã tạo cuộc hội thoại mới!', 'success');
     }
@@ -186,7 +138,7 @@ export default function AiChatbotFullPage({ addToast }) {
     try {
       let replyText = await askChatbot(text);
       if (!replyText) {
-        replyText = getAgentReply(text, selectedAgentId);
+        replyText = getAgentReply(text);
       }
 
       setConversations(prev => prev.map(c => {
@@ -199,7 +151,7 @@ export default function AiChatbotFullPage({ addToast }) {
         return c;
       }));
     } catch (err) {
-      const replyText = getAgentReply(text, selectedAgentId);
+      const replyText = getAgentReply(text);
       setConversations(prev => prev.map(c => {
         if (c.id === activeConvId) {
           return {
@@ -221,9 +173,55 @@ export default function AiChatbotFullPage({ addToast }) {
     }
   };
 
+  const appendMessageToActiveConv = (msg) => {
+    setConversations(prev => prev.map(c => {
+      if (c.id === activeConvId) {
+        return { ...c, messages: [...c.messages, msg] };
+      }
+      return c;
+    }));
+  };
+
   const handleUploadImage = () => {
-    if (addToast) {
-      addToast('Chức năng phân tích hình ảnh đang được đồng bộ hóa...', 'info');
+    fileInputRef.current?.click();
+  };
+
+  const handleImageSelected = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      if (addToast) addToast('Vui lòng chọn một tệp hình ảnh.', 'error');
+      return;
+    }
+
+    const MAX_SIZE_MB = 8;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      if (addToast) addToast(`Ảnh quá lớn (tối đa ${MAX_SIZE_MB}MB).`, 'error');
+      return;
+    }
+
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    appendMessageToActiveConv({ sender: 'user', text: 'Đã gửi một ảnh để kiểm tra.', image: dataUrl });
+    setIsThinking(true);
+
+    try {
+      let replyText = await askChatbotImage(dataUrl);
+      if (!replyText) {
+        replyText = 'Xin lỗi, hiện chưa phân tích được ảnh này. Bạn thử lại sau ít phút nhé.';
+      }
+      appendMessageToActiveConv({ sender: 'bot', text: replyText });
+    } catch (err) {
+      appendMessageToActiveConv({ sender: 'bot', text: 'Xin lỗi, hiện chưa phân tích được ảnh này. Bạn thử lại sau ít phút nhé.' });
+    } finally {
+      setIsThinking(false);
     }
   };
 
@@ -300,32 +298,16 @@ export default function AiChatbotFullPage({ addToast }) {
           </div>
         </header>
 
-        {/* Agent Persona Select Bar */}
-        <div className="agent-selection-row">
-          {AGENTS.map(agent => (
-            <button
-              key={agent.id}
-              className={`agent-pill ${selectedAgentId === agent.id ? 'active' : ''}`}
-              onClick={() => handleSelectAgent(agent.id)}
-            >
-              <div className="agent-avatar-circle" style={{ backgroundColor: agent.color }}>
-                {agent.name[0]}
-              </div>
-              <span>{agent.name}</span>
-            </button>
-          ))}
-        </div>
-
         {/* Message Stream Stream */}
         <div className="chat-messages-container">
           {activeConv.messages.length === 0 ? (
             /* Empty Greeting State */
             <div className="chat-empty-greeting">
-              <div className="chat-welcome-avatar-wrap" style={{ color: selectedAgent.color, borderColor: `${selectedAgent.color}33`, background: `${selectedAgent.color}11` }}>
-                <span style={{ fontSize: '1.75rem', fontWeight: 900 }}>{selectedAgent.name[0]}</span>
+              <div className="chat-welcome-avatar-wrap" style={{ color: AGENT.color, borderColor: `${AGENT.color}33`, background: `${AGENT.color}11` }}>
+                <span style={{ fontSize: '1.75rem', fontWeight: 900 }}>{AGENT.name[0]}</span>
               </div>
-              <h2>Chào bạn, Trợ lý {selectedAgent.name} có thể giúp gì?</h2>
-              <p>{selectedAgent.welcome}</p>
+              <h2>Chào bạn, Trợ lý {AGENT.name} có thể giúp gì?</h2>
+              <p>{AGENT.welcome}</p>
 
               <div className="chat-prompts-grid">
                 {QUICK_PROMPTS.map(p => (
@@ -350,20 +332,27 @@ export default function AiChatbotFullPage({ addToast }) {
             <>
               {/* Auto welcoming message */}
               <div className="chat-bubble-row bot">
-                <div className="chat-avatar-wrap" style={{ backgroundColor: selectedAgent.color }}>
-                  {selectedAgent.name[0]}
+                <div className="chat-avatar-wrap" style={{ backgroundColor: AGENT.color }}>
+                  {AGENT.name[0]}
                 </div>
                 <div className="chat-msg-bubble">
-                  {selectedAgent.welcome}
+                  {AGENT.welcome}
                 </div>
               </div>
 
               {activeConv.messages.map((msg, idx) => (
                 <div key={idx} className={`chat-bubble-row ${msg.sender}`}>
-                  <div className="chat-avatar-wrap" style={{ backgroundColor: msg.sender === 'bot' ? selectedAgent.color : undefined }}>
-                    {msg.sender === 'user' ? 'U' : selectedAgent.name[0]}
+                  <div className="chat-avatar-wrap" style={{ backgroundColor: msg.sender === 'bot' ? AGENT.color : undefined }}>
+                    {msg.sender === 'user' ? 'U' : AGENT.name[0]}
                   </div>
                   <div className="chat-msg-bubble">
+                    {msg.image && (
+                      <img
+                        src={msg.image}
+                        alt="Ảnh đã gửi"
+                        style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', display: 'block', marginBottom: msg.text ? '0.5rem' : 0 }}
+                      />
+                    )}
                     {renderMessageText(msg.text)}
                   </div>
                 </div>
@@ -371,11 +360,11 @@ export default function AiChatbotFullPage({ addToast }) {
 
               {isThinking && (
                 <div className="chat-bubble-row bot thinking">
-                  <div className="chat-avatar-wrap" style={{ backgroundColor: selectedAgent.color }}>
-                    {selectedAgent.name[0]}
+                  <div className="chat-avatar-wrap" style={{ backgroundColor: AGENT.color }}>
+                    {AGENT.name[0]}
                   </div>
                   <div className="chat-msg-bubble">
-                    <span>Trợ lý {selectedAgent.name} đang suy nghĩ</span>
+                    <span>Trợ lý {AGENT.name} đang suy nghĩ</span>
                     <div className="spinner" style={{ width: '10px', height: '10px', borderWidth: '1.5px', borderStyle: 'solid', display: 'inline-block' }}></div>
                   </div>
                 </div>
@@ -388,6 +377,13 @@ export default function AiChatbotFullPage({ addToast }) {
         {/* Bottom Input Area */}
         <div className="chat-bottom-wrapper">
           <div className="chat-input-bar">
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageSelected}
+              style={{ display: 'none' }}
+            />
             <button className="input-media-btn" onClick={handleUploadImage} title="Tải ảnh hoặc tài liệu">
               <Image size={18} />
             </button>

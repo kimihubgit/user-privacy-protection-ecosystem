@@ -3,16 +3,27 @@ import { useNavigate } from 'react-router-dom';
 import { MessageSquareCode, X } from 'lucide-react';
 import { useChatbot } from '../../../hooks';
 
+// Parse **bold** trong một dòng văn bản thành <strong>, tránh hiện ký tự ** thô
+const renderInlineText = (line) => {
+  const parts = line.split(/(\*\*[^*]+\*\*)/g);
+  return parts.map((part, i) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={i}>{part.slice(2, -2)}</strong>;
+    }
+    return part;
+  });
+};
+
 const renderMessageText = (text) => {
   if (!text) return '';
   return text.split('\n').map((line, index) => {
     if (line.startsWith('## ')) {
-      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{line.replace('## ', '')}</h4>;
+      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{renderInlineText(line.replace('## ', ''))}</h4>;
     }
     if (line.startsWith('- ')) {
-      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{line.replace('- ', '')}</li>;
+      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{renderInlineText(line.replace('- ', ''))}</li>;
     }
-    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{line}</p>;
+    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{renderInlineText(line)}</p>;
   });
 };
 
@@ -40,11 +51,11 @@ export default function FloatingChat({
     try {
       let replyText = await askChatbot(query);
       if (!replyText) {
-        replyText = getAgentReply(query, 'ai');
+        replyText = getAgentReply(query);
       }
       setChatMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
     } catch (err) {
-      const replyText = getAgentReply(query, 'ai');
+      const replyText = getAgentReply(query);
       setChatMessages(prev => [...prev, { sender: 'bot', text: replyText }]);
     } finally {
       setIsThinking(false);
