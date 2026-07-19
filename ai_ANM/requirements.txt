@@ -1,13 +1,69 @@
-langchain
-langchain-core
-langchain-community
-langchain-text-splitters
-langchain-huggingface
-langchain-groq
-sentence-transformers
-faiss-cpu
-pypdf
-python-dotenv
-fastapi
-uvicorn
+# =========================
+# FastAPI
+# =========================
 
+fastapi
+uvicorn[standard]
+
+# =========================
+# Validation
+# =========================
+
+pydantic
+pydantic-settings
+
+# =========================
+# Gemini
+# =========================
+
+google-genai
+
+# =========================
+# Vector Database
+# =========================
+
+pinecone
+
+# =========================
+# Redis
+# =========================
+
+redis
+
+# =========================
+# Embedding
+# =========================
+
+sentence-transformers
+
+torch
+
+# =========================
+# HTTP
+# =========================
+
+httpx
+
+# =========================
+# PDF
+# =========================
+
+pymupdf
+
+# =========================
+# Utilities
+# =========================
+
+python-dotenv
+
+orjson
+
+tenacity
+
+# =========================
+# Testing
+# =========================
+
+pytest
+
+pytest-asyncio
