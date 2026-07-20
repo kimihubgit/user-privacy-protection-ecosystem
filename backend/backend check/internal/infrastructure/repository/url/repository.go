@@ -72,8 +72,14 @@ func (r *mongoRepository) InitIndexes(ctx context.Context) error {
 	domainIdx := mongo.IndexModel{
 		Keys: bson.D{{Key: "domain", Value: 1}},
 	}
+	createdAtIdx := mongo.IndexModel{
+		Keys: bson.D{{Key: "created_at", Value: -1}},
+	}
+	statusIdx := mongo.IndexModel{
+		Keys: bson.D{{Key: "status", Value: 1}},
+	}
 
-	_, err := urlsColl.Indexes().CreateMany(ctx, []mongo.IndexModel{urlIdx, domainIdx})
+	_, err := urlsColl.Indexes().CreateMany(ctx, []mongo.IndexModel{urlIdx, domainIdx, createdAtIdx, statusIdx})
 	if err != nil {
 		return err
 	}
@@ -99,7 +105,10 @@ func (r *mongoRepository) InitIndexes(ctx context.Context) error {
 	allowDomainIdx := mongo.IndexModel{
 		Keys: bson.D{{Key: "domain", Value: 1}},
 	}
-	_, err = allowlistColl.Indexes().CreateMany(ctx, []mongo.IndexModel{allowURLIdx, allowDomainIdx})
+	allowCreatedAtIdx := mongo.IndexModel{
+		Keys: bson.D{{Key: "created_at", Value: -1}},
+	}
+	_, err = allowlistColl.Indexes().CreateMany(ctx, []mongo.IndexModel{allowURLIdx, allowDomainIdx, allowCreatedAtIdx})
 	return err
 }
 
@@ -214,7 +223,13 @@ func (r *mongoRepository) ListURLs(ctx context.Context, page, limit int64, statu
 		filter["status"] = status
 	}
 
-	total, err := coll.CountDocuments(ctx, filter)
+	var total int64
+	var err error
+	if len(filter) == 0 {
+		total, err = coll.EstimatedDocumentCount(ctx)
+	} else {
+		total, err = coll.CountDocuments(ctx, filter)
+	}
 	if err != nil {
 		return nil, 0, err
 	}
@@ -291,6 +306,16 @@ func (r *mongoRepository) GetStats(ctx context.Context) (*response.StatsResponse
 		return nil, err
 	}
 
+	totalAllowlist, err := r.allowlistCollection().CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
+	totalScammers, err := r.db.Database.Collection("scammers").CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return nil, err
+	}
+
 	resultPipeline := mongo.Pipeline{
 		{{Key: "$group", Value: bson.D{
 			{Key: "_id", Value: "$result"},
@@ -362,6 +387,8 @@ func (r *mongoRepository) GetStats(ctx context.Context) (*response.StatsResponse
 		SuspiciousChecks:  suspiciousChecks,
 		SafeChecks:        safeChecks,
 		TotalScamURLs:     totalScamURLs,
+		TotalAllowlist:    totalAllowlist,
+		TotalScammers:     totalScammers,
 		CategoryBreakdown: categoryBreakdown,
 	}, nil
 }
@@ -400,7 +427,7 @@ func (r *mongoRepository) GetAllowURLByID(ctx context.Context, id primitive.Obje
 
 func (r *mongoRepository) ListAllowURLs(ctx context.Context, page, limit int64) ([]models.AllowURL, int64, error) {
 	coll := r.allowlistCollection()
-	total, err := coll.CountDocuments(ctx, bson.M{})
+	total, err := coll.EstimatedDocumentCount(ctx)
 	if err != nil {
 		return nil, 0, err
 	}

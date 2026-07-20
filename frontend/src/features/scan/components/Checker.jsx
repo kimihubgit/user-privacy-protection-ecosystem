@@ -61,7 +61,7 @@ export default function Checker({ addToast }) {
   const scanProgress = 0;
   const scanStepIndex = 0;
   const scanResult = null;
-  const setScanResult = () => {};
+  const setScanResult = () => { };
   const scanSteps = [
     "Đang kết nối cổng giám sát trung tâm...",
     "Đang quét heuristic AI nhận diện giả mạo...",
@@ -102,13 +102,13 @@ export default function Checker({ addToast }) {
   }, [inputValue]);
 
   const handleSelectItem = (item) => {
-    navigate(`/detail/${encodeURIComponent(item.target)}`);
+    navigate(`/detail/${encodeURIComponent(item.target)}`, { state: { autoScan: true } });
   };
 
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     if (!inputValue.trim()) return;
-    navigate(`/detail/${encodeURIComponent(inputValue.trim())}`);
+    navigate(`/detail/${encodeURIComponent(inputValue.trim())}`, { state: { autoScan: true } });
   };
 
 
@@ -365,7 +365,7 @@ export default function Checker({ addToast }) {
                 </button>
               )}
               <button type="submit" className="search-submit-btn">
-                TRA CỨU
+                PHÂN TÍCH
               </button>
             </form>
 

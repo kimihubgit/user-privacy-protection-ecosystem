@@ -24,11 +24,13 @@ type Loss struct {
 }
 
 type OtherEntities struct {
-	Web     []string `json:"web" bson:"web"`
-	Phone   []string `json:"phone" bson:"phone"`
-	Name    []string `json:"name" bson:"name"`
-	Address []string `json:"address" bson:"address"`
-	Social  []string `json:"social" bson:"social"`
+	Web         []string `json:"web" bson:"web"`
+	Phone       []string `json:"phone" bson:"phone"`
+	Name        []string `json:"name" bson:"name"`
+	Address     []string `json:"address" bson:"address"`
+	Social      []string `json:"social" bson:"social"`
+	BankAccount []string `json:"bank_account,omitempty" bson:"bank_account,omitempty"`
+	BankName    []string `json:"bank_name,omitempty" bson:"bank_name,omitempty"`
 }
 
 type RawData struct {

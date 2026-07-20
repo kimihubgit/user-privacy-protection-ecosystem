@@ -33,6 +33,7 @@ type Service interface {
 	// Added for Clean Architecture (Resolving handler direct repository call bypass)
 	FindUserByID(ctx context.Context, id primitive.ObjectID) (*entity.User, error)
 	ListUsers(ctx context.Context, page, limit int64, search string) ([]entity.User, int64, error)
+	GetStats(ctx context.Context) (total int64, newToday int64, err error)
 }
 
 type service struct {
@@ -110,6 +111,10 @@ func (s *service) FindUserByID(ctx context.Context, id primitive.ObjectID) (*ent
 
 func (s *service) ListUsers(ctx context.Context, page, limit int64, search string) ([]entity.User, int64, error) {
 	return s.userRepo.List(ctx, page, limit, search)
+}
+
+func (s *service) GetStats(ctx context.Context) (total int64, newToday int64, err error) {
+	return s.userRepo.GetStats(ctx)
 }
 
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"io"
 	"net/http"
 	"strconv"
@@ -247,4 +248,115 @@ func (h *AdminHandler) GetUserDetails(c *gin.Context) {
 			"pending_reports": pendingReports,
 		},
 	})
+}
+
+func (h *AdminHandler) GetDashboardStats(c *gin.Context) {
+	ctx := c.Request.Context()
+
+	// 1. Get user stats from authService
+	totalUsers, newUsersToday, err := h.authService.GetStats(ctx)
+	if err != nil {
+		response.SendError(c, http.StatusInternalServerError, "DATABASE_ERROR", "failed to fetch user stats: "+err.Error())
+		return
+	}
+
+	// 2. Get weekly report stats from reportService
+	weeklyReportCounts, weeklyReportTotal, err := h.reportService.GetWeeklyStats(ctx)
+	if err != nil {
+		response.SendError(c, http.StatusInternalServerError, "DATABASE_ERROR", "failed to fetch weekly report stats: "+err.Error())
+		return
+	}
+
+	// 3. Get url, allowlist, and scammer stats from backend check
+	baseUrl := config.AppConfig.BackendCheckURL
+	apiKey := config.AppConfig.BackendCheckAPIKey
+	targetURL := baseUrl + "/api/admin/stats"
+
+	req, err := http.NewRequestWithContext(ctx, "GET", targetURL, nil)
+	if err != nil {
+		response.SendError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to create request to backend check: "+err.Error())
+		return
+	}
+	req.Header.Set("X-API-Key", apiKey)
+
+	resp, err := h.httpClient.Do(req)
+	if err != nil {
+		response.SendError(c, http.StatusBadGateway, "BAD_GATEWAY", "failed to contact backend check: "+err.Error())
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		respBody, _ := io.ReadAll(resp.Body)
+		var errData struct {
+			Message string `json:"message"`
+			Status  string `json:"status"`
+			Error   string `json:"error"`
+		}
+		errMsg := "backend check stats returned error"
+		if err := json.Unmarshal(respBody, &errData); err == nil {
+			if errData.Message != "" {
+				errMsg = errData.Message
+			} else if errData.Error != "" {
+				errMsg = errData.Error
+			}
+		} else if len(respBody) > 0 {
+			errMsg = string(respBody)
+		}
+		response.SendError(c, resp.StatusCode, "BAD_GATEWAY", errMsg)
+		return
+	}
+
+	var checkStats struct {
+		TotalChecks       int64            `json:"total_checks"`
+		MaliciousChecks   int64            `json:"malicious_checks"`
+		SuspiciousChecks  int64            `json:"suspicious_checks"`
+		SafeChecks        int64            `json:"safe_checks"`
+		TotalScamURLs     int64            `json:"total_scam_urls"`
+		TotalAllowlist    int64            `json:"total_allowlist"`
+		TotalScammers     int64            `json:"total_scammers"`
+		CategoryBreakdown map[string]int64 `json:"category_breakdown"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&checkStats); err != nil {
+		response.SendError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "failed to decode backend check stats: "+err.Error())
+		return
+	}
+
+	// 4. Return combined stats
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"users": gin.H{
+				"total":     totalUsers,
+				"new_today": newUsersToday,
+			},
+			"reports": gin.H{
+				"weekly_total": weeklyReportTotal,
+				"weekly_days":  weeklyReportCounts,
+			},
+			"scam_urls":  checkStats.TotalScamURLs,
+			"allowlist":  checkStats.TotalAllowlist,
+			"scam_users": checkStats.TotalScammers,
+			"checks": gin.H{
+				"total":      checkStats.TotalChecks,
+				"malicious":  checkStats.MaliciousChecks,
+				"suspicious": checkStats.SuspiciousChecks,
+				"safe":       checkStats.SafeChecks,
+			},
+			"categories": checkStats.CategoryBreakdown,
+		},
+	})
+}
+
+func (h *AdminHandler) AddAllowURL(c *gin.Context) {
+	h.forwardRequest(c, "POST", "/api/admin/allowlist")
+}
+
+func (h *AdminHandler) ListAllowURLs(c *gin.Context) {
+	h.forwardRequest(c, "GET", "/api/admin/allowlist")
+}
+
+func (h *AdminHandler) DeleteAllowURL(c *gin.Context) {
+	h.forwardRequest(c, "DELETE", "/api/admin/allowlist/"+c.Param("id"))
 }

@@ -136,3 +136,24 @@ func (r *mongoRepository) List(ctx context.Context, page, limit int64, search st
 
 	return users, total, nil
 }
+
+func (r *mongoRepository) GetStats(ctx context.Context) (total int64, newToday int64, err error) {
+	total, err = r.collection.CountDocuments(ctx, bson.M{})
+	if err != nil {
+		return 0, 0, err
+	}
+
+	now := time.Now()
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
+
+	newToday, err = r.collection.CountDocuments(ctx, bson.M{
+		"created_at": bson.M{
+			"$gte": todayStart,
+		},
+	})
+	if err != nil {
+		return total, 0, err
+	}
+
+	return total, newToday, nil
+}

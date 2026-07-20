@@ -17,7 +17,7 @@ func InitURLFilter(db *database.DB) {
 	URLFilter = NewFilter(2000000)
 
 	ctx := context.Background()
-	collection := db.Database.Collection("scam_urls")
+	collection := db.Database.Collection("blacklist")
 
 	// Retrieve url and domain fields to minimize network overhead
 	filter := bson.M{

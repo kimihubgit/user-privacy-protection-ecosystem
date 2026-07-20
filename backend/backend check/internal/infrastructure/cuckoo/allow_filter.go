@@ -46,7 +46,7 @@ func InitURLAllowlist(db *database.DB) {
 	URLAllowlist = NewAllowlist()
 
 	ctx := context.Background()
-	collection := db.Database.Collection("allow_urls")
+	collection := db.Database.Collection("whitelist")
 
 	opts := options.Find().SetProjection(bson.M{"url": 1, "domain": 1})
 	cursor, err := collection.Find(ctx, bson.M{}, opts)

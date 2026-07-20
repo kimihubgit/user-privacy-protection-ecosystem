@@ -14,4 +14,5 @@ type ReportRepository interface {
 	GetByReporter(ctx context.Context, email string, ip string, page, limit int64) ([]entity.Report, int64, error)
 	GetStatsByReporter(ctx context.Context, email string, ip string) (map[string]int64, error)
 	GetGlobalStats(ctx context.Context) (map[string]int64, error)
+	GetWeeklyStats(ctx context.Context) (dailyCounts map[string]int64, total int64, err error)
 }

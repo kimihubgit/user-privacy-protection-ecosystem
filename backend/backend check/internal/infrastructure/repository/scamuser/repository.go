@@ -115,7 +115,13 @@ func (r *mongoRepository) ListScammers(ctx context.Context, page, limit int64, t
 		}
 	}
 
-	total, err := coll.CountDocuments(ctx, filter)
+	var total int64
+	var err error
+	if len(filter) == 0 {
+		total, err = coll.EstimatedDocumentCount(ctx)
+	} else {
+		total, err = coll.CountDocuments(ctx, filter)
+	}
 	if err != nil {
 		return nil, 0, err
 	}

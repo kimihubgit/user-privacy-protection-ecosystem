@@ -1,11 +1,28 @@
 <template>
   <div style="height: 100%; display: flex; flex-direction: column;">
-    <h2 class="title" data-i18n="settings.title">{{ t('settings.title') }}</h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+      <h2 class="title" data-i18n="settings.title" style="margin-bottom: 0;">{{ t('settings.title') }}</h2>
+      
+      <!-- Theme Accent Selector next to Title -->
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; gap: 6px;">
+          <button 
+            v-for="color in ['blue', 'indigo', 'teal', 'danger']" 
+            :key="color"
+            :class="['accent-color-btn', { active: activeAccentColor === color }]"
+            :style="{
+              backgroundColor: getAccentColorHex(color)
+            }"
+            @click="setAccentColor(color)"
+          ></button>
+        </div>
+      </div>
+    </div>
     
     <!-- Sub Navigation -->
     <div class="sub-nav" id="settings-sub-nav" style="margin-bottom: 14px;">
       <button 
-        v-for="tab in ['security', 'facebook', 'instagram', 'zalo', 'others']" 
+        v-for="tab in ['security', 'social', 'others']" 
         :key="tab"
         :class="['sub-nav-item', { active: activeSettingsTab === tab }]" 
         @click="setSettingsTab(tab)"
@@ -92,127 +109,150 @@
         </div>
       </div>
 
-      <!-- Settings Panel: Facebook -->
-      <div v-show="activeSettingsTab === 'facebook'" class="settings-sub-panel active" id="settings-panel-facebook">
-        <div class="settings-form">
-          <!-- Block "Seen" in Chat -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.fb_seen_chat_title') }}</span>
-              <span class="card-desc">{{ t('settings.fb_seen_chat_desc') }}</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.block_seen_chat" @change="onToggleChange('block_seen_chat', 'block_seen_chat', false)">
-              <span class="slider round"></span>
-            </label>
+      <!-- Settings Panel: Social Networks -->
+      <div v-show="activeSettingsTab === 'social'" class="settings-sub-panel active" id="settings-panel-social" style="display: flex; flex-direction: column; gap: 8px;">
+        
+        <!-- Collapsible Section: Facebook -->
+        <div class="social-collapse-group" :class="{ open: expandedSocial.facebook }">
+          <div class="social-collapse-header" @click="toggleSocialSection('facebook')">
+            <span class="social-platform-title">Facebook</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="social-collapse-chevron-svg">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </div>
-
-          <!-- Block "Seen" in Stories -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.fb_seen_story_title') }}</span>
-              <span class="card-desc">{{ t('settings.fb_seen_story_desc') }}</span>
+          <div v-show="expandedSocial.facebook" class="social-collapse-body">
+            <!-- Block "Seen" in Chat -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.fb_seen_chat_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.fb_seen_chat_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.block_seen_chat" @change="onToggleChange('block_seen_chat', 'block_seen_chat', false)">
+                <span class="slider round"></span>
+              </label>
             </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.block_seen_story_facebook" @change="onToggleChange('block_seen_story_facebook', 'block_seen_story_facebook', false)">
-              <span class="slider round"></span>
-            </label>
-          </div>
 
-          <!-- Block "Typing..." in Chat -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.fb_typing_chat_title') }}</span>
-              <span class="card-desc">{{ t('settings.fb_typing_chat_desc') }}</span>
+            <!-- Block "Seen" in Stories -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.fb_seen_story_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.fb_seen_story_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.block_seen_story_facebook" @change="onToggleChange('block_seen_story_facebook', 'block_seen_story_facebook', false)">
+                <span class="slider round"></span>
+              </label>
             </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.block_typing_chat" @change="onToggleChange('block_typing_chat', 'block_typing_chat', false)">
-              <span class="slider round"></span>
-            </label>
-          </div>
 
-          <!-- Prevent Feed Auto-Reload -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.fb_prevent_reload_title') }}</span>
-              <span class="card-desc">{{ t('settings.fb_prevent_reload_desc') }}</span>
+            <!-- Block "Typing..." in Chat -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.fb_typing_chat_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.fb_typing_chat_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.block_typing_chat" @change="onToggleChange('block_typing_chat', 'block_typing_chat', false)">
+                <span class="slider round"></span>
+              </label>
             </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.prevent_facebook_feed_reload" @change="onToggleChange('prevent_facebook_feed_reload', 'prevent_facebook_feed_reload', false)">
-              <span class="slider round"></span>
-            </label>
-          </div>
 
-          <!-- Block Suggested Posts -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.fb_suggested_posts_title') }}</span>
-              <span class="card-desc">{{ t('settings.fb_suggested_posts_desc') }}</span>
+            <!-- Prevent Feed Auto-Reload -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.fb_prevent_reload_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.fb_prevent_reload_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.prevent_facebook_feed_reload" @change="onToggleChange('prevent_facebook_feed_reload', 'prevent_facebook_feed_reload', false)">
+                <span class="slider round"></span>
+              </label>
             </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.block_suggested_posts" @change="onToggleChange('block_suggested_posts', 'block_suggested_posts', false)">
-              <span class="slider round"></span>
-            </label>
-          </div>
 
-          <!-- Facebook Time Counter -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.fb_timer_title') }}</span>
-              <span class="card-desc">{{ t('settings.fb_timer_desc') }}</span>
+            <!-- Block Suggested Posts -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.fb_suggested_posts_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.fb_suggested_posts_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.block_suggested_posts" @change="onToggleChange('block_suggested_posts', 'block_suggested_posts', false)">
+                <span class="slider round"></span>
+              </label>
             </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.show_facebook_time_counter" @change="onToggleChange('show_facebook_time_counter', 'show_facebook_time_counter', false)">
-              <span class="slider round"></span>
-            </label>
+
+            <!-- Facebook Time Counter -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.fb_timer_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.fb_timer_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.show_facebook_time_counter" @change="onToggleChange('show_facebook_time_counter', 'show_facebook_time_counter', false)">
+                <span class="slider round"></span>
+              </label>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Settings Panel: Instagram -->
-      <div v-show="activeSettingsTab === 'instagram'" class="settings-sub-panel active" id="settings-panel-instagram">
-        <div class="settings-form">
-          <!-- Block "Seen" in Stories -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.ig_seen_story_title') }}</span>
-              <span class="card-desc">{{ t('settings.ig_seen_story_desc') }}</span>
+        <!-- Collapsible Section: Instagram -->
+        <div class="social-collapse-group" :class="{ open: expandedSocial.instagram }">
+          <div class="social-collapse-header" @click="toggleSocialSection('instagram')">
+            <span class="social-platform-title">Instagram</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="social-collapse-chevron-svg">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </div>
+          <div v-show="expandedSocial.instagram" class="social-collapse-body">
+            <!-- Block "Seen" in Stories -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.ig_seen_story_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.ig_seen_story_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.block_seen_story_instagram" @change="onToggleChange('block_seen_story_instagram', 'block_seen_story_instagram', false)">
+                <span class="slider round"></span>
+              </label>
             </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.block_seen_story_instagram" @change="onToggleChange('block_seen_story_instagram', 'block_seen_story_instagram', false)">
-              <span class="slider round"></span>
-            </label>
           </div>
         </div>
-      </div>
 
-      <!-- Settings Panel: Zalo -->
-      <div v-show="activeSettingsTab === 'zalo'" class="settings-sub-panel active" id="settings-panel-zalo">
-        <div class="settings-form">
-          <!-- Block "Seen" in Chat -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.zalo_seen_chat_title') }}</span>
-              <span class="card-desc">{{ t('settings.zalo_seen_chat_desc') }}</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.block_seen_zalo" @change="onToggleChange('block_seen_zalo', 'block_seen_zalo', false)">
-              <span class="slider round"></span>
-            </label>
+        <!-- Collapsible Section: Zalo -->
+        <div class="social-collapse-group" :class="{ open: expandedSocial.zalo }">
+          <div class="social-collapse-header" @click="toggleSocialSection('zalo')">
+            <span class="social-platform-title">Zalo</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="social-collapse-chevron-svg">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </div>
-
-          <!-- Block "Typing..." -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.zalo_typing_chat_title') }}</span>
-              <span class="card-desc">{{ t('settings.zalo_typing_chat_desc') }}</span>
+          <div v-show="expandedSocial.zalo" class="social-collapse-body">
+            <!-- Block "Seen" in Chat -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.zalo_seen_chat_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.zalo_seen_chat_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.block_seen_zalo" @change="onToggleChange('block_seen_zalo', 'block_seen_zalo', false)">
+                <span class="slider round"></span>
+              </label>
             </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.block_typing_zalo" @change="onToggleChange('block_typing_zalo', 'block_typing_zalo', false)">
-              <span class="slider round"></span>
-            </label>
+
+            <!-- Block "Typing..." -->
+            <div class="social-setting-row">
+              <div class="social-setting-info">
+                <span class="social-setting-title">{{ t('settings.zalo_typing_chat_title') }}</span>
+                <span class="social-setting-desc">{{ t('settings.zalo_typing_chat_desc') }}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" v-model="settings.block_typing_zalo" @change="onToggleChange('block_typing_zalo', 'block_typing_zalo', false)">
+                <span class="slider round"></span>
+              </label>
+            </div>
           </div>
         </div>
+
       </div>
 
       <!-- Settings Panel: Others -->
@@ -263,21 +303,7 @@
             </label>
           </div>
 
-          <!-- Theme Accent -->
-          <div class="form-group">
-            <label class="form-label">{{ t('settings.accent_title') }}</label>
-            <div style="display: flex; gap: 10px; margin-top: 6px;">
-              <button 
-                v-for="color in ['blue', 'indigo', 'teal', 'danger']" 
-                :key="color"
-                :class="['accent-color-btn', { active: activeAccentColor === color }]"
-                :style="{
-                  backgroundColor: getAccentColorHex(color)
-                }"
-                @click="setAccentColor(color)"
-              ></button>
-            </div>
-          </div>
+
         </div>
       </div>
     </div>
@@ -291,12 +317,21 @@
         </span>
         <span style="font-size: 10px; color: var(--text-muted);">
           <span>{{ appName }}</span> v<span>{{ appVersion }}</span> 
-          (<a href="https://kide.vn/changelog" target="_blank" style="color: var(--primary-blue); text-decoration: none; font-weight: 500;">Changelog</a>) | 
+          (<a href="https://blog.kimidev.net/changelog" target="_blank" style="color: var(--primary-blue); text-decoration: none; font-weight: 500;">Changelog</a>) | 
           <span>{{ t('settings.credit_by') }} </span> 
           <a href="https://blog.kimidev.net" target="_blank" style="color: var(--primary-blue); text-decoration: none; font-weight: 500;">{{ authorName }}</a>
         </span>
       </div>
       <div style="display: flex; gap: 6px;">
+        <!-- About Button -->
+        <button @click="$emit('show-about')" class="btn-sync-action" style="background-color: rgba(255, 255, 255, 0.05); color: var(--text-desc); border: none; cursor: pointer;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--text-desc);">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>{{ t('settings.about_btn') }}</span>
+        </button>
         <button @click="$emit('show-feedback')" class="btn-sync-action" style="background-color: var(--primary-light); color: var(--primary-blue); border: none; cursor: pointer;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; color: var(--primary-blue);">
             <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
@@ -328,6 +363,16 @@ export default {
     const isDarkMode = ref(true);
     const activeAccentColor = ref('blue');
     const lastSyncTime = ref(null);
+
+    const expandedSocial = reactive({
+      facebook: true,
+      instagram: false,
+      zalo: false
+    });
+
+    const toggleSocialSection = (platform) => {
+      expandedSocial[platform] = !expandedSocial[platform];
+    };
 
     const settings = reactive({
       webShieldActive: true,
@@ -462,7 +507,7 @@ export default {
     };
 
     const openDonate = () => {
-      chrome.tabs.create({ url: 'https://kide.vn/donate' });
+      chrome.tabs.create({ url: 'https://blog.kimidev.net/donate' });
     };
 
     const handlePolicyClick = (e) => {
@@ -508,7 +553,9 @@ export default {
       setAccentColor,
       openProductPolicy,
       openDonate,
-      handlePolicyClick
+      handlePolicyClick,
+      expandedSocial,
+      toggleSocialSection
     };
   }
 };

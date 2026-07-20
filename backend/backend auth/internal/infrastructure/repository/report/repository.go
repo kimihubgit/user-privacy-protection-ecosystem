@@ -274,3 +274,48 @@ func (r *mongoRepository) GetGlobalStats(ctx context.Context) (map[string]int64,
 
 	return stats, nil
 }
+
+func (r *mongoRepository) GetWeeklyStats(ctx context.Context) (dailyCounts map[string]int64, total int64, err error) {
+	now := time.Now()
+	offset := int(now.Weekday() - time.Monday)
+	if offset < 0 {
+		offset = 6
+	}
+	monday := now.AddDate(0, 0, -offset)
+	mondayStart := time.Date(monday.Year(), monday.Month(), monday.Day(), 0, 0, 0, 0, now.Location())
+
+	filter := bson.M{
+		"created_at": bson.M{
+			"$gte": mondayStart,
+		},
+	}
+
+	cursor, err := r.collection.Find(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	dailyCounts = map[string]int64{
+		"Monday":    0,
+		"Tuesday":   0,
+		"Wednesday": 0,
+		"Thursday":  0,
+		"Friday":    0,
+		"Saturday":  0,
+		"Sunday":    0,
+	}
+
+	var reports []entity.Report
+	if err := cursor.All(ctx, &reports); err != nil {
+		return nil, 0, err
+	}
+
+	for _, rep := range reports {
+		day := rep.CreatedAt.Weekday().String()
+		dailyCounts[day]++
+		total++
+	}
+
+	return dailyCounts, total, nil
+}

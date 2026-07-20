@@ -11,6 +11,7 @@ import (
 	reportRepo "protect-user-auth/internal/infrastructure/repository/report"
 	"protect-user-auth/internal/infrastructure/repository/user"
 	"protect-user-auth/internal/services/auth"
+	"protect-user-auth/internal/services/chat"
 	"protect-user-auth/internal/services/passkey"
 	reportService "protect-user-auth/internal/services/report"
 
@@ -47,6 +48,8 @@ func NewApp() (*App, error) {
 		return nil, err
 	}
 	repService := reportService.NewService(repRepo)
+	chatHub := chat.NewHub()
+	go chatHub.Run()
 
 	// 5. Initialize OAuth Providers Registry
 	oauthRegistry := oauth.NewRegistry()
@@ -63,9 +66,10 @@ func NewApp() (*App, error) {
 	reportHandler := handlers.NewReportHandler(repService)
 	userHandler := handlers.NewUserHandler(authService)
 	adminHandler := handlers.NewAdminHandler(authService, repService)
+	chatHandler := handlers.NewChatHandler(chatHub, authService)
 
 	// 7. Setup Router
-	r := router.SetupRouter(authService, authHandler, passkeyHandler, reportHandler, userHandler, adminHandler)
+	r := router.SetupRouter(authService, authHandler, passkeyHandler, reportHandler, userHandler, adminHandler, chatHandler)
 
 	return &App{
 		Router:  r,

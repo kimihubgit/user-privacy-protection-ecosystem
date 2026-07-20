@@ -7,45 +7,17 @@ import { useChatbot } from '../../../hooks';
 const AGENTS = [
   {
     id: 'ai',
-    name: 'AI',
+    name: 'Trợ lý AI',
     color: '#23b56c',
-    label: 'Trợ lý chung',
+    label: 'Trợ lý thông minh',
     welcome: 'Xin chào! Tôi là Trợ lý AI của Chống Lừa Đảo. Tôi có thể giúp bạn kiểm tra độ an toàn của các đường link, IP, SĐT, email và tư vấn phòng chống các hình thức lừa đảo trực tuyến phổ biến.'
   },
   {
-    id: 'hoangminh',
-    name: 'Hoàng Minh',
-    color: '#ef4444',
-    label: 'Tài chính & Ngân hàng',
-    welcome: 'Chào bạn! Tôi là Hoàng Minh, chuyên gia tư vấn an toàn tài chính. Hãy chia sẻ với tôi nếu bạn gặp cuộc gọi mạo danh cơ quan công an/ngân hàng, dụ dỗ đầu tư tài chính lãi cao, hoặc nhận tin nhắn gửi mã OTP giả mạo.'
-  },
-  {
-    id: 'minhan',
-    name: 'Minh An',
+    id: 'moderator',
+    name: 'Người hỗ trợ (Support)',
     color: '#007aff',
-    label: 'Mạng xã hội & OTP',
-    welcome: 'Hi! Minh An đây, chuyên gia bảo mật mạng xã hội. Tôi có thể hỗ trợ bạn nhận diện các group Telegram lừa đảo làm nhiệm vụ online, fanpage giả mạo, link tặng quà trúng thưởng, hay hướng dẫn bảo mật tài khoản Facebook.'
-  },
-  {
-    id: 'tieulam',
-    name: 'Tiểu Lâm',
-    color: '#f59e0b',
-    label: 'Rò rỉ dữ liệu',
-    welcome: 'Xin chào! Tôi là Tiểu Lâm, trợ lý kiểm tra lộ lọt dữ liệu cá nhân. Nếu bạn nghi ngờ địa chỉ email, mật khẩu hoặc số CCCD của mình bị rò rỉ trên internet hoặc chợ đen, tôi sẽ hướng dẫn bạn các bước xử lý khân cấp.'
-  },
-  {
-    id: 'tieumy',
-    name: 'Tiểu Mỹ',
-    color: '#8b5cf6',
-    label: 'Phân tích ảnh chụp',
-    welcome: 'Chào bạn! Tôi là Tiểu Mỹ. Tôi chuyên phân tích hình ảnh tin nhắn đe dọa, hóa đơn chuyển tiền giả (fake bill). Bạn hãy mô tả nội dung ảnh chụp hoặc dán văn bản tin nhắn nghi ngờ vào đây để tôi kiểm tra.'
-  },
-  {
-    id: 'tieuhong',
-    name: 'Tiểu Hồng',
-    color: '#ec4899',
-    label: 'Hỗ trợ tố cáo',
-    welcome: 'Chào bạn! Tôi là Tiểu Hồng, cố vấn pháp lý cộng đồng. Tôi sẽ hướng dẫn bạn chi tiết quy trình thu thập bằng chứng kỹ thuật số, lập vi bằng, viết đơn trình báo và liên hệ các cơ quan Công an có thẩm quyền để tố cáo lừa đảo.'
+    label: 'Hỗ trợ trực tuyến',
+    welcome: 'Xin chào! Bạn đang kết nối với kênh hỗ trợ trực tuyến của Chống Lừa Đảo. Vui lòng gửi tin nhắn, hệ thống sẽ phân phát cho tư vấn viên hỗ trợ bạn ngay lập tức.'
   }
 ];
 
@@ -84,16 +56,84 @@ const QUICK_PROMPTS = [
   }
 ];
 
+const parseInlineStyle = (text) => {
+  if (!text) return '';
+  const parts = text.split(/\*\*([^*]+)\*\*/g);
+  return parts.map((part, idx) => {
+    if (idx % 2 === 1) {
+      return <strong key={idx}>{part}</strong>;
+    }
+    return part;
+  });
+};
+
 const renderMessageText = (text) => {
   if (!text) return '';
   return text.split('\n').map((line, index) => {
-    if (line.startsWith('## ')) {
-      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{line.replace('## ', '')}</h4>;
+    const trimmed = line.trim();
+
+    // Horizontal Rule
+    if (trimmed === '---') {
+      return <hr key={index} style={{ margin: '1rem 0', border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }} />;
     }
-    if (line.startsWith('- ')) {
-      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{line.replace('- ', '')}</li>;
+
+    // Headings (ordered from longest to shortest prefix)
+    if (trimmed.startsWith('### ')) {
+      return (
+        <h4 key={index} style={{ margin: '0.8rem 0 0.35rem 0', fontWeight: 'bold', color: 'inherit', fontSize: '1.05rem' }}>
+          {parseInlineStyle(trimmed.substring(4))}
+        </h4>
+      );
     }
-    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{line}</p>;
+    if (trimmed.startsWith('## ')) {
+      return (
+        <h3 key={index} style={{ margin: '0.9rem 0 0.4rem 0', fontWeight: 'bold', color: 'inherit', fontSize: '1.25rem' }}>
+          {parseInlineStyle(trimmed.substring(3))}
+        </h3>
+      );
+    }
+    if (trimmed.startsWith('# ')) {
+      return (
+        <h2 key={index} style={{ margin: '1rem 0 0.5rem 0', fontWeight: 'bold', color: 'inherit', fontSize: '1.45rem' }}>
+          {parseInlineStyle(trimmed.substring(2))}
+        </h2>
+      );
+    }
+
+    // Numbered lists (e.g. "1. ", "2. ")
+    const numberMatch = trimmed.match(/^(\d+)\.\s(.*)/);
+    if (numberMatch) {
+      const num = numberMatch[1];
+      const rest = numberMatch[2];
+      return (
+        <div key={index} style={{ marginLeft: '1.25rem', margin: '0.25rem 0', display: 'flex', gap: '0.35rem', alignItems: 'flex-start', lineHeight: '1.5' }}>
+          <span style={{ fontWeight: 'bold', flexShrink: 0, minWidth: '1.2rem' }}>{num}.</span>
+          <span style={{ flex: 1 }}>{parseInlineStyle(rest)}</span>
+        </div>
+      );
+    }
+
+    // Bullet lists (e.g. "- ", "* ")
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      return (
+        <div key={index} style={{ marginLeft: '1.25rem', margin: '0.25rem 0', display: 'flex', gap: '0.5rem', alignItems: 'flex-start', lineHeight: '1.5' }}>
+          <span style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>•</span>
+          <span style={{ flex: 1 }}>{parseInlineStyle(trimmed.substring(2))}</span>
+        </div>
+      );
+    }
+
+    // Empty line
+    if (!trimmed) {
+      return <div key={index} style={{ height: '0.5rem' }} />;
+    }
+
+    // Regular paragraph
+    return (
+      <p key={index} style={{ margin: '0.35rem 0', color: 'inherit', lineHeight: '1.5' }}>
+        {parseInlineStyle(line)}
+      </p>
+    );
   });
 };
 
@@ -107,7 +147,71 @@ export default function AiChatbotFullPage({ addToast }) {
   const [activeConvId, setActiveConvId] = useState('1');
   const [selectedAgentId, setSelectedAgentId] = useState('ai');
 
+  // Support & WebSocket Chat states
+  const [supportMessages, setSupportMessages] = useState([
+    { sender: 'bot', text: 'Xin chào! Bạn đang kết nối với kênh hỗ trợ trực tuyến của Chống Lừa Đảo. Vui lòng gửi tin nhắn, hệ thống sẽ phân phát cho tư vấn viên hỗ trợ bạn ngay lập tức.' }
+  ]);
+  const supportSocketRef = useRef(null);
+
   const messagesEndRef = useRef(null);
+
+  // Initialize Support WebSocket connection when selectedAgentId === 'moderator'
+  useEffect(() => {
+    if (selectedAgentId !== 'moderator') {
+      if (supportSocketRef.current) {
+        supportSocketRef.current.close();
+        supportSocketRef.current = null;
+      }
+      return;
+    }
+
+    let sessionId = sessionStorage.getItem('chat_session_id');
+    if (!sessionId) {
+      sessionId = 'guest_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+      sessionStorage.setItem('chat_session_id', sessionId);
+    }
+
+    const wsUrl = `ws://localhost:8081/api/v1/ws/chat?session_id=${sessionId}&name=Khách_Hàng_A`;
+    const socket = new WebSocket(wsUrl);
+    supportSocketRef.current = socket;
+
+    socket.onopen = () => {
+      console.log('Support WebSocket connected for guest:', sessionId);
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        const replyText = data.text || data.content;
+        const senderRole = data.role;
+
+        if (replyText && senderRole === 'moderator') {
+          setSupportMessages(prev => {
+            const isDuplicate = prev.some(m => m.text === replyText && m.sender === 'bot');
+            if (isDuplicate) return prev;
+            return [...prev, { sender: 'bot', text: replyText }];
+          });
+        }
+      } catch (err) {
+        console.warn('Failed to parse Support WebSocket message:', err);
+      }
+    };
+
+    socket.onerror = (error) => {
+      console.warn('Support WebSocket error:', error);
+    };
+
+    socket.onclose = () => {
+      console.log('Support WebSocket disconnected');
+    };
+
+    return () => {
+      socket.close();
+      if (supportSocketRef.current === socket) {
+        supportSocketRef.current = null;
+      }
+    };
+  }, [selectedAgentId]);
 
   const activeConv = conversations.find(c => c.id === activeConvId) || conversations[0];
   const selectedAgent = AGENTS.find(a => a.id === selectedAgentId) || AGENTS[0];
@@ -156,6 +260,35 @@ export default function AiChatbotFullPage({ addToast }) {
     const text = textToSend || chatInput;
     if (!text.trim()) return;
 
+    if (selectedAgentId === 'moderator') {
+      const userMsg = { sender: 'user', text: text };
+      setSupportMessages(prev => [...prev, userMsg]);
+      if (!textToSend) {
+        setChatInput('');
+      }
+
+      if (supportSocketRef.current && supportSocketRef.current.readyState === WebSocket.OPEN) {
+        try {
+          const sessionId = sessionStorage.getItem('chat_session_id') || 'guest_unknown';
+          supportSocketRef.current.send(JSON.stringify({
+            session_id: sessionId,
+            sender: "Khách hàng",
+            sender_name: "Khách hàng",
+            role: "guest",
+            content: text,
+            text: text,
+            timestamp: Date.now()
+          }));
+        } catch (err) {
+          console.warn('Failed to send support message via WebSocket:', err);
+          setSupportMessages(prev => [...prev, { sender: 'bot', text: 'Không thể gửi tin nhắn. Kênh hỗ trợ đang gián đoạn.' }]);
+        }
+      } else {
+        setSupportMessages(prev => [...prev, { sender: 'bot', text: 'Kết nối hỗ trợ chưa sẵn sàng hoặc đã đóng. Vui lòng thử lại.' }]);
+      }
+      return;
+    }
+
     // Add user message
     const userMsg = { sender: 'user', text: text };
 
@@ -184,7 +317,7 @@ export default function AiChatbotFullPage({ addToast }) {
     setIsThinking(true);
 
     try {
-      let replyText = await askChatbot(text);
+      let replyText = await askChatbot(text, selectedAgentId, activeConv.messages);
       if (!replyText) {
         replyText = getAgentReply(text, selectedAgentId);
       }
@@ -233,51 +366,53 @@ export default function AiChatbotFullPage({ addToast }) {
       <div className="login-overlay-laser" style={{ opacity: 0.15 }}></div>
 
       {/* Left Sidebar */}
-      <div className={`chat-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
-        <div>
-          <div className="chat-sidebar-top-action">
-            <button className="new-chat-btn" onClick={handleNewConversation}>
-              <Plus size={16} />
-              <span>Hội thoại mới</span>
-            </button>
-            <button
-              className="collapse-sidebar-btn"
-              onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-              title={isSidebarCollapsed ? "Mở rộng thanh bên" : "Thu nhỏ thanh bên"}
-            >
-              <ChevronLeft size={16} />
-            </button>
-          </div>
+      {selectedAgentId === 'ai' && (
+        <div className={`chat-sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
+          <div>
+            <div className="chat-sidebar-top-action">
+              <button className="new-chat-btn" onClick={handleNewConversation}>
+                <Plus size={16} />
+                <span>Hội thoại mới</span>
+              </button>
+              <button
+                className="collapse-sidebar-btn"
+                onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                title={isSidebarCollapsed ? "Mở rộng thanh bên" : "Thu nhỏ thanh bên"}
+              >
+                <ChevronLeft size={16} />
+              </button>
+            </div>
 
-          <div className="chat-history-section">
-            <h4 className="chat-history-title">GẦN ĐÂY</h4>
-            <div className="chat-history-list">
-              {conversations.length > 0 ? (
-                conversations.map(conv => (
-                  <div
-                    key={conv.id}
-                    className={`history-item ${conv.id === activeConvId ? 'active' : ''}`}
-                    onClick={() => setActiveConvId(conv.id)}
-                    title={conv.title}
-                  >
-                    <MessageSquare size={16} style={{ flexShrink: 0 }} />
-                    <span>{conv.title}</span>
-                  </div>
-                ))
-              ) : (
-                <div className="no-history-text">Chưa có hội thoại nào</div>
-              )}
+            <div className="chat-history-section">
+              <h4 className="chat-history-title">GẦN ĐÂY</h4>
+              <div className="chat-history-list">
+                {conversations.length > 0 ? (
+                  conversations.map(conv => (
+                    <div
+                      key={conv.id}
+                      className={`history-item ${conv.id === activeConvId ? 'active' : ''}`}
+                      onClick={() => setActiveConvId(conv.id)}
+                      title={conv.title}
+                    >
+                      <MessageSquare size={16} style={{ flexShrink: 0 }} />
+                      <span>{conv.title}</span>
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-history-text">Chưa có hội thoại nào</div>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="chat-sidebar-footer">
-          <button className="sidebar-footer-item" onClick={() => addToast && addToast('Cài đặt đang đồng bộ hóa...', 'info')}>
-            <Settings size={16} style={{ flexShrink: 0 }} />
-            <span>Cài đặt</span>
-          </button>
+          <div className="chat-sidebar-footer">
+            <button className="sidebar-footer-item" onClick={() => addToast && addToast('Cài đặt đang đồng bộ hóa...', 'info')}>
+              <Settings size={16} style={{ flexShrink: 0 }} />
+              <span>Cài đặt</span>
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Main Area */}
       <div className="chat-main-area">
@@ -300,7 +435,7 @@ export default function AiChatbotFullPage({ addToast }) {
           </div>
         </header>
 
-        {/* Agent Persona Select Bar */}
+        {/* Tab Selection Bar (2 Tabs) */}
         <div className="agent-selection-row">
           {AGENTS.map(agent => (
             <button
@@ -318,7 +453,21 @@ export default function AiChatbotFullPage({ addToast }) {
 
         {/* Message Stream Stream */}
         <div className="chat-messages-container">
-          {activeConv.messages.length === 0 ? (
+          {selectedAgentId === 'moderator' ? (
+            /* Support Messages Stream */
+            <>
+              {supportMessages.map((msg, idx) => (
+                <div key={idx} className={`chat-bubble-row ${msg.sender === 'user' ? 'user' : 'bot'}`}>
+                  <div className="chat-avatar-wrap" style={{ backgroundColor: msg.sender === 'user' ? undefined : '#23b56c' }}>
+                    {msg.sender === 'user' ? 'U' : 'SUP'}
+                  </div>
+                  <div className="chat-msg-bubble">
+                    {renderMessageText(msg.text)}
+                  </div>
+                </div>
+              ))}
+            </>
+          ) : activeConv.messages.length === 0 ? (
             /* Empty Greeting State */
             <div className="chat-empty-greeting">
               <div className="chat-welcome-avatar-wrap" style={{ color: selectedAgent.color, borderColor: `${selectedAgent.color}33`, background: `${selectedAgent.color}11` }}>
@@ -394,7 +543,7 @@ export default function AiChatbotFullPage({ addToast }) {
             <input
               type="text"
               className="chat-core-input"
-              placeholder="Nhập câu hỏi hoặc dán tin nhắn nghi ngờ..."
+              placeholder={selectedAgentId === 'moderator' ? "Nhập nội dung cần hỗ trợ từ tư vấn viên..." : "Nhập câu hỏi hoặc dán tin nhắn nghi ngờ..."}
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleInputKeyDown}

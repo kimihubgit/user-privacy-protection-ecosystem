@@ -278,3 +278,221 @@
     from { opacity: 0; }
     to { opacity: 1; }
 }
+
+/* --- Data Blur Shield --- */
+.kiguard-blurred {
+    filter: blur(8px) !important;
+    transition: filter 0.2s ease !important;
+    cursor: pointer !important;
+}
+
+.kiguard-blurred:hover {
+    filter: blur(0px) !important;
+}
+
+/* User-defined element blur */
+.kiguard-user-blurred {
+    filter: blur(var(--kiguard-blur-val, 12px)) !important;
+    transition: filter 0.3s ease !important;
+}
+
+.kiguard-user-blurred:hover {
+    filter: blur(0px) !important;
+}
+
+/* Selector hover highlighting when in Element Blur Mode */
+.kiguard-blur-hover-highlight {
+    outline: 2px dashed #0088ff !important;
+    outline-offset: 2px !important;
+    cursor: crosshair !important;
+}
+
+/* Selection bounding box during drag-to-blur */
+.kiguard-drag-selection-box {
+    border: 1px dashed #0088ff !important;
+    background-color: rgba(0, 136, 255, 0.15) !important;
+    position: fixed !important;
+    z-index: 2147483646 !important;
+    pointer-events: none !important;
+}
+
+/* Area Blur Overlay */
+.kiguard-area-blur-overlay {
+    position: absolute !important;
+    z-index: 2147483640 !important;
+    backdrop-filter: blur(var(--kiguard-blur-val, 12px)) !important;
+    background-color: rgba(255, 255, 255, 0.01) !important;
+    border: 1px dashed rgba(0, 136, 255, 0.2) !important;
+    box-sizing: border-box !important;
+    cursor: pointer !important;
+    transition: border-color 0.2s ease, opacity 0.2s ease !important;
+}
+
+.kiguard-area-blur-overlay:hover {
+    border-color: #ff3333 !important;
+    background-color: rgba(255, 50, 50, 0.05) !important;
+}
+
+/* Area Blur Remove Tooltip */
+.kiguard-area-blur-overlay::after {
+    content: "✕" !important;
+    position: absolute !important;
+    top: 2px !important;
+    right: 4px !important;
+    color: #ff3333 !important;
+    font-size: 10px !important;
+    font-weight: bold !important;
+    opacity: 0 !important;
+    transition: opacity 0.2s ease !important;
+}
+
+.kiguard-area-blur-overlay:hover::after {
+    opacity: 1 !important;
+}
+
+/* Premium Floating Toolbar */
+.kiguard-blur-toolbar {
+    position: fixed !important;
+    bottom: 24px !important;
+    left: 50% !important;
+    transform: translateX(-50%) translateY(0) !important;
+    background: rgba(15, 23, 42, 0.85) !important;
+    backdrop-filter: blur(16px) saturate(180%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 999px !important;
+    padding: 6px 12px !important;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3), 0 0 1px 1px rgba(255, 255, 255, 0.1) inset !important;
+    z-index: 2147483647 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    font-size: 13px !important;
+    color: #f1f5f9 !important;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    user-select: none !important;
+}
+
+.kiguard-blur-toolbar.collapsed {
+    bottom: -60px !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* Small reveal toggle button */
+.kiguard-blur-toolbar-trigger {
+    position: fixed !important;
+    bottom: 12px !important;
+    right: 12px !important;
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    background: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(8px) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    color: #38bdf8 !important;
+    cursor: pointer !important;
+    z-index: 2147483646 !important;
+    transition: all 0.2s ease !important;
+}
+
+.kiguard-blur-toolbar-trigger:hover {
+    background: #0f172a !important;
+    transform: scale(1.1) !important;
+}
+
+.kiguard-blur-toolbar-btn {
+    width: 32px !important;
+    height: 32px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: transparent !important;
+    color: #94a3b8 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative !important;
+}
+
+.kiguard-blur-toolbar-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #f8fafc !important;
+}
+
+.kiguard-blur-toolbar-btn.active {
+    background: #38bdf8 !important;
+    color: #0f172a !important;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4) !important;
+}
+
+/* Tooltips */
+.kiguard-blur-toolbar-btn::before {
+    content: attr(data-tooltip) !important;
+    position: absolute !important;
+    bottom: 42px !important;
+    left: 50% !important;
+    transform: translateX(-50%) scale(0.9) !important;
+    background: #0f172a !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    color: #cbd5e1 !important;
+    padding: 4px 8px !important;
+    font-size: 10px !important;
+    border-radius: 4px !important;
+    white-space: nowrap !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: all 0.15s ease !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3) !important;
+}
+
+.kiguard-blur-toolbar-btn:hover::before {
+    opacity: 1 !important;
+    transform: translateX(-50%) scale(1) !important;
+}
+
+.kiguard-toolbar-divider {
+    height: 20px !important;
+    width: 1px !important;
+    background: rgba(255, 255, 255, 0.15) !important;
+    margin: 0 2px !important;
+}
+
+/* Slider Style */
+.kiguard-slider-container {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 0 8px !important;
+    font-size: 11px !important;
+    color: #94a3b8 !important;
+}
+
+.kiguard-slider-container input[type="range"] {
+    -webkit-appearance: none !important;
+    width: 60px !important;
+    height: 4px !important;
+    border-radius: 2px !important;
+    background: #334155 !important;
+    outline: none !important;
+}
+
+.kiguard-slider-container input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none !important;
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    background: #38bdf8 !important;
+    cursor: pointer !important;
+    transition: transform 0.1s ease !important;
+}
+
+.kiguard-slider-container input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.3) !important;
+}
+

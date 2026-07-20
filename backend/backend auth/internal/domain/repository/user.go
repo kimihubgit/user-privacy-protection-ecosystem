@@ -16,4 +16,5 @@ type UserRepository interface {
 	FindByCredentialID(ctx context.Context, credentialID []byte) (*entity.User, error)
 	Update(ctx context.Context, user *entity.User) error
 	List(ctx context.Context, page, limit int64, search string) ([]entity.User, int64, error)
+	GetStats(ctx context.Context) (total int64, newToday int64, err error)
 }

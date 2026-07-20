@@ -14,6 +14,8 @@ import (
 	"protect-user-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/likexian/whois"
+	whoisparser "github.com/likexian/whois-parser"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -27,8 +29,8 @@ type SuggestionItem struct {
 }
 
 type SearchHandler struct {
-	db            *database.DB
-	httpClient    *http.Client
+	db         *database.DB
+	httpClient *http.Client
 }
 
 func NewSearchHandler(db *database.DB) *SearchHandler {
@@ -106,7 +108,7 @@ func (h *SearchHandler) GetSuggestions(c *gin.Context) {
 		}
 	} else {
 		// B. Search text-based inputs (URLs, names, social media links) directly
-		
+
 		// Optimization: Strip common URL protocol prefixes and www. to avoid matching all URLs
 		cleanedQuery := strings.TrimSpace(q)
 		cleanedQuery = strings.TrimPrefix(cleanedQuery, "https://")
@@ -123,7 +125,7 @@ func (h *SearchHandler) GetSuggestions(c *gin.Context) {
 		if !isProtocolOnly && cleanedQuery != "" {
 			// Convert to lowercase and perform a case-sensitive prefix scan (leverages index range scan directly, taking < 1ms)
 			prefixRegex := primitive.Regex{Pattern: "^" + regexp.QuoteMeta(strings.ToLower(cleanedQuery))}
-			urlsColl := h.db.Database.Collection("scam_urls")
+			urlsColl := h.db.Database.Collection("blacklist")
 			urlFilter := bson.M{
 				"$or": []bson.M{
 					{"url": prefixRegex},
@@ -246,7 +248,7 @@ func detectQueryType(q string) string {
 			return "phone"
 		}
 	}
-	
+
 	// Bank account numbers are typically 6-19 numeric characters
 	if len(cleaned) >= 6 && len(cleaned) <= 19 {
 		return "bank_account"
@@ -263,76 +265,153 @@ func detectQueryType(q string) string {
 	return "unknown"
 }
 
-// GetDetail retrieves the detailed information of the queried item, supporting URL, Email (including breach), Phone, Bank Account.
-func (h *SearchHandler) GetDetail(c *gin.Context) {
-	q := strings.TrimSpace(c.Query("q"))
-	if q == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Query parameter 'q' is required"})
+// Check detects the type of the target query and performs the corresponding check.
+func (h *SearchHandler) Check(c *gin.Context) {
+	var target string
+
+	// 1. Try reading from Query params
+	if q := c.Query("q"); q != "" {
+		target = q
+	} else if t := c.Query("target"); t != "" {
+		target = t
+	} else if u := c.Query("url"); u != "" {
+		target = u
+	}
+
+	// 2. Try reading from JSON body
+	if target == "" && (c.Request.Method == http.MethodPost || c.Request.Method == http.MethodPut) {
+		var body struct {
+			Q      string `json:"q"`
+			Target string `json:"target"`
+			URL    string `json:"url"`
+		}
+		if err := c.ShouldBindJSON(&body); err == nil {
+			if body.Target != "" {
+				target = body.Target
+			} else if body.Q != "" {
+				target = body.Q
+			} else if body.URL != "" {
+				target = body.URL
+			}
+		}
+	}
+
+	target = strings.TrimSpace(target)
+	if target == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Target query parameter or body field is required"})
 		return
 	}
 
 	ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
 	defer cancel()
 
-	// 1. Detect Type
-	detectedType := detectQueryType(q)
+	detectedType := detectQueryType(target)
 
 	response := gin.H{
-		"query":         q,
-		"detected_type": detectedType,
+		"query": target,
+		"type":  detectedType,
 	}
 
-	// 2. Perform detail fetching based on type
+	// For logging check count
+	checkResult := "safe"
+
 	switch detectedType {
 	case "url":
-		urlsColl := h.db.Database.Collection("scam_urls")
+		urlsColl := h.db.Database.Collection("blacklist")
 		var scamURL models.ScamURL
-		cleanedURL := strings.ToLower(strings.TrimSpace(q))
+		cleanedURL := strings.ToLower(strings.TrimSpace(target))
+		domainName := cleanedURL
+		domainName = strings.TrimPrefix(domainName, "https://")
+		domainName = strings.TrimPrefix(domainName, "http://")
+		domainName = strings.TrimPrefix(domainName, "www.")
+		if idx := strings.Index(domainName, "/"); idx != -1 {
+			domainName = domainName[:idx]
+		}
+
+		// 1. Check blacklist first (scam_urls collection) directly in MongoDB (no cuckoo filter errors)
 		err := urlsColl.FindOne(ctx, bson.M{
 			"$or": []bson.M{
 				{"url": cleanedURL},
-				{"domain": cleanedURL},
+				{"domain": domainName},
 			},
 		}).Decode(&scamURL)
 
 		if err == nil {
+			// Found in blacklist - return a brief message
 			response["is_safe"] = false
-			response["detail"] = scamURL
+			response["is_scam"] = true
+			response["message"] = "Phát hiện liên kết nằm trong danh mục độc hại / lừa đảo."
+			checkResult = "malicious"
 		} else {
-			response["is_safe"] = true
-			response["message"] = "Không phát hiện mối đe dọa trực tiếp cho URL này trong cơ sở dữ liệu."
+			// 2. Not in blacklist, check allowlist directly in MongoDB (no cuckoo filter errors)
+			allowColl := h.db.Database.Collection("whitelist")
+			var allowURL models.AllowURL
+			errAllow := allowColl.FindOne(ctx, bson.M{
+				"$or": []bson.M{
+					{"url": cleanedURL},
+					{"domain": domainName},
+				},
+			}).Decode(&allowURL)
+
+			if errAllow == nil {
+				// Found in allowlist - return a brief message
+				response["is_safe"] = true
+				response["is_scam"] = false
+				response["message"] = "Tên miền an toàn!"
+				checkResult = "safe"
+			} else {
+				// 3. Not in both - return not found / default safe response
+				response["is_safe"] = true
+				response["is_scam"] = false
+				response["message"] = "Không phát hiện mối đe dọa trực tiếp cho URL này trong cơ sở dữ liệu."
+				checkResult = "safe"
+			}
 		}
 
+		// Insert check log
+		logsColl := h.db.Database.Collection("logs")
+		logEntry := models.CheckLog{
+			ID:        primitive.NewObjectID(),
+			URL:       cleanedURL,
+			Domain:    domainName,
+			IPAddress: c.ClientIP(),
+			UserAgent: c.Request.UserAgent(),
+			Result:    checkResult,
+			CheckedAt: time.Now(),
+		}
+		_, _ = logsColl.InsertOne(ctx, logEntry)
+
 	case "email":
-		emailNormalized := strings.ToLower(strings.TrimSpace(q))
+		emailNormalized := strings.ToLower(strings.TrimSpace(target))
 		scamColl := h.db.Database.Collection("scammers")
 		var scammer models.Scammer
-		// Search directly in email address field
 		err := scamColl.FindOne(ctx, bson.M{"contact.email.address": emailNormalized}).Decode(&scammer)
 		if err == nil {
 			response["is_scam"] = true
-			response["scammer_detail"] = scammer
+			response["is_safe"] = false
+			response["detail"] = scammer
 		} else {
 			response["is_scam"] = false
+			response["is_safe"] = true
 		}
 
 		// Query breach details from ChongLuaDao
 		lang := c.DefaultQuery("lang", "vi")
 		targetURL := "https://feeds.chongluadao.vn/checkbreach/email?q=" + url.QueryEscape(emailNormalized) + "&lang=" + url.QueryEscape(lang)
-		
+
 		var breachData map[string]interface{}
 		resp, breachErr := h.httpClient.Get(targetURL)
 		if breachErr == nil && resp.StatusCode == http.StatusOK {
 			defer resp.Body.Close()
 			_ = json.NewDecoder(resp.Body).Decode(&breachData)
 		}
-		
+
 		if breachData != nil {
 			response["breach_detail"] = breachData
 		}
 
 	case "phone", "bank_account", "facebook", "telegram":
-		cleanedTarget := q
+		cleanedTarget := target
 		if detectedType == "phone" || detectedType == "bank_account" {
 			reg := regexp.MustCompile(`[^\d]`)
 			cleanedTarget = reg.ReplaceAllString(cleanedTarget, "")
@@ -344,7 +423,6 @@ func (h *SearchHandler) GetDetail(c *gin.Context) {
 		scamColl := h.db.Database.Collection("scammers")
 		var scammer models.Scammer
 
-		// Query the matching field directly using regex to allow flexible format matches
 		var targetFilter bson.M
 		targetRegex := primitive.Regex{Pattern: regexp.QuoteMeta(cleanedTarget), Options: "i"}
 		if detectedType == "phone" {
@@ -360,16 +438,111 @@ func (h *SearchHandler) GetDetail(c *gin.Context) {
 		err := scamColl.FindOne(ctx, targetFilter).Decode(&scammer)
 		if err == nil {
 			response["is_scam"] = true
+			response["is_safe"] = false
 			response["detail"] = scammer
+			response["message"] = "Phát hiện đối tượng nằm trong danh sách đen lừa đảo."
 		} else {
 			response["is_scam"] = false
+			response["is_safe"] = true
 			response["message"] = "Không phát hiện thông tin lừa đảo cho đối tượng này."
 		}
 
 	default:
 		response["is_safe"] = true
+		response["is_scam"] = false
 		response["message"] = "Không thể nhận diện định dạng dữ liệu đầu vào."
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+// GetWhois performs a WHOIS query on the target URL or domain and returns structured domain registration details.
+func (h *SearchHandler) GetWhois(c *gin.Context) {
+	target := strings.TrimSpace(c.Query("url"))
+	if target == "" {
+		target = strings.TrimSpace(c.Query("q"))
+	}
+	if target == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "URL/domain query parameter 'url' or 'q' is required"})
+		return
+	}
+
+	domainName := strings.ToLower(target)
+	domainName = strings.TrimPrefix(domainName, "https://")
+	domainName = strings.TrimPrefix(domainName, "http://")
+	domainName = strings.TrimPrefix(domainName, "www.")
+	if idx := strings.Index(domainName, "/"); idx != -1 {
+		domainName = domainName[:idx]
+	}
+	if idx := strings.Index(domainName, ":"); idx != -1 {
+		domainName = domainName[:idx]
+	}
+
+	// 1. Query raw WHOIS info
+	var raw string
+	var err error
+	if strings.HasSuffix(domainName, ".vn") {
+		raw, err = whois.Whois(domainName, "whois.vnnic.vn")
+	} else {
+		raw, err = whois.Whois(domainName)
+	}
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("failed to fetch WHOIS info: %v", err)})
+		return
+	}
+
+	// 2. Parse raw WHOIS info
+	result, err := whoisparser.Parse(raw)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to parse WHOIS data: %v", err)})
+		return
+	}
+
+	// 3. Construct the response structure matching the requested format
+	type DomainInfo struct {
+		DomainChecked    string     `json:"domain_checked"`
+		Registrar        string     `json:"registrar"`
+		Owner            *string    `json:"owner"`
+		RegistrationDate *time.Time `json:"registration_date"`
+		ExpirationDate   *time.Time `json:"expiration_date"`
+		UpdatedDate      *time.Time `json:"updated_date"`
+		Status           []string   `json:"status"`
+		NameServers      []string   `json:"nameservers"`
+	}
+
+	info := DomainInfo{
+		DomainChecked: result.Domain.Domain,
+		Registrar:     result.Registrar.Name,
+		Status:        result.Domain.Status,
+		NameServers:   result.Domain.NameServers,
+	}
+
+	if result.Registrant.Name != "" {
+		info.Owner = &result.Registrant.Name
+	}
+
+	parseTime := func(timeStr string) *time.Time {
+		if timeStr == "" {
+			return nil
+		}
+		formats := []string{
+			time.RFC3339,
+			"2006-01-02T15:04:05Z",
+			"2006-01-02 15:04:05",
+			"2006-01-02T15:04:05.00Z",
+			"2006-01-02T15:04:05",
+		}
+		for _, f := range formats {
+			if t, err := time.Parse(f, timeStr); err == nil {
+				return &t
+			}
+		}
+		return nil
+	}
+
+	info.RegistrationDate = parseTime(result.Domain.CreatedDate)
+	info.ExpirationDate = parseTime(result.Domain.ExpirationDate)
+	info.UpdatedDate = parseTime(result.Domain.UpdatedDate)
+
+	c.JSON(http.StatusOK, info)
 }

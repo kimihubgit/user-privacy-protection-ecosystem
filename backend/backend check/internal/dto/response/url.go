@@ -13,5 +13,7 @@ type StatsResponse struct {
 	SuspiciousChecks  int64            `json:"suspicious_checks"`
 	SafeChecks        int64            `json:"safe_checks"`
 	TotalScamURLs     int64            `json:"total_scam_urls"`
+	TotalAllowlist    int64            `json:"total_allowlist"`
+	TotalScammers     int64            `json:"total_scammers"`
 	CategoryBreakdown map[string]int64 `json:"category_breakdown"`
 }

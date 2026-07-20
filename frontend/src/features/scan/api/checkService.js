@@ -43,10 +43,10 @@ export const checkService = {
 
     // B. Check local admin blacklist
     const localBlacklist = JSON.parse(localStorage.getItem('admin_blacklist') || '[]');
-    const localMatch = localBlacklist.find(item => 
+    const localMatch = localBlacklist.find(item =>
       item.type === 'url' &&
       (item.target.toLowerCase() === url.toLowerCase() ||
-       item.target.toLowerCase() === domain.toLowerCase())
+        item.target.toLowerCase() === domain.toLowerCase())
     );
 
     if (localMatch) {
@@ -123,7 +123,7 @@ export const checkService = {
 
     // Fallback Mock Logic
     const localBlacklist = JSON.parse(localStorage.getItem('admin_blacklist') || '[]');
-    const localMatch = localBlacklist.find(item => 
+    const localMatch = localBlacklist.find(item =>
       item.type !== 'url' && item.target === cleanedTarget
     );
 
@@ -189,12 +189,37 @@ export const checkService = {
   // Get check detail (Public)
   async getDetail(query) {
     try {
-      const response = await fetch(`${API_BASE_URL}/check/detail?q=${encodeURIComponent(query)}`);
+      const response = await fetch(`${API_BASE_URL}/check`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ target: query })
+      });
       if (response.ok) {
         return await response.json();
       }
     } catch (e) {
       console.warn('Backend API getDetail failed:', e);
+    }
+    return null;
+  },
+
+  // Get domain breach/whois info (Public)
+  async getDomainWhois(domain) {
+    try {
+      const targetUrl = `${API_BASE_URL}/urls/whois?url=${encodeURIComponent(domain)}`;
+      const response = await fetch(targetUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      if (response.ok) {
+        return await response.json();
+      }
+    } catch (e) {
+      console.warn('Backend API getDomainWhois failed:', e);
     }
     return null;
   }

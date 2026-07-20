@@ -11,7 +11,15 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRouter(authService auth.Service, authHandler *handlers.AuthHandler, passkeyHandler *handlers.PasskeyHandler, reportHandler *handlers.ReportHandler, userHandler *handlers.UserHandler, adminHandler *handlers.AdminHandler) *gin.Engine {
+func SetupRouter(
+	authService auth.Service,
+	authHandler *handlers.AuthHandler,
+	passkeyHandler *handlers.PasskeyHandler,
+	reportHandler *handlers.ReportHandler,
+	userHandler *handlers.UserHandler,
+	adminHandler *handlers.AdminHandler,
+	chatHandler *handlers.ChatHandler,
+) *gin.Engine {
 	r := gin.Default()
 
 	// 1. Max Request Body Size Limit (1MB)
@@ -28,6 +36,9 @@ func SetupRouter(authService auth.Service, authHandler *handlers.AuthHandler, pa
 
 	api := r.Group("/api/v1")
 	{
+		// WebSocket Chat route (handles its own authorization internally)
+		api.GET("/ws/chat", chatHandler.HandleWS)
+
 		authGroup := api.Group("/auth", globalLimiter)
 		{
 			authGroup.POST("/register", middleware.RateLimit(15, 15*time.Minute), authHandler.Register)
@@ -95,6 +106,12 @@ func SetupRouter(authService auth.Service, authHandler *handlers.AuthHandler, pa
 			adminGroup.GET("/urls", adminHandler.ListScamURLs)
 			adminGroup.DELETE("/urls/:id", adminHandler.DeleteScamURL)
 			adminGroup.GET("/stats", adminHandler.GetStats)
+			adminGroup.GET("/dashboard-stats", adminHandler.GetDashboardStats)
+
+			// Allowlist management (proxied to backend check)
+			adminGroup.POST("/allowlist", adminHandler.AddAllowURL)
+			adminGroup.GET("/allowlist", adminHandler.ListAllowURLs)
+			adminGroup.DELETE("/allowlist/:id", adminHandler.DeleteAllowURL)
 
 			// Scammer registry management (proxied to backend check)
 			adminGroup.POST("/scammers", adminHandler.AddScammer)

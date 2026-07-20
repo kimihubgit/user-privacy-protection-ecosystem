@@ -163,3 +163,53 @@ func (h *URLHandler) ListAllowURLs(c *gin.Context) {
 		"limit": limit,
 	})
 }
+
+// GetStats returns aggregation data of URL logs and total counts.
+func (h *URLHandler) GetStats(c *gin.Context) {
+	res, err := h.service.GetStats(c.Request.Context())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+}
+
+// ListScamURLs returns blocklisted URLs with pagination and optional status filter
+func (h *URLHandler) ListScamURLs(c *gin.Context) {
+	pageStr := c.DefaultQuery("page", "1")
+	limitStr := c.DefaultQuery("limit", "20")
+	status := c.Query("status")
+
+	page, _ := strconv.ParseInt(pageStr, 10, 64)
+	limit, _ := strconv.ParseInt(limitStr, 10, 64)
+
+	urls, total, err := h.service.ListURLs(c.Request.Context(), page, limit, status)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"data":  urls,
+		"total": total,
+		"page":  page,
+		"limit": limit,
+	})
+}
+
+// DeleteScamURL removes a blocklisted URL from the blacklist
+func (h *URLHandler) DeleteScamURL(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID parameter is required"})
+		return
+	}
+
+	err := h.service.DeleteURL(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Scam URL successfully deleted"})
+}

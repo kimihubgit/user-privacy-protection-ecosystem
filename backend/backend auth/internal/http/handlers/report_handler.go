@@ -181,10 +181,11 @@ func (h *ReportHandler) ListReports(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"page":  page,
-		"limit": limit,
-		"total": total,
-		"data":  reports,
+		"success": true,
+		"page":    page,
+		"limit":   limit,
+		"total":   total,
+		"data":    reports,
 	})
 }
 

@@ -26,9 +26,12 @@ func LoadURLRouter(apiGroup *gin.RouterGroup, adminGroup *gin.RouterGroup, db *d
 
 	// Ingestion/Sync API
 	adminGroup.POST("/urls", urlHandler.AddScamURL)
+	adminGroup.GET("/urls", urlHandler.ListScamURLs)
+	adminGroup.DELETE("/urls/:id", urlHandler.DeleteScamURL)
 	adminGroup.POST("/allowlist", urlHandler.AddAllowURL)
 	adminGroup.DELETE("/allowlist/:id", urlHandler.DeleteAllowURL)
 	adminGroup.GET("/allowlist", urlHandler.ListAllowURLs)
+	adminGroup.GET("/stats", urlHandler.GetStats)
 
 	return urlChecker
 }

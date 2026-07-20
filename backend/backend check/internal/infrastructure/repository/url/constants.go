@@ -1,7 +1,7 @@
 package url
 
 const (
-	CollectionName          = "scam_urls"
+	CollectionName          = "blacklist"
 	LogsCollectionName      = "logs"
-	AllowlistCollectionName = "allow_urls"
+	AllowlistCollectionName = "whitelist"
 )

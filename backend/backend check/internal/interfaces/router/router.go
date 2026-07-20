@@ -52,11 +52,7 @@ func SetupRouter(cfg *config.Config, db *database.DB) *gin.Engine {
 	// Ingestion Admin API group (for syncing data from backend auth: 100 KiB)
 	adminGroup := r.Group("/api/admin")
 	adminGroup.Use(middleware.IPWhitelist(cfg.AdminAllowedIPs))
-	if cfg.JWTPublicKey != "" {
-		adminGroup.Use(middleware.JWTAuth(cfg.JWTPublicKey, []string{"moderator", "super_admin", "admin"}))
-	} else {
-		adminGroup.Use(middleware.APIKeyAuth(cfg.AdminAPIKey))
-	}
+	adminGroup.Use(middleware.FlexibleAdminAuth(cfg.AdminAPIKey, cfg.JWTPublicKey, []string{"moderator", "super_admin", "admin"}))
 	adminGroup.Use(middleware.MaxBodySize(middleware.APIBodyMaxBytes))
 
 	// Register sub-routes with self-initialization

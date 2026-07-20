@@ -30,7 +30,7 @@ export const reportService = {
     };
 
     try {
-      const response = await fetch(`${API_CHECK_URL}/api/reports`, {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export const reportService = {
     };
 
     try {
-      const response = await fetch(`${API_CHECK_URL}/api/reports`, {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/reports`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export const reportService = {
   async getMyReports(page = 1, limit = 20) {
     const token = localStorage.getItem('token');
     try {
-      const response = await fetch(`${API_CHECK_URL}/api/reports/status?page=${page}&limit=${limit}`, {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/status?page=${page}&limit=${limit}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -227,6 +227,183 @@ export const reportService = {
       return await response.json();
     } catch (e) {
       console.error('getAdminReports failed:', e);
+      throw e;
+    }
+  },
+
+  // POST /api/v1/admin/urls
+  async addAdminScamURL(token, payload) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/urls`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error('Không thể thêm URL độc hại vào máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('addAdminScamURL failed:', e);
+      throw e;
+    }
+  },
+
+  // POST /api/v1/admin/scammers
+  async addAdminScammer(token, payload) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/scammers`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error('Không thể thêm đối tượng lừa đảo vào máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('addAdminScammer failed:', e);
+      throw e;
+    }
+  },
+
+  // GET /api/v1/admin/urls
+  async getAdminScamURLs(token, page = 1, limit = 20, status = '') {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/urls?page=${page}&limit=${limit}&status=${status}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể lấy danh sách URL từ máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('getAdminScamURLs failed:', e);
+      throw e;
+    }
+  },
+
+  // DELETE /api/v1/admin/urls/:id
+  async deleteAdminScamURL(token, id) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/urls/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể gỡ bỏ URL trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('deleteAdminScamURL failed:', e);
+      throw e;
+    }
+  },
+
+  // GET /api/v1/admin/scammers
+  async getAdminScammers(token, page = 1, limit = 20, type = '') {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/scammers?page=${page}&limit=${limit}&type=${type}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể lấy danh sách scammers từ máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('getAdminScammers failed:', e);
+      throw e;
+    }
+  },
+
+  // DELETE /api/v1/admin/scammers/:id
+  async deleteAdminScammer(token, id) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/scammers/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể gỡ bỏ đối tượng trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('deleteAdminScammer failed:', e);
+      throw e;
+    }
+  },
+
+  // GET /api/v1/admin/allowlist
+  async getAdminAllowlist(token, page = 1, limit = 20) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/allowlist?page=${page}&limit=${limit}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể lấy danh sách allowlist từ máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('getAdminAllowlist failed:', e);
+      throw e;
+    }
+  },
+
+  // POST /api/v1/admin/allowlist
+  async addAdminAllowlist(token, payload) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/allowlist`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error('Không thể thêm vào Whitelist trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('addAdminAllowlist failed:', e);
+      throw e;
+    }
+  },
+
+  // DELETE /api/v1/admin/allowlist/:id
+  async deleteAdminAllowlist(token, id) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/allowlist/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể gỡ bỏ khỏi Whitelist trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('deleteAdminAllowlist failed:', e);
       throw e;
     }
   }

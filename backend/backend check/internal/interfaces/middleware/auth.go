@@ -39,7 +39,9 @@ func APIKeyAuth(configuredKey string) gin.HandlerFunc {
 func JWTAuth(publicKeyPEM string, allowedRoles []string) gin.HandlerFunc {
 	var rsaPublicKey *rsa.PublicKey
 	if publicKeyPEM != "" {
-		pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(publicKeyPEM))
+		// Clean up potential escaped newlines from env strings
+		cleanPEM := strings.ReplaceAll(publicKeyPEM, `\n`, "\n")
+		pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(cleanPEM))
 		if err != nil {
 			println("Error parsing JWT public key PEM:", err.Error())
 		} else {
@@ -70,6 +72,113 @@ func JWTAuth(publicKeyPEM string, allowedRoles []string) gin.HandlerFunc {
 
 		tokenString := parts[1]
 
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
+				return nil, errors.New("unexpected signing method")
+			}
+			return rsaPublicKey, nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
+			c.Abort()
+			return
+		}
+
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if !ok {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid token claims"})
+			c.Abort()
+			return
+		}
+
+		roleVal, hasRole := claims["role"]
+		if !hasRole {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: No role assigned in token"})
+			c.Abort()
+			return
+		}
+
+		role, ok := roleVal.(string)
+		if !ok {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: Invalid role in token"})
+			c.Abort()
+			return
+		}
+
+		roleAllowed := false
+		for _, allowedRole := range allowedRoles {
+			if strings.ToLower(role) == strings.ToLower(allowedRole) {
+				roleAllowed = true
+				break
+			}
+		}
+
+		if !roleAllowed {
+			c.JSON(http.StatusForbidden, gin.H{"error": "Forbidden: Insufficient permissions"})
+			c.Abort()
+			return
+		}
+
+		if sub, ok := claims["sub"].(string); ok {
+			c.Set("userId", sub)
+		}
+		c.Set("userRole", role)
+
+		c.Next()
+	}
+}
+
+// FlexibleAdminAuth is a middleware that allows EITHER a valid API Key via X-API-Key header
+// OR a valid JWT Token via Authorization header.
+func FlexibleAdminAuth(configuredKey string, publicKeyPEM string, allowedRoles []string) gin.HandlerFunc {
+	var rsaPublicKey *rsa.PublicKey
+	if publicKeyPEM != "" {
+		// Clean up potential escaped newlines from env strings
+		cleanPEM := strings.ReplaceAll(publicKeyPEM, `\n`, "\n")
+		pubKey, err := jwt.ParseRSAPublicKeyFromPEM([]byte(cleanPEM))
+		if err == nil {
+			rsaPublicKey = pubKey
+		} else {
+			println("Error parsing JWT public key PEM in FlexibleAdminAuth:", err.Error())
+		}
+	}
+
+	return func(c *gin.Context) {
+		// 1. Try API Key verification first
+		apiKey := c.GetHeader("X-API-Key")
+		if apiKey != "" {
+			if apiKey == configuredKey {
+				c.Next()
+				return
+			}
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid API Key"})
+			c.Abort()
+			return
+		}
+
+		// 2. Try JWT verification if API Key is not present
+		if rsaPublicKey == nil {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing X-API-Key header (JWT is not configured)"})
+			c.Abort()
+			return
+		}
+
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Missing Authorization or X-API-Key header"})
+			c.Abort()
+			return
+		}
+
+		parts := strings.Split(authHeader, " ")
+		if len(parts) != 2 || strings.ToLower(parts[0]) != "bearer" {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": "Authorization header must be Bearer <token>"})
+			c.Abort()
+			return
+		}
+
+		tokenString := parts[1]
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodRSA); !ok {
 				return nil, errors.New("unexpected signing method")

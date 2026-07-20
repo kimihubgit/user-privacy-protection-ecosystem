@@ -149,7 +149,7 @@ export default function App() {
   if (path === '/report') activeTab = 'report';
   else if (path === '/privacy' || path === '/privacypolicies') activeTab = 'privacy';
 
-  const isAdminPage = path.startsWith('/admin');
+  const isAdminPage = path.startsWith('/admin') || path.startsWith('/moderator');
 
   const setActiveTab = (tab) => {
     if (tab === 'checker') {

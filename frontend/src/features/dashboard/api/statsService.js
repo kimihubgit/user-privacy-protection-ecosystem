@@ -1,9 +1,28 @@
 import { MOCK_REVIEWS, MOCK_SCAM_URLS, MOCK_SCAMMERS } from '../../../lib/mockData';
-import { API_CHECK_URL } from '../../../lib/config';
+import { API_CHECK_URL, API_AUTH_URL } from '../../../lib/config';
 
 const API_BASE_URL = `${API_CHECK_URL}/api`;
 
 export const statsService = {
+  // GET /api/v1/admin/dashboard-stats
+  async getAdminDashboardStats(token) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/dashboard-stats`, {
+        method: 'GET',
+        headers: {
+          'Accept': '*/*',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể lấy thông tin thống kê dashboard!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('getAdminDashboardStats failed:', e);
+      throw e;
+    }
+  },
   // Get Reviews (Local mock helper)
   getReviews(domain) {
     return MOCK_REVIEWS[domain.toLowerCase()] || [];

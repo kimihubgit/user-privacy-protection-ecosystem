@@ -49,14 +49,14 @@ export function useChatbot() {
     }
   }, []);
 
-  const askChatbot = useCallback(async (question) => {
+  const askChatbot = useCallback(async (question, agentId = 'ai', history = []) => {
     try {
       const response = await fetch('/chat-api/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ question })
+        body: JSON.stringify({ question, agentId, history })
       });
       if (!response.ok) {
         throw new Error('Không thể kết nối đến máy chủ Chatbot!');

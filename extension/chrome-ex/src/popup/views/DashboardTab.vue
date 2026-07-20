@@ -539,44 +539,86 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  height: 32px;
-  padding: 0 14px;
+  height: 28px;
+  padding: 0 12px;
   font-family: 'Outfit', sans-serif;
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
   color: #ffffff;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: linear-gradient(135deg, #7239ea 0%, #3e97ff 50%, #00d182 100%);
-  background-size: 200% auto;
+  border-radius: 99px;
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  background: rgba(99, 102, 241, 0.08);
+  backdrop-filter: blur(4px);
   cursor: pointer;
   outline: none;
   position: relative;
   overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-  box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4), 0 4px 12px rgba(37, 99, 235, 0.2);
-  animation: shimmer 4s infinite linear, pulse-glow 2.5s infinite ease-in-out;
-  letter-spacing: -0.2px;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ai-analyze-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: skewX(-25deg);
+  pointer-events: none;
+  transition: none;
 }
 
 .ai-analyze-btn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 0 15px 3px rgba(62, 151, 255, 0.4), 0 6px 18px rgba(114, 57, 234, 0.3);
-  border-color: rgba(255, 255, 255, 0.35);
-  background-position: right center;
+  transform: translateY(-1px);
+  border-color: rgba(99, 102, 241, 0.7);
+  background: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 0 12px rgba(99, 102, 241, 0.4), 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.ai-analyze-btn:hover::before {
+  left: 200%;
+  transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ai-analyze-btn:active {
-  transform: translateY(0) scale(0.98);
+  transform: translateY(0.5px);
 }
 
 .ai-analyze-btn:disabled {
-  background: #1e1e2d;
+  background: rgba(255, 255, 255, 0.02);
   color: var(--text-muted);
-  border-color: var(--border-light);
+  border-color: rgba(255, 255, 255, 0.05);
   cursor: not-allowed;
-  animation: none;
   box-shadow: none;
+}
+
+.ai-analyze-btn::after {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #3e97ff;
+  box-shadow: 0 0 8px #3e97ff;
+  margin-left: 2px;
+  animation: button-dot-pulse 2s infinite ease-in-out;
+}
+
+.ai-analyze-btn:disabled::after {
+  display: none;
+}
+
+@keyframes button-dot-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(0.9); }
+  50% { opacity: 1; transform: scale(1.25); box-shadow: 0 0 8px 1.5px #3e97ff; }
 }
 
 /* Robot Icon Animations */

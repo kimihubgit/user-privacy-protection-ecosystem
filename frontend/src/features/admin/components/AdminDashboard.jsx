@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Navigate, useLocation } from 'react-router-dom';
+import { useNavigate, Navigate, useLocation, Routes, Route } from 'react-router-dom';
 import {
   Shield, Grid, Clock, ShieldAlert, ShieldCheck, Users, Activity,
-  LogOut, Plus, Search, Trash2, CheckCircle, X, Check, User, AlertCircle, ChevronDown
+  LogOut, Plus, Search, Trash2, CheckCircle, X, Check, User, AlertCircle, ChevronDown, History
 } from 'lucide-react';
 import './AdminDashboard.css';
 import { api } from '../../../lib/api';
 import { useAuth } from '../../../context/AuthContext';
 import AdminOverviewTab from './AdminOverviewTab';
+import ReportsTab from './ReportsTab';
+import UsersTab from './UsersTab';
+import BlacklistTab from './BlacklistTab';
+import WhitelistTab from './WhitelistTab';
+import AuditLogTab from './AuditLogTab';
+import ModeratorHistoryTab from './ModeratorHistoryTab';
 
 function generateId(prefix) {
   return `${prefix}_${new Date().getTime()}_${Math.floor(Math.random() * 1000)}`;
@@ -23,9 +29,27 @@ export default function AdminDashboard({ addToast, onLogout }) {
   const location = useLocation();
   const pathSegments = location.pathname.split('/');
   const lastSegment = pathSegments[pathSegments.length - 1];
-  const activeTab = ['overview', 'reports', 'blacklist', 'whitelist', 'users', 'audit'].includes(lastSegment) ? lastSegment : 'overview';
+  const activeTab = ['overview', 'reports', 'blacklist', 'whitelist', 'users', 'audit', 'mod-history'].includes(lastSegment) ? lastSegment : 'overview';
   const [searchQuery, setSearchQuery] = useState('');
   const [reportsStats, setReportsStats] = useState({ total: 0, pending: 0, approved: 0, rejected: 0 });
+  const [dashboardStats, setDashboardStats] = useState(null);
+
+  // Fetch dashboard stats from API
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const res = await api.getAdminDashboardStats(token);
+        if (res && res.success && res.data) {
+          setDashboardStats(res.data);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch dashboard stats from API, using fallback calculated values.", err);
+      }
+    };
+    if (token) {
+      fetchDashboardStats();
+    }
+  }, [token]);
 
   // Add User Form States
   const [showAddUserModal, setShowAddUserModal] = useState(false);
@@ -162,7 +186,7 @@ export default function AdminDashboard({ addToast, onLogout }) {
 
           setUsers(mappedUsers);
           setUsersError(null);
-          
+
           let total = mappedUsers.length;
           if (res.data.total) {
             total = res.data.total;
@@ -303,7 +327,7 @@ export default function AdminDashboard({ addToast, onLogout }) {
     saveUsers([...users, newUser]);
     addAuditLog('Thêm Thành viên', newUser.email, `Đã thêm thành viên mới: ${newUser.name} vai trò ${newUser.role}`);
     if (addToast) addToast(`Đã thêm thành viên ${newUser.name}!`, 'success');
-    
+
     setShowAddUserModal(false);
     setNewUserName('');
     setNewUserEmail('');
@@ -460,6 +484,10 @@ export default function AdminDashboard({ addToast, onLogout }) {
               <Users size={16} />
               <span>Quản lý Thành Viên</span>
             </button>
+            <button className={`cyber-menu-item ${activeTab === 'mod-history' ? 'active' : ''}`} onClick={() => { navigate('/admin/mod-history'); setSearchQuery(''); }}>
+              <History size={16} />
+              <span>Lịch sử Kiểm duyệt</span>
+            </button>
 
             <div style={{ fontSize: '0.65rem', fontWeight: 700, color: '#565674', letterSpacing: '0.08em', padding: '1rem 1rem 0.25rem 1rem', textTransform: 'uppercase' }}>
               Help
@@ -482,546 +510,82 @@ export default function AdminDashboard({ addToast, onLogout }) {
       {/* 2. MAIN AREA */}
       <div className="cyber-main-container">
 
-        {/* Header */}
-        <header className="cyber-main-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <span className="live-pulse-dot" style={{ backgroundColor: '#23b56c' }}></span>
-            <span className="db-header-title">HỆ THỐNG GIÁM SÁT TRUNG TÂM CLD</span>
-          </div>
-          <button className="btn btn-secondary" style={{ height: '32px', fontSize: '0.75rem', borderRadius: '6px' }} onClick={() => navigate('/')}>
-            Quay lại trang chủ
-          </button>
-        </header>
-
-        {/* Tab views layout router logic */}
-        {activeTab === 'overview' ? (
-          <div className="cyber-overview-scroll">
-            <AdminOverviewTab reportsStats={reportsStats} />
-          </div>
-        ) : activeTab === 'users' ? (
-          <div id="kt_app_content_container" className="app-container container-xxl" style={{ padding: '1.75rem' }}>
-            
-            {/*begin::Card*/}
-            <div className="card">
-              
-              {/*begin::Card header*/}
-              <div className="card-header border-0 pt-6">
-                
-                {/*begin::Card title*/}
-                <div className="card-title">
-                  {/*begin::Search*/}
-                  <div className="d-flex align-items-center position-relative my-1" style={{ display: 'flex', alignItems: 'center', position: 'relative' }}>
-                    <Search size={18} className="position-absolute ms-5" style={{ position: 'absolute', marginLeft: '1.25rem', color: '#a1a5b7' }} />
-                    <input
-                      type="text"
-                      className="form-control form-control-solid w-250px ps-13"
-                      placeholder="Search user"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  {/*end::Search*/}
-                </div>
-                {/*end::Card title*/}
-
-                {/*begin::Card toolbar*/}
-                <div className="card-toolbar">
-                  {/*begin::Toolbar*/}
-                  <div className="d-flex justify-content-end" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                    
-                    {/*begin::Filter*/}
-                    <button type="button" className="btn btn-light-primary me-3" onClick={() => addToast('Đang mở bộ lọc...', 'info')} style={{ marginRight: '0.75rem' }}>
-                      Filter
-                    </button>
-                    {/*end::Filter*/}
-
-                    {/*begin::Export*/}
-                    <button type="button" className="btn btn-light-primary me-3" onClick={() => addToast('Xuất báo cáo CSV thành công!', 'success')} style={{ marginRight: '0.75rem' }}>
-                      Export
-                    </button>
-                    {/*end::Export*/}
-
-                    {/*begin::Add user*/}
-                    <button type="button" className="btn btn-primary" onClick={() => setShowAddUserModal(true)}>
-                      Add User
-                    </button>
-                    {/*end::Add user*/}
-
-                  </div>
-                  {/*end::Toolbar*/}
-                </div>
-                {/*end::Card toolbar*/}
-
-              </div>
-              {/*end::Card header*/}
-
-              {/*begin::Card body*/}
-              <div className="card-body py-4">
-                
-                {/*begin::Table*/}
-                <div id="kt_table_users_wrapper" className="dataTables_wrapper dt-bootstrap4 no-footer">
-                  <div className="table-responsive">
-                    <table className="table align-middle table-row-dashed fs-6 gy-5 dataTable no-footer" id="kt_table_users">
-                      <thead>
-                        <tr className="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                          <th className="w-10px pe-2 sorting_disabled" style={{ width: '29.8906px' }}>
-                            <div className="form-check form-check-sm form-check-custom form-check-solid me-3">
-                              <input className="form-check-input" type="checkbox" readOnly />
-                            </div>
-                          </th>
-                          <th className="min-w-125px sorting" style={{ width: '250px' }}>User</th>
-                          <th className="min-w-125px sorting" style={{ width: '150px' }}>Role</th>
-                          <th className="min-w-125px sorting" style={{ width: '150px' }}>IP Address</th>
-                          <th className="min-w-125px sorting" style={{ width: '180px' }}>Joined Date</th>
-                          <th className="text-end min-w-100px sorting_disabled" style={{ width: '120px', textAlign: 'right' }}>Actions</th>
-                        </tr>
-                      </thead>
-                      
-                      <tbody className="text-gray-600 fw-semibold">
-                        {usersError ? (
-                          <tr>
-                            <td colSpan="5" className="text-center" style={{ padding: '3rem', textAlign: 'center', color: '#f1416c', fontWeight: 600 }}>
-                              {usersError}
-                            </td>
-                          </tr>
-                        ) : isLoadingUsers ? (
-                          <tr>
-                            <td colSpan="5" className="text-center" style={{ padding: '3rem', textAlign: 'center', color: '#a1a5b7' }}>
-                              Đang tải danh sách thành viên...
-                            </td>
-                          </tr>
-                        ) : users.length === 0 ? (
-                          <tr>
-                            <td colSpan="5" className="text-center" style={{ padding: '3rem', textAlign: 'center', color: '#a1a5b7' }}>
-                              Không tìm thấy thành viên phù hợp.
-                            </td>
-                          </tr>
-                        ) : (
-                          users.map((userItem, index) => (
-                            <tr key={userItem.id} className={index % 2 === 0 ? 'odd' : 'even'}>
-                              <td>
-                                <div className="form-check form-check-sm form-check-custom form-check-solid">
-                                  <input className="form-check-input" type="checkbox" readOnly />
-                                </div>
-                              </td>
-                              <td style={{ display: 'flex', alignItems: 'center', borderBottom: 'none' }}>
-                                {/*begin::Avatar*/}
-                                <div className="symbol symbol-circle symbol-50px overflow-hidden me-3" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', flexShrink: 0, marginRight: '0.75rem' }}>
-                                  <div className={`symbol-label fs-3 ${index % 2 === 0 ? 'bg-light-danger text-danger' : 'bg-light-primary text-primary'}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '50%', fontWeight: 700, fontSize: '0.9rem' }}>
-                                    {userItem.name.slice(0, 1).toUpperCase()}
-                                  </div>
-                                </div>
-                                {/*end::Avatar*/}
-                                
-                                {/*begin::User details*/}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.15rem' }}>
-                                  <span className="text-gray-800 text-hover-primary mb-1" style={{ cursor: 'pointer', fontWeight: 700, color: '#181c32', fontSize: '0.9rem', display: 'block' }}>{userItem.name}</span>
-                                  <span style={{ color: '#a1a5b7', fontSize: '0.75rem', display: 'block' }}>{userItem.email}</span>
-                                </div>
-                                {/*end::User details*/}
-                              </td>
-                              <td>
-                                {userItem.role === 'admin' ? 'Administrator' : userItem.role === 'moderator' ? 'Analyst' : 'Support'}
-                              </td>
-                              <td>
-                                <div className="badge badge-light fw-bold">{userItem.ipAddress || '127.0.0.1'}</div>
-                              </td>
-                              <td>
-                                {userItem.joined}
-                              </td>
-                              <td className="text-end" style={{ textAlign: 'right' }}>
-                                <div style={{ position: 'relative', display: 'inline-block' }}>
-                                  <button
-                                    className="btn btn-light btn-active-light-primary btn-flex btn-center btn-sm"
-                                    onClick={(e) => { e.preventDefault(); setActiveUserMenuId(activeUserMenuId === userItem.id ? null : userItem.id); }}
-                                    style={{
-                                      height: '32px',
-                                      fontSize: '0.8rem',
-                                      padding: '0 0.85rem',
-                                      borderRadius: '6px',
-                                      background: '#f5f8fa',
-                                      color: '#5e6278',
-                                      border: 'none',
-                                      fontWeight: 600,
-                                      cursor: 'pointer',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: '0.25rem'
-                                    }}
-                                  >
-                                    Actions <ChevronDown size={12} style={{ color: '#a1a5b7' }} />
-                                  </button>
-                                  
-                                  {activeUserMenuId === userItem.id && (
-                                    <div className="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4" style={{
-                                      position: 'absolute',
-                                      right: 0,
-                                      top: '36px',
-                                      backgroundColor: '#ffffff',
-                                      border: '1px solid #eff2f5',
-                                      borderRadius: '8px',
-                                      boxShadow: '0 10px 30px rgba(82, 63, 105, 0.15)',
-                                      zIndex: 100,
-                                      width: '140px',
-                                      padding: '0.5rem 0',
-                                      textAlign: 'left'
-                                    }}>
-                                      <div className="menu-item px-3">
-                                        <a href="#" className="menu-link px-3" onClick={(e) => { e.preventDefault(); handleUpdateUserRole(userItem.id, 'admin'); setActiveUserMenuId(null); }} style={{ display: 'block', padding: '0.5rem 1.25rem', color: '#5e6278', fontSize: '0.78rem', textDecoration: 'none', fontWeight: 500 }}>
-                                          Set Admin
-                                        </a>
-                                      </div>
-                                      <div className="menu-item px-3">
-                                        <a href="#" className="menu-link px-3" onClick={(e) => { e.preventDefault(); handleUpdateUserRole(userItem.id, 'moderator'); setActiveUserMenuId(null); }} style={{ display: 'block', padding: '0.5rem 1.25rem', color: '#5e6278', fontSize: '0.78rem', textDecoration: 'none', fontWeight: 500 }}>
-                                          Set Moderator
-                                        </a>
-                                      </div>
-                                      <div className="menu-item px-3">
-                                        <a href="#" className="menu-link px-3" onClick={(e) => { e.preventDefault(); handleUpdateUserRole(userItem.id, 'user'); setActiveUserMenuId(null); }} style={{ display: 'block', padding: '0.5rem 1.25rem', color: '#5e6278', fontSize: '0.78rem', textDecoration: 'none', fontWeight: 500 }}>
-                                          Set User
-                                        </a>
-                                      </div>
-                                      <hr style={{ border: 'none', borderTop: '1px solid #eff2f5', margin: '0.25rem 0' }} />
-                                      <div className="menu-item px-3">
-                                        <a href="#" className="menu-link px-3" style={{ display: 'block', padding: '0.5rem 1.25rem', color: userItem.status === 'active' ? '#f1416c' : '#50cd89', fontSize: '0.78rem', textDecoration: 'none', fontWeight: 600 }} onClick={(e) => { e.preventDefault(); handleToggleUserStatus(userItem.id); setActiveUserMenuId(null); }}>
-                                          {userItem.status === 'active' ? 'Khóa' : 'Kích hoạt'}
-                                        </a>
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  
-                  {/*Pagination*/}
-                  <div className="row" style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div className="col-sm-12 col-md-5 d-flex align-items-center justify-content-center justify-content-md-start" style={{ color: '#a1a5b7', fontSize: '0.85rem' }}>
-                      Hiển thị {users.length > 0 ? indexOfFirstUser + 1 : 0} - {Math.min(indexOfLastUser, usersTotal)} trong tổng số {usersTotal} thành viên
-                    </div>
-                    <div className="col-sm-12 col-md-7 d-flex align-items-center justify-content-center justify-content-md-end" style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                      <div className="dataTables_paginate paging_simple_numbers" id="kt_table_users_paginate">
-                        <ul className="pagination" style={{ display: 'flex', listStyle: 'none', padding: 0, gap: '0.25rem' }}>
-                          <li className={`paginate_button page-item previous ${activePage === 1 ? 'disabled' : ''}`}>
-                            <a
-                              href="#"
-                              className="page-link"
-                              onClick={(e) => { e.preventDefault(); if (activePage > 1) setCurrentPage(activePage - 1); }}
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', textDecoration: 'none' }}
-                            >
-                              &lt;
-                            </a>
-                          </li>
-                          
-                          {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
-                            <li key={pageNum} className={`paginate_button page-item ${activePage === pageNum ? 'active' : ''}`}>
-                              <a
-                                href="#"
-                                className="page-link"
-                                onClick={(e) => { e.preventDefault(); setCurrentPage(pageNum); }}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', textDecoration: 'none' }}
-                              >
-                                {pageNum}
-                              </a>
-                            </li>
-                          ))}
-
-                          <li className={`paginate_button page-item next ${activePage === totalPages ? 'disabled' : ''}`}>
-                            <a
-                              href="#"
-                              className="page-link"
-                              onClick={(e) => { e.preventDefault(); if (activePage < totalPages) setCurrentPage(activePage + 1); }}
-                              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '32px', height: '32px', textDecoration: 'none' }}
-                            >
-                              &gt;
-                            </a>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-
-                </div>
-                {/*end::Table*/}
-
-              </div>
-              {/*end::Card body*/}
-
+               {/* Tab views layout router logic */}
+        <Routes>
+          <Route path="overview" element={
+            <div className="cyber-overview-scroll">
+              <AdminOverviewTab reportsStats={reportsStats} dashboardStats={dashboardStats} />
             </div>
-            {/*end::Card*/}
-          </div>
-        ) : (
-          <div className="cyber-console-split">
-
-            {/* MIDDLE PANELS: ITEM LIST COLUMNS */}
-            <div className="cyber-console-list-pane">
-              <div className="cyber-list-header">
-                <span className="cyber-list-title">
-                  {activeTab === 'reports' ? 'Báo cáo chờ duyệt' :
-                    activeTab === 'blacklist' ? 'Database Blacklist' :
-                      activeTab === 'whitelist' ? 'Database Whitelist' : 'Audit Logs'}
-                </span>
-
-                {activeTab === 'blacklist' && (
-                  <button className="btn btn-primary" onClick={() => setShowAddBlackModal(true)} style={{ height: '28px', padding: '0 0.5rem', fontSize: '0.72rem', borderRadius: '4px' }}>
-                    + Thêm
-                  </button>
-                )}
-                {activeTab === 'whitelist' && (
-                  <button className="btn btn-primary" onClick={() => setShowAddWhiteModal(true)} style={{ height: '28px', padding: '0 0.5rem', fontSize: '0.72rem', borderRadius: '4px' }}>
-                    + Thêm
-                  </button>
-                )}
-              </div>
-
-              {/* Search filter input bar */}
-              <div className="cyber-search-container">
-                <div className="cyber-search-bar">
-                  <Search size={14} color="var(--text-muted)" />
-                  <input
-                    type="text"
-                    className="cyber-search-input"
-                    placeholder="Tìm kiếm nhanh..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              {/* Items scroll selector */}
-              <div className="cyber-items-scroll">
-                {activeTab === 'reports' && (
-                  filteredReports.map(item => (
-                    <button key={item.id} className={`cyber-item-row ${selectedReportId === item.id ? 'active' : ''}`} onClick={() => setSelectedReportId(item.id)}>
-                      <div className="cyber-item-avatar" style={{ backgroundColor: getAvatarColor(item.target) }}>
-                        {item.type === 'url' ? 'W' : item.type === 'phone' ? 'P' : 'B'}
-                      </div>
-                      <div className="cyber-item-details">
-                        <div className="cyber-item-meta">
-                          <span className="cyber-item-name">{item.target}</span>
-                          <span className="cyber-item-time">{new Date(item.date).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        <span className="cyber-item-snippet">{item.description}</span>
-                      </div>
-                    </button>
-                  ))
-                )}
-
-                {activeTab === 'blacklist' && (
-                  filteredBlacklist.map(item => (
-                    <button key={item.id} className={`cyber-item-row ${selectedBlacklistId === item.id ? 'active' : ''}`} onClick={() => setSelectedBlacklistId(item.id)}>
-                      <div className="cyber-item-avatar" style={{ backgroundColor: '#ff3e6c' }}>
-                        {item.type === 'url' ? 'W' : item.type === 'phone' ? 'P' : 'B'}
-                      </div>
-                      <div className="cyber-item-details">
-                        <div className="cyber-item-meta">
-                          <span className="cyber-item-name">{item.target}</span>
-                          <span className="cyber-item-time">{new Date(item.date).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        <span className="cyber-item-snippet">{item.description}</span>
-                      </div>
-                    </button>
-                  ))
-                )}
-
-                {activeTab === 'whitelist' && (
-                  filteredWhitelist.map(item => (
-                    <button key={item.id} className={`cyber-item-row ${selectedWhitelistId === item.id ? 'active' : ''}`} onClick={() => setSelectedWhitelistId(item.id)}>
-                      <div className="cyber-item-avatar" style={{ backgroundColor: '#23b56c' }}>W</div>
-                      <div className="cyber-item-details">
-                        <div className="cyber-item-meta">
-                          <span className="cyber-item-name">{item.domain}</span>
-                          <span className="cyber-item-time">{new Date(item.date).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        <span className="cyber-item-snippet">{item.notes}</span>
-                      </div>
-                    </button>
-                  ))
-                )}
-
-                {activeTab === 'audit' && (
-                  filteredLogs.map(item => (
-                    <button key={item.id} className={`cyber-item-row ${selectedAuditId === item.id ? 'active' : ''}`} onClick={() => setSelectedAuditId(item.id)}>
-                      <div className="cyber-item-avatar" style={{ backgroundColor: '#00b4d8' }}>L</div>
-                      <div className="cyber-item-details">
-                        <div className="cyber-item-meta">
-                          <span className="cyber-item-name">{item.action}</span>
-                          <span className="cyber-item-time">{new Date(item.date).toLocaleDateString('vi-VN')}</span>
-                        </div>
-                        <span className="cyber-item-snippet">{item.target}</span>
-                      </div>
-                    </button>
-                  ))
-                )}
-              </div>
-
+          } />
+          <Route path="users" element={
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <UsersTab
+                token={token}
+                users={users}
+                setUsers={setUsers}
+                saveUsers={saveUsers}
+                addAuditLog={addAuditLog}
+                addToast={addToast}
+                pendingReports={pendingReports}
+              />
             </div>
-
-            {/* RIGHT SIDE DETAILS INTERACTIVE SCREENS */}
-            <div className="cyber-console-detail-pane">
-
-              {/* RENDER PLACEHOLDER IF NOTHING SELECTED */}
-              {activeTab === 'reports' && !selectedReport && <div className="telegram-empty-view">Chọn một báo cáo để kiểm duyệt</div>}
-              {activeTab === 'blacklist' && !selectedBlacklist && <div className="telegram-empty-view">Chọn một đối tượng để xem thông tin danh sách đen</div>}
-              {activeTab === 'whitelist' && !selectedWhitelist && <div className="telegram-empty-view">Chọn một tên miền tin cậy để xem thông tin</div>}
-
-              {activeTab === 'audit' && !selectedAudit && <div className="telegram-empty-view">Chọn một bản ghi nhật ký hoạt động hệ thống</div>}
-
-              {/* VIEW 1: SELECTED REPORT DETAILS */}
-              {activeTab === 'reports' && selectedReport && (
-                <>
-                  <div className="cyber-detail-scroll animate-fade-in">
-                    <div className="cyber-console-card">
-                      <div className="cyber-console-section-title">Đối tượng bị phản ánh</div>
-                      <div className="cyber-console-value highlight danger">{selectedReport.target}</div>
-                      <span className="status-badge pending">{selectedReport.type}</span>
-                    </div>
-
-                    <div className="cyber-console-card">
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div>
-                          <div className="cyber-console-section-title">Người tố cáo</div>
-                          <div className="cyber-console-value">{selectedReport.reporter}</div>
-                        </div>
-                        <div>
-                          <div className="cyber-console-section-title">Email phản hồi</div>
-                          <div className="cyber-console-value">{selectedReport.email}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="cyber-console-card">
-                      <div className="cyber-console-section-title">Mô tả hành vi gian lận</div>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                        {selectedReport.description}
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '0.75rem', background: 'rgba(245,158,11,0.04)', border: '1px solid rgba(245,158,11,0.12)', padding: '1rem', borderRadius: '10px', fontSize: '0.78rem', color: '#f59e0b', lineHeight: 1.4 }}>
-                      <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                      <span>Xác nhận thông tin kỹ lưỡng trước khi thực hiện phê duyệt. Đối tượng bị phê duyệt chặn sẽ được ghi lại trong danh sách đen bảo vệ thời gian thực cho tất cả người dùng cuối cài đặt Tiện ích mở rộng.</span>
-                    </div>
-                  </div>
-
-                  <div className="cyber-action-drawer">
-                    <button className="btn btn-secondary" onClick={() => handleRejectReport(selectedReport)}>
-                      Từ chối báo cáo
-                    </button>
-                    <button className="btn btn-primary" onClick={() => handleApproveReportClick(selectedReport)}>
-                      Phê duyệt chặn
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* VIEW 2: SELECTED BLACKLIST DETAILS */}
-              {activeTab === 'blacklist' && selectedBlacklist && (
-                <>
-                  <div className="cyber-detail-scroll animate-fade-in">
-                    <div className="cyber-console-card">
-                      <div className="cyber-console-section-title">Đối tượng danh sách đen</div>
-                      <div className="cyber-console-value highlight danger">{selectedBlacklist.target}</div>
-                      <span className="status-badge rejected" style={{ marginRight: '0.5rem' }}>{selectedBlacklist.type}</span>
-                      <span className="status-badge pending">{selectedBlacklist.category}</span>
-                    </div>
-
-                    <div className="cyber-console-card">
-                      <div className="cyber-console-section-title">Mức độ cảnh báo vi phạm</div>
-                      <div className="cyber-console-value" style={{ textTransform: 'uppercase', fontWeight: 'bold', color: selectedBlacklist.severity === 'danger' ? 'var(--danger)' : 'var(--warning)' }}>
-                        {selectedBlacklist.severity === 'danger' ? 'CRITICAL (NGUY HIỂM CAO)' : 'WARNING (CẢNH BÁO)'}
-                      </div>
-                    </div>
-
-                    <div className="cyber-console-card">
-                      <div className="cyber-console-section-title">Ghi chú hành vi</div>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        {selectedBlacklist.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="cyber-action-drawer">
-                    <button className="btn btn-secondary" style={{ color: 'var(--danger)', borderColor: 'rgba(255, 62, 108, 0.2)', background: 'rgba(255, 62, 108, 0.05)' }} onClick={() => handleDeleteBlacklist(selectedBlacklist)}>
-                      <Trash2 size={13} style={{ marginRight: '0.25rem' }} /> Gỡ khỏi Blacklist
-                    </button>
-                  </div>
-                </>
-              )}
-
-              {/* VIEW 3: SELECTED WHITELIST DETAILS */}
-              {activeTab === 'whitelist' && selectedWhitelist && (
-                <>
-                  <div className="cyber-detail-scroll animate-fade-in">
-                    <div className="cyber-console-card">
-                      <div className="cyber-console-section-title">Tên miền Whitelist an toàn</div>
-                      <div className="cyber-console-value highlight">{selectedWhitelist.domain}</div>
-                      <span className="status-badge approved">Xác thực an toàn</span>
-                    </div>
-
-                    <div className="cyber-console-card">
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div>
-                          <div className="cyber-console-section-title">Người phê duyệt</div>
-                          <div className="cyber-console-value">{selectedWhitelist.addedBy}</div>
-                        </div>
-                        <div>
-                          <div className="cyber-console-section-title">Ngày thêm</div>
-                          <div className="cyber-console-value">{new Date(selectedWhitelist.date).toLocaleDateString('vi-VN')}</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="cyber-console-card">
-                      <div className="cyber-console-section-title">Ghi chú xác minh</div>
-                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'var(--text-secondary)' }}>
-                        {selectedWhitelist.notes}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="cyber-action-drawer">
-                    <button className="btn btn-secondary" style={{ color: 'var(--danger)', borderColor: 'rgba(255, 62, 108, 0.2)' }} onClick={() => handleDeleteWhitelist(selectedWhitelist)}>
-                      <Trash2 size={13} style={{ marginRight: '0.25rem' }} /> Xóa khỏi danh sách trắng
-                    </button>
-                  </div>
-                </>
-              )}
-
-
-
-              {/* VIEW 5: SELECTED AUDIT LOGS */}
-              {activeTab === 'audit' && selectedAudit && (
-                <div className="cyber-detail-scroll animate-fade-in">
-                  <div className="cyber-console-card">
-                    <div className="cyber-console-section-title">Nhật ký hoạt động hệ thống</div>
-                    <div className="cyber-console-value highlight">{selectedAudit.action}</div>
-                  </div>
-
-                  <div className="cyber-console-card">
-                    <div className="cyber-console-section-title">Cấu trúc dữ liệu ghi nhận (System Logs)</div>
-                    <div className="cyber-terminal-panel">
-                      {`{
-  "log_id": "${selectedAudit.id}",
-  "timestamp": "${selectedAudit.date}",
-  "operator": "${selectedAudit.operator}",
-  "action": "${selectedAudit.action}",
-  "target_affected": "${selectedAudit.target}",
-  "audit_details": "${selectedAudit.details}"
-}`}
-                    </div>
-                  </div>
-                </div>
-              )}
-
+          } />
+          <Route path="reports" element={
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <ReportsTab
+                token={token}
+                pendingReports={pendingReports}
+                setPendingReports={setPendingReports}
+                savePendingReports={savePendingReports}
+                blacklist={blacklist}
+                saveBlacklist={saveBlacklist}
+                addAuditLog={addAuditLog}
+                addToast={addToast}
+              />
             </div>
-
-          </div>
-        )}
-
+          } />
+          <Route path="blacklist" element={
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <BlacklistTab
+                token={token}
+                blacklist={blacklist}
+                saveBlacklist={saveBlacklist}
+                addAuditLog={addAuditLog}
+                addToast={addToast}
+              />
+            </div>
+          } />
+          <Route path="whitelist" element={
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <WhitelistTab
+                token={token}
+                whitelist={whitelist}
+                saveWhitelist={saveWhitelist}
+                addAuditLog={addAuditLog}
+                addToast={addToast}
+                currentUserEmail={user.email}
+              />
+            </div>
+          } />
+          <Route path="audit" element={
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <AuditLogTab
+                auditLogs={auditLogs}
+                saveAuditLogs={saveAuditLogs}
+                addToast={addToast}
+              />
+            </div>
+          } />
+          <Route path="mod-history" element={
+            <div style={{ flex: 1, overflowY: 'auto', minHeight: 0 }}>
+              <ModeratorHistoryTab
+                auditLogs={auditLogs}
+                addToast={addToast}
+              />
+            </div>
+          } />
+          <Route path="*" element={<Navigate to="overview" replace />} />
+        </Routes>
       </div>
 
       {/* ======================================================== */}

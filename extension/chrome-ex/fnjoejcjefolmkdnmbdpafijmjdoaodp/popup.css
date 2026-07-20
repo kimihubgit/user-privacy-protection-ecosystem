@@ -1,0 +1,871 @@
+/* ==========================
+   DataBlur Popup Styles
+   Figma design with vanilla JS
+   ========================== */
+
+/* ==========================
+   Design Tokens (CSS Variables)
+   ========================== */
+:root {
+  /* Colors - Primary */
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-outline: rgba(124, 58, 237, 0.6);
+  --color-primary-bg-hover: rgba(124, 58, 237, 0.05);
+
+  /* Colors - Text */
+  --color-text-primary: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-text-hover: #e4e4e7;
+  --color-white: #ffffff;
+
+  /* Colors - Backgrounds */
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #212121;
+  --color-bg-elevated: #262626;
+  --color-bg-badge: #3f3f46;
+
+  /* Colors - Overlays (White) */
+  --color-overlay-subtle: rgba(255, 255, 255, 0.05);
+  --color-overlay-light: rgba(255, 255, 255, 0.1);
+  --color-overlay-medium: rgba(255, 255, 255, 0.12);
+
+  /* Colors - Overlays (Black) */
+  --color-shadow-subtle: rgba(0, 0, 0, 0.05);
+  --color-shadow-light: rgba(0, 0, 0, 0.1);
+  --color-shadow-medium: rgba(0, 0, 0, 0.2);
+  --color-tooltip-bg: rgba(0, 0, 0, 0.8);
+
+  /* Colors - Borders */
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-transparent: transparent;
+
+  /* Colors - Status */
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.15);
+  --color-success-bg-hover: rgba(34, 197, 94, 0.25);
+  --color-success-border: rgba(34, 197, 94, 0.4);
+  --color-success-border-hover: rgba(34, 197, 94, 0.5);
+  --color-error: #f04438;
+  --color-error-bg: rgba(212, 24, 61, 0.15);
+  --color-error-border: rgba(212, 24, 61, 0.4);
+
+  /* Spacing Scale */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 0.75rem; /* 12px */
+  --spacing-lg: 1rem; /* 16px */
+  --spacing-xl: 1.5rem; /* 24px */
+  --spacing-2xl: 2rem; /* 32px */
+
+  /* Border Radius */
+  --radius-xs: 0.125rem; /* 2px */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-full: 9999px;
+  --radius-circle: 50%;
+
+  /* Typography - Font Families */
+  --font-mono:
+    'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+    monospace;
+  --font-ui:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Typography - Font Sizes */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+
+  /* Typography - Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+
+  /* Typography - Line Heights */
+  --leading-tight: 1;
+  --leading-snug: 1.2;
+  --leading-normal: 1.25;
+  --leading-relaxed: 1.5;
+
+  /* Transitions - Durations */
+  --duration-fast: 0.1s;
+  --duration-normal: 0.15s;
+  --duration-medium: 0.2s;
+  --duration-slow: 0.3s;
+
+  /* Transitions - Timing Functions */
+  --ease-default: ease-in-out;
+  --ease-out: ease-out;
+  --ease-in: ease-in;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 var(--color-shadow-subtle);
+  --shadow-md: 0 10px 15px -3px var(--color-shadow-light), 0 4px 6px -4px var(--color-shadow-light);
+  --shadow-lg:
+    0 10px 15px -3px var(--color-shadow-medium), 0 4px 6px -4px var(--color-shadow-light);
+
+  /* Z-Index Scale */
+  --z-base: 0;
+  --z-toggle: 1;
+  --z-overlay: 1000000;
+  --z-interaction: 1000002;
+  --z-controls: 1000003;
+  --z-toolbar: 1000004;
+  --z-modal: 1000005;
+  --z-tooltip: 1000005;
+}
+
+/* CSS Reset */
+html {
+  -webkit-text-size-adjust: 100%;
+  line-height: 1.15;
+  box-sizing: border-box;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: inherit;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family:
+    'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+    monospace;
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  background-color: var(--color-bg-secondary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ==========================
+   Utility Transitions
+   ========================== */
+
+.datablur-ease-in-out,
+.datablur-linear,
+.datablur-ease-in-out-fast,
+.datablur-linear-fast {
+  transition:
+    opacity 0.15s ease-in-out,
+    transform 0.15s ease-in-out,
+    background-color 0.15s ease-in-out,
+    color 0.15s ease-in-out;
+}
+
+.datablur-ease-in-out-medium,
+.datablur-linear-medium {
+  transition:
+    opacity 0.2s ease-in-out,
+    transform 0.2s ease-in-out,
+    background-color 0.2s ease-in-out,
+    color 0.2s ease-in-out;
+}
+
+.datablur-ease-in-out-slow,
+.datablur-linear-slow {
+  transition:
+    opacity 0.3s ease-in-out,
+    transform 0.3s ease-in-out,
+    background-color 0.3s ease-in-out,
+    color 0.3s ease-in-out;
+}
+
+/* ==========================
+   Button Base
+   ========================== */
+
+.datablur-button {
+  background-color: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 500;
+  color: inherit;
+  padding: 0;
+  text-decoration: none;
+  user-select: none;
+  opacity: 1;
+  transition:
+    opacity 0.15s ease-in-out,
+    background-color 0.15s ease-in-out;
+}
+
+.datablur-button:hover {
+  opacity: 0.9;
+}
+
+.datablur-button:focus {
+  outline: none;
+}
+
+.datablur-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.datablur-button-disabled {
+  pointer-events: none;
+  opacity: 0.4;
+}
+
+/* ==========================
+   Main App Container
+   ========================== */
+
+.datablur-app {
+  background-color: var(--color-bg-primary);
+  background-image: url(./assets/bcg.jpg);
+  background-repeat: no-repeat;
+  background-position: top;
+  width: 18rem;
+  padding: 1rem 1rem 0;
+  /* No bottom padding - footer sits flush */
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ==========================
+   Logo / Title
+   ========================== */
+
+.datablur-title {
+  display: flex;
+  align-items: center;
+}
+
+.datablur-title-background {
+  display: flex;
+  align-items: center;
+}
+
+.datablur-title-background > img {
+  height: 2em;
+  object-fit: contain;
+}
+
+/* ==========================
+   Tab Navigation
+   ========================== */
+
+.datablur-tab-navigation {
+  display: flex;
+  gap: 0;
+  width: 100%;
+  border-bottom: 1px solid var(--color-border-default);
+}
+
+.datablur-tab-button {
+  position: relative;
+  flex: 1;
+  padding: 0.75rem 0;
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.datablur-tab-button:hover {
+  color: var(--color-text-primary);
+}
+
+.datablur-tab-button:focus {
+  outline: none;
+}
+
+.datablur-tab-button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.datablur-tab-button-active {
+  color: var(--color-text-primary);
+}
+
+.datablur-tab-button-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: var(--color-primary);
+}
+
+/* ==========================
+   Overview Section
+   ========================== */
+
+.datablur-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.datablur-overview-controllers {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.datablur-overview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* ==========================
+   Settings Section
+   ========================== */
+
+.datablur-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.datablur-settings-controllers {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.datablur-settings-toggle-controller {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 1.25rem;
+}
+
+.datablur-settings-toggle-controller-text {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.datablur-settings-toggle-controller-disabled {
+  opacity: 0.4;
+}
+
+/* Analytics Explanation */
+.datablur-analytics-explanation {
+  margin: -0.5rem 0 0 0;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.datablur-analytics-explanation-link {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-underline-position: from-font;
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.datablur-analytics-explanation-link:hover {
+  color: var(--color-text-hover);
+}
+
+/* ==========================
+   Blocklist UI
+   ========================== */
+
+.datablur-blocklist-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.datablur-blocklist-label {
+  margin: -0.5rem 0 0 0;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.datablur-blocklist-textarea {
+  width: 100%;
+  padding: 0.5rem;
+  background-color: var(--color-overlay-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-primary);
+  line-height: 1.5;
+  resize: vertical;
+  transition: border-color 0.15s ease-in-out;
+}
+
+.datablur-blocklist-textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.datablur-blocklist-textarea::placeholder {
+  color: var(--color-text-muted);
+  opacity: 0.6;
+}
+
+.datablur-blocklist-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.datablur-blocklist-counter {
+  /* Inherits from parent info-row */
+}
+
+.datablur-blocklist-status {
+  opacity: 0.8;
+}
+
+/* Badge */
+.datablur-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-bg-badge);
+  border: 1px solid var(--color-border-transparent);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary);
+}
+
+/* PII Category Badge Grid */
+.datablur-pii-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+/* Clickable PII Category Badge */
+.datablur-pii-category-badge {
+  cursor: pointer;
+  transition:
+    opacity var(--duration-normal) var(--ease-default),
+    transform var(--duration-normal) var(--ease-default);
+  user-select: none;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+}
+
+.datablur-pii-category-badge:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.datablur-pii-category-badge:active {
+  transform: translateY(0);
+}
+
+.datablur-pii-category-badge:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Badge Active State (Primary Purple) */
+.datablur-badge-active {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+}
+
+.datablur-badge-active:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* ==========================
+   Toggle Switch
+   ========================== */
+
+.datablur-styled-button-v1 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.datablur-styled-button-v1-indicator {
+  position: relative;
+  height: 1.25rem;
+  width: 2.25rem;
+}
+
+.datablur-styled-button-v1-indicator-background {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  transition: background-color 0.15s ease-in-out;
+  z-index: var(--z-base);
+  border: 2px solid transparent;
+}
+
+.datablur-styled-button-v1-indicator-background-off {
+  background-color: var(--color-overlay-medium);
+}
+
+.datablur-styled-button-v1-indicator-background-on {
+  background-color: var(--color-primary);
+}
+
+.datablur-styled-button-v1-indicator-circle {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  background-color: var(--color-white);
+  border-radius: 50%;
+  box-shadow: var(--shadow-md);
+  transition: margin-left 0.15s ease-in-out;
+  z-index: var(--z-toggle);
+}
+
+.datablur-styled-button-v1-indicator-circle-off {
+  margin-left: 0.125rem;
+}
+
+.datablur-styled-button-v1-indicator-circle-on {
+  margin-left: 1.125rem;
+  /* 2.25rem - 1rem - 0.125rem */
+}
+
+/* ==========================
+   Action Buttons
+   ========================== */
+
+.datablur-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+/* Primary glassmorphic button */
+.datablur-styled-button-v2 {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-primary-hover);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  line-height: 1.25rem;
+  text-align: center;
+  transition:
+    background 0.2s ease-in-out,
+    box-shadow 0.2s ease-in-out,
+    transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.datablur-styled-button-v2:hover {
+  background:
+    linear-gradient(0deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.1) 100%),
+    var(--color-primary-hover);
+  box-shadow: var(--shadow-md);
+}
+
+.datablur-styled-button-v2:active {
+  transform: translateY(1px);
+}
+
+/* Secondary button */
+.datablur-styled-button-secondary {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-overlay-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  box-shadow: var(--shadow-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  transition: background-color 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.datablur-styled-button-secondary:hover {
+  background-color: var(--color-overlay-light);
+}
+
+.datablur-buttons-button-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Shortcut indicator */
+.datablur-shortcut {
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-primary);
+  opacity: 0.8;
+}
+
+/* Buy Me a Coffee button */
+.bmc-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-overlay-subtle);
+  border: 1px solid var(--color-border-default);
+  border-radius: 0.5rem;
+  transition: background-color 0.15s ease-in-out;
+}
+
+.bmc-button:hover {
+  background-color: var(--color-overlay-light);
+}
+
+.bmc-button img {
+  height: 1.5rem;
+  width: auto;
+  object-fit: contain;
+}
+
+/* ==========================
+   Footer
+   ========================== */
+
+.datablur-copyright {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+  margin: 0;
+  margin-top: auto;
+  /* Push footer to bottom when content is short */
+  padding-bottom: 1rem;
+  /* Footer's own bottom spacing */
+}
+
+.datablur-copyright-version {
+  color: var(--color-text-primary);
+}
+
+.datablur-copyright-link {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-underline-position: from-font;
+  text-decoration-skip-ink: none;
+  cursor: pointer;
+  transition: color 0.15s ease-in-out;
+}
+
+.datablur-copyright-link:hover {
+  color: var(--color-text-hover);
+}
+
+/* ==========================
+   Notification
+   ========================== */
+
+.datablur-notification {
+  padding: 0.75rem;
+  background-color: var(--color-error-bg);
+  border: 1px solid var(--color-error-border);
+  border-radius: 0.5rem;
+  color: var(--color-error);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* Green notification variant for positive messages (surveys, success) */
+.datablur-notification-green {
+  position: relative;
+  padding: 0.75rem;
+  background-color: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: 0.5rem;
+  color: var(--color-success);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.datablur-notification-green-title {
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.datablur-notification-green-message {
+  font-weight: 400;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0;
+  opacity: 0.9;
+}
+
+.datablur-notification-green-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 2.25rem;
+  padding: 0.5rem 1rem;
+  background-color: var(--color-success-bg);
+  border: 1px solid var(--color-success-border);
+  border-radius: 0.5rem;
+  color: var(--color-success);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background-color 0.15s ease-in-out,
+    border-color 0.15s ease-in-out;
+  cursor: pointer;
+}
+
+.datablur-notification-green-button:hover {
+  background-color: var(--color-success-bg-hover);
+  border-color: var(--color-success-border-hover);
+}
+
+.datablur-notification-green-dismiss {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--color-success);
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: opacity 0.15s ease-in-out;
+  padding: 0;
+}
+
+.datablur-notification-green-dismiss:hover {
+  opacity: 1;
+}
+
+.datablur-notification-green-dismiss:focus {
+  outline: none;
+}
+
+.datablur-notification-green-dismiss:focus-visible {
+  outline: 2px solid var(--color-success);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* ==========================
+   Links
+   ========================== */
+
+.datablur-link {
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  border: none;
+  text-decoration: none;
+  opacity: 1;
+  transition: opacity 0.15s ease-in-out;
+}
+
+.datablur-link:hover {
+  opacity: 0.85;
+}
+
+.datablur-link:visited {
+  color: inherit;
+}
+
+.datablur-link-disabled {
+  pointer-events: none;
+}
+
+/* ==========================
+   Accessibility
+   ========================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

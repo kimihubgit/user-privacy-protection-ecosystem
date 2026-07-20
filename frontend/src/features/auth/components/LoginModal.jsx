@@ -367,7 +367,7 @@ export default function LoginModal({
               </div>
               <div className="login-feature-text">
                 <h4>Giám sát thời gian thực</h4>
-                <p>Kích hoạt tính năng cảnh báo tự động 24/7 về nguy cơ rò rỉ dữ liệu cá nhân.</p>
+                <p> tính năng cảnh báo tự động 24/7 về nguy cơ rò rỉ dữ liệu cá nhân.</p>
               </div>
             </div>
           </div>

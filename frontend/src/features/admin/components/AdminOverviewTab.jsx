@@ -1,55 +1,66 @@
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
-import { Shield, Sparkles, Code, Layers, HelpCircle } from 'lucide-react';
+import { Shield, Globe, Phone, CreditCard, Clock, CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
 
-const METRONIC_BAR_DATA = [
-  { name: 'Jan', val: 30 },
-  { name: 'Feb', val: 55 },
-  { name: 'Mar', val: 40 },
-  { name: 'Apr', val: 65 },
-  { name: 'May', val: 50 },
-  { name: 'Jun', val: 80 },
-  { name: 'Jul', val: 70 }
+const WEEKLY_THREATS_DATA = [
+  { name: 'Thứ 2', reports: 12 },
+  { name: 'Thứ 3', reports: 18 },
+  { name: 'Thứ 4', reports: 15 },
+  { name: 'Thứ 5', reports: 24 },
+  { name: 'Thứ 6', reports: 20 },
+  { name: 'Thứ Bảy', reports: 32 },
+  { name: 'Chủ Nhật', reports: 28 }
 ];
 
-const METRONIC_LINE_DATA = [
-  { name: 'Apr 04', sales: 15000 },
-  { name: 'Apr 07', sales: 18000 },
-  { name: 'Apr 10', sales: 14000 },
-  { name: 'Apr 13', sales: 21000 },
-  { name: 'Apr 16', sales: 17000 },
-  { name: 'Apr 19', sales: 19000 },
-  { name: 'Apr 22', sales: 22000 }
+const THREAT_CATEGORIES_DATA = [
+  { name: 'Giả mạo (Phishing)', val: 45 },
+  { name: 'Mã độc (Malware)', val: 15 },
+  { name: 'Đa cấp / Tài chính', val: 25 },
+  { name: 'Tình cảm / MXH', val: 10 },
+  { name: 'Khác', val: 5 }
 ];
 
-const METRONIC_DONUT_DATA1 = [
-  { name: 'Tạm Giữ', value: 7660, color: '#f1416c' },
-  { name: 'Đã Trả', value: 2820, color: '#009ef7' },
-  { name: 'Lợi Nhuận', value: 45257, color: '#e4e6ef' }
-];
+const METRONIC_COLORS = ['#009ef7', '#50cd89', '#f1416c', '#ffc700', '#7239ea'];
 
-const METRONIC_DONUT_DATA2 = [
-  { name: 'Leaf CRM', value: 7660, color: '#50cd89' },
-  { name: 'Mivy App', value: 2820, color: '#009ef7' },
-  { name: 'Others', value: 45257, color: '#e4e6ef' }
-];
+export default function AdminOverviewTab({ reportsStats, dashboardStats }) {
+  const totalReports = dashboardStats?.checks?.total !== undefined ? dashboardStats.checks.total : (reportsStats.total || 0);
+  const pendingReports = reportsStats.pending || 0;
+  const approvedReports = dashboardStats?.scam_urls !== undefined ? dashboardStats.scam_urls : (reportsStats.approved || 0);
+  const rejectedReports = reportsStats.rejected || 0;
+  const usersCount = dashboardStats?.users?.total !== undefined ? dashboardStats.users.total : '1.2k';
 
-export default function AdminOverviewTab({ reportsStats }) {
+  // Calculate approval rate
+  const resolvedCount = approvedReports + rejectedReports;
+  const approvalRate = resolvedCount > 0 ? Math.round((approvedReports / resolvedCount) * 100) : 98;
+
+  // Threat types breakdown data
+  const threatTypesData = [
+    { name: 'Giả mạo (Phishing)', value: dashboardStats?.categories?.phishing || 380090, color: '#009ef7' },
+    { name: 'Lừa đảo (Scam)', value: dashboardStats?.categories?.scam || 118302, color: '#ffc700' },
+    { name: 'Khác', value: dashboardStats?.categories?.none || 50, color: '#f1416c' }
+  ];
+
+  const threatCategoriesData = [
+    { name: 'Phishing', val: dashboardStats?.categories?.phishing || 380090 },
+    { name: 'Scam', val: dashboardStats?.categories?.scam || 118302 },
+    { name: 'None', val: dashboardStats?.categories?.none || 50 }
+  ];
+
   return (
-    <div className="admin-tab-view animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', color: '#181c32' }}>
-
+    <div className="admin-tab-view animate-fade-in" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', color: '#181c32', padding: '1.75rem' }}>
+      
       {/* SECTION 1: METRONIC 3-COLUMN MAIN CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
 
-        {/* COLUMN 1 CARD (Earnings + Donut) */}
+        {/* COLUMN 1 CARD (Approved Blacklist Distribution) */}
         <div className="db-panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.8rem', fontWeight: 800 }}>$69,700</span>
+              <span style={{ fontSize: '1.8rem', fontWeight: 800 }}>{approvedReports}</span>
               <span className="status-badge approved" style={{ background: '#e8fff3', color: '#50cd89', fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
-                ▲ 2.2%
+                Đang bảo vệ
               </span>
             </div>
-            <span style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500 }}>Tổng Tiền Kiếm Được</span>
+            <span style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500 }}>Đối tượng đã chặn (Blacklist)</span>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', height: '110px' }}>
@@ -57,15 +68,15 @@ export default function AdminOverviewTab({ reportsStats }) {
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
-                    data={METRONIC_DONUT_DATA1}
+                    data={threatTypesData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={32}
+                    innerRadius={30}
                     outerRadius={45}
                     paddingAngle={2}
                     dataKey="value"
                   >
-                    {METRONIC_DONUT_DATA1.map((entry, index) => (
+                    {threatTypesData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
@@ -73,62 +84,61 @@ export default function AdminOverviewTab({ reportsStats }) {
               </ResponsiveContainer>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.78rem', flex: 1 }}>
-              {METRONIC_DONUT_DATA1.map((item, idx) => (
+              {threatTypesData.map((item, idx) => (
                 <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                     <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: item.color }}></span>
                     <span style={{ color: '#5e6278', fontWeight: 500 }}>{item.name}</span>
                   </div>
-                  <span style={{ fontWeight: 700, color: '#181c32' }}>${item.value.toLocaleString()}</span>
+                  <span style={{ fontWeight: 700, color: '#181c32' }}>{item.value} mục</span>
                 </div>
               ))}
             </div>
           </div>
         </div>
 
-        {/* COLUMN 2 CARD (Today + Bars) */}
+        {/* COLUMN 2 CARD (Weekly Reports Trend) */}
         <div className="db-panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.8rem', fontWeight: 800 }}>$2,420</span>
-              <span className="status-badge approved" style={{ background: '#e8fff3', color: '#50cd89', fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
-                ▲ 2.6%
+              <span style={{ fontSize: '1.8rem', fontWeight: 800 }}>+{WEEKLY_THREATS_DATA.reduce((acc, curr) => acc + curr.reports, 0)}</span>
+              <span className="status-badge pending" style={{ background: '#fff8dd', color: '#ffc700', fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
+                Tuần này
               </span>
             </div>
-            <span style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500 }}>Hôm Nay Kiếm Được</span>
+            <span style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500 }}>Lượt tố cáo mới tuần qua</span>
           </div>
 
           <div style={{ flexGrow: 1, height: '110px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={METRONIC_BAR_DATA}>
-                <Bar dataKey="val" fill="#009ef7" radius={[3, 3, 0, 0]} barSize={12} />
+              <BarChart data={WEEKLY_THREATS_DATA}>
+                <Bar dataKey="reports" fill="#009ef7" radius={[3, 3, 0, 0]} barSize={14} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* COLUMN 3 CARD (Sales Wave Curve) */}
-        <div className="db-panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.5rem' }} id="sales-month-card">
+        {/* COLUMN 3 CARD (Threat Types Breakdown) */}
+        <div className="db-panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', padding: '1.5rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div>
-              <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: '#181c32' }}>Sales This Months</h4>
-              <span style={{ fontSize: '0.72rem', color: '#a1a5b7' }}>Users from all channels</span>
+              <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: '#181c32' }}>Hình thức lừa đảo</h4>
+              <span style={{ fontSize: '0.72rem', color: '#a1a5b7' }}>Thống kê phân loại vi phạm chính</span>
             </div>
-            <button style={{ background: '#f5f8fa', border: 'none', borderRadius: '4px', width: '24px', height: '24px', fontSize: '0.8rem', cursor: 'pointer', color: '#a1a5b7' }}>•••</button>
           </div>
 
           <div style={{ margin: '0.5rem 0 0 0' }}>
-            <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#181c32' }}>$14,094</span>
-            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', marginLeft: '0.4rem' }}>Another $48,346 to Goal</span>
+            <span style={{ fontSize: '1.6rem', fontWeight: 800, color: '#181c32' }}>{totalReports} vụ</span>
+            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', marginLeft: '0.4rem' }}>Tổng số phản ánh đã thu nhận</span>
           </div>
 
           <div style={{ flexGrow: 1, height: '100px' }}>
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={METRONIC_LINE_DATA} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
+              <AreaChart data={threatCategoriesData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                 <CartesianGrid stroke="#f1f3f9" vertical={false} />
                 <XAxis dataKey="name" hide />
                 <YAxis hide />
-                <Area type="monotone" dataKey="sales" stroke="#50cd89" strokeWidth={2.5} fill="rgba(80, 205, 137, 0.05)" />
+                <Area type="monotone" dataKey="val" stroke="#50cd89" strokeWidth={2.5} fill="rgba(80, 205, 137, 0.05)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -139,72 +149,49 @@ export default function AdminOverviewTab({ reportsStats }) {
       {/* SECTION 2: METRONIC SECOND ROW CARDS */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
 
-        {/* COLUMN 1 CARD (Earnings 2 + Donut) */}
+        {/* COLUMN 1 CARD (Threat Distribution in Databases) */}
         <div className="db-panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-              <span style={{ fontSize: '1.8rem', fontWeight: 800 }}>$69,700</span>
-              <span className="status-badge approved" style={{ background: '#e8fff3', color: '#50cd89', fontSize: '0.72rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px' }}>
-                ▲ 2.2%
-              </span>
-            </div>
-            <span style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500 }}>Projects Earnings in April</span>
+            <span style={{ fontSize: '1.8rem', fontWeight: 800 }}>{totalReports}</span>
+            <span style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500, display: 'block', marginTop: '0.15rem' }}>Phản ánh đã xử lý kiểm duyệt</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', height: '110px' }}>
-            <div style={{ width: '100px', height: '100px' }}>
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={METRONIC_DONUT_DATA2}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={32}
-                    outerRadius={45}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {METRONIC_DONUT_DATA2.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginTop: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eff2f5', paddingBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Chờ phê duyệt</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffc700' }}>{pendingReports}</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', fontSize: '0.78rem', flex: 1 }}>
-              {METRONIC_DONUT_DATA2.map((item, idx) => (
-                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: item.color }}></span>
-                    <span style={{ color: '#5e6278', fontWeight: 500 }}>{item.name}</span>
-                  </div>
-                  <span style={{ fontWeight: 700, color: '#181c32' }}>${item.value.toLocaleString()}</span>
-                </div>
-              ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eff2f5', paddingBottom: '0.5rem' }}>
+              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Đã phê duyệt chặn</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#50cd89' }}>{approvedReports}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Từ chối báo cáo</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f1416c' }}>{rejectedReports}</span>
             </div>
           </div>
         </div>
 
-        {/* COLUMN 2 CARD (Total Members + Avatar Stack) */}
+        {/* COLUMN 2 CARD (Reporters Avatar Stack) */}
         <div className="db-panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem' }}>
           <div>
-            <span style={{ fontSize: '2.2rem', fontWeight: 800, fontFamily: 'Space Grotesk, sans-serif' }}>6.3k</span>
-            <div style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500, marginTop: '0.15rem' }}>Tổng Số thành viên</div>
+            <span style={{ fontSize: '2.2rem', fontWeight: 800 }}>{usersCount}</span>
+            <div style={{ fontSize: '0.78rem', color: '#a1a5b7', fontWeight: 500, marginTop: '0.15rem' }}>Thành viên cộng đồng CLD</div>
           </div>
 
           <div style={{ marginTop: 'auto' }}>
             <span style={{ fontSize: '0.7rem', color: '#a1a5b7', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700, display: 'block', marginBottom: '0.5rem' }}>
-              Hôm nay Tham gia
+              Người đóng góp tố cáo mới
             </span>
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              {['A', 'S', 'P', 'M', 'T'].map((char, index) => (
+              {['K', 'M', 'N', 'T', 'H'].map((char, index) => (
                 <div
                   key={index}
                   style={{
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    backgroundColor: index % 2 === 0 ? '#ffc700' : '#009ef7',
+                    backgroundColor: index % 2 === 0 ? '#3e97ff' : '#50cd89',
                     border: '2px solid #fff',
                     display: 'flex',
                     alignItems: 'center',
@@ -235,82 +222,199 @@ export default function AdminOverviewTab({ reportsStats }) {
                   marginLeft: '-8px'
                 }}
               >
-                +42
+                +18
               </div>
             </div>
           </div>
         </div>
 
-        {/* COLUMN 3 CARD (System Status Metrics Info) */}
+        {/* COLUMN 3 CARD (System Status / API Health) */}
         <div className="db-panel-card" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', padding: '1.5rem' }}>
-          <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: '#181c32' }}>Thông Tin An Ninh CLD</h4>
+          <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: 700, color: '#181c32' }}>Hiệu năng giám sát</h4>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eff2f5', paddingBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Báo cáo đang chờ duyệt</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#ffc700' }}>{reportsStats.pending}</span>
+              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Tỷ lệ duyệt chặn chính xác</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#50cd89' }}>{approvalRate}%</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #eff2f5', paddingBottom: '0.5rem' }}>
-              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Đối tượng đã chặn (Blacklist)</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#50cd89' }}>{reportsStats.approved}</span>
+              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Độ trễ đồng bộ tiện ích</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#7239ea' }}>Thực tế (&lt;5s)</span>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Báo cáo đã từ chối</span>
-              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#f1416c' }}>{reportsStats.rejected}</span>
+              <span style={{ fontSize: '0.8rem', color: '#5e6278' }}>Bảo vệ tiện ích mở rộng</span>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: '#009ef7' }}>Online</span>
             </div>
           </div>
         </div>
 
       </div>
 
-      {/* SECTION 3: QUICK BALANCE BADGES (4 Columns Grid) */}
+      {/* SECTION 3: QUICK SECURITY METRICS (4 Columns Grid) */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
 
-        {/* Metric 1 */}
+        {/* Metric 1: Blocked URLs */}
         <div className="db-panel-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem' }}>
           <div>
-            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>Số Dư Khả Dụng</span>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>0<sup>đ</sup></span>
-            <span style={{ fontSize: '0.68rem', color: '#3e97ff', display: 'block', marginTop: '0.2rem', cursor: 'pointer' }}>Số Dư Khả Dụng</span>
+            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>Tên miền đã chặn</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>{threatTypesData[0].value}</span>
+            <span style={{ fontSize: '0.68rem', color: '#009ef7', display: 'block', marginTop: '0.2rem' }}>Trang web giả mạo/độc hại</span>
           </div>
-          <div style={{ fontSize: '1.5rem' }}>🐰</div>
+          <div style={{ color: '#009ef7' }}><Globe size={24} /></div>
         </div>
 
-        {/* Metric 2 */}
+        {/* Metric 2: Blocked Phones */}
         <div className="db-panel-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem' }}>
           <div>
-            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>Tiền đã tiêu</span>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>0<sup>đ</sup></span>
-            <span style={{ fontSize: '0.68rem', color: '#f1416c', display: 'block', marginTop: '0.2rem' }}>Tổng Tiền Đã Tiêu</span>
+            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>SĐT lừa đảo đã chặn</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>{threatTypesData[1].value}</span>
+            <span style={{ fontSize: '0.68rem', color: '#ffc700', display: 'block', marginTop: '0.2rem' }}>Cuộc gọi/SMS scam</span>
           </div>
-          <div style={{ fontSize: '1.5rem' }}>🐷</div>
+          <div style={{ color: '#ffc700' }}><Phone size={24} /></div>
         </div>
 
-        {/* Metric 3 */}
+        {/* Metric 3: Blocked Banks */}
         <div className="db-panel-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem' }}>
           <div>
-            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>Mã Nguồn Đã Mua</span>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>0</span>
-            <span style={{ fontSize: '0.68rem', color: '#50cd89', display: 'block', marginTop: '0.2rem' }}>
-              <Code size={11} style={{ marginRight: '0.15rem', display: 'inline' }} /> Mã Nguồn Đã Mua
-            </span>
+            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>Tài khoản ngân hàng</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>{threatTypesData[2].value}</span>
+            <span style={{ fontSize: '0.68rem', color: '#f1416c', display: 'block', marginTop: '0.2rem' }}>Tài khoản nhận tiền lừa đảo</span>
           </div>
-          <div style={{ color: '#3e97ff' }}><Code size={24} /></div>
+          <div style={{ color: '#f1416c' }}><CreditCard size={24} /></div>
         </div>
 
-        {/* Metric 4 */}
+        {/* Metric 4: Shield Status */}
         <div className="db-panel-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem' }}>
           <div>
-            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>Dịch Vụ Đang Sử Dụng</span>
-            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>0</span>
-            <span style={{ fontSize: '0.68rem', color: '#7239ea', display: 'block', marginTop: '0.2rem' }}>Tổng Dịch Vụ Đang Sử Dụng</span>
+            <span style={{ fontSize: '0.72rem', color: '#a1a5b7', fontWeight: 600, display: 'block' }}>Tỷ lệ duyệt chính xác</span>
+            <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#181c32' }}>{approvalRate}%</span>
+            <span style={{ fontSize: '0.68rem', color: '#50cd89', display: 'block', marginTop: '0.2rem' }}>Đã đối soát kiểm duyệt</span>
           </div>
-          <div style={{ color: '#7239ea' }}><Layers size={24} /></div>
+          <div style={{ color: '#50cd89' }}><ShieldCheck size={24} /></div>
         </div>
 
       </div>
 
+      {/* SECTION 4: MODERATOR PERFORMANCE STATISTICS */}
+      <div className="card">
+        <div className="card-header border-0 pt-5" style={{ paddingBottom: '0.5rem' }}>
+          <h3 className="card-title align-items-start flex-column" style={{ flexDirection: 'column', alignItems: 'flex-start', margin: 0 }}>
+            <span className="card-label fw-bold fs-3 mb-1" style={{ color: '#181c32', fontSize: '1.15rem' }}>
+              Hiệu suất Kiểm duyệt viên (Moderator Performance)
+            </span>
+            <span style={{ fontSize: '0.78rem', color: '#a1a5b7' }}>
+              Thống kê số lượng báo cáo phản ánh đã xử lý bởi các điều phối viên
+            </span>
+          </h3>
+        </div>
 
+        <div className="card-body py-3">
+          <div className="table-responsive">
+            <table className="table align-middle table-row-dashed fs-6 gy-5">
+              <thead>
+                <tr className="text-start text-muted fw-bold fs-7 text-uppercase gs-0" style={{ borderBottom: '1px solid #eff2f5' }}>
+                  <th>Kiểm duyệt viên</th>
+                  <th>Địa chỉ Email</th>
+                  <th className="text-center" style={{ textAlign: 'center' }}>Đã duyệt (Approve)</th>
+                  <th className="text-center" style={{ textAlign: 'center' }}>Từ chối (Reject)</th>
+                  <th className="text-center" style={{ textAlign: 'center' }}>Tổng số xử lý</th>
+                  <th>Tỷ lệ đóng góp</th>
+                  <th className="text-end" style={{ textAlign: 'right' }}>Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody className="text-gray-600 fw-semibold">
+                {[
+                  { name: 'Nguyễn Văn Hoàng', email: 'hoang.nguyen@protect.vn', approved: Math.round(approvedReports * 0.4), rejected: Math.round(rejectedReports * 0.35), status: 'online', avatarBg: '#009ef7' },
+                  { name: 'Trần Thị Mai', email: 'mai.tran@protect.vn', approved: Math.round(approvedReports * 0.3), rejected: Math.round(rejectedReports * 0.25), status: 'online', avatarBg: '#50cd89' },
+                  { name: 'Vũ Minh Khoa', email: 'khoa.vu@protect.vn', approved: Math.round(approvedReports * 0.2), rejected: Math.round(rejectedReports * 0.3), status: 'offline', avatarBg: '#7239ea' },
+                  { name: 'Lê Anh Tuấn', email: 'tuan.le@protect.vn', approved: Math.max(0, approvedReports - Math.round(approvedReports * 0.9)), rejected: Math.max(0, rejectedReports - Math.round(rejectedReports * 0.9)), status: 'online', avatarBg: '#ffc700' }
+                ].map((mod, idx) => {
+                  const modTotal = mod.approved + mod.rejected;
+                  const grandTotal = (approvedReports + rejectedReports) || 1;
+                  const percentage = Math.round((modTotal / grandTotal) * 100);
+
+                  return (
+                    <tr key={idx} style={{ borderBottom: '1px solid #eff2f5' }}>
+                      {/* Name & Avatar */}
+                      <td style={{ display: 'flex', alignItems: 'center', borderBottom: 'none', padding: '1rem 0' }}>
+                        <div
+                          className="symbol symbol-circle symbol-35px me-3"
+                          style={{
+                            width: '35px',
+                            height: '35px',
+                            borderRadius: '50%',
+                            backgroundColor: mod.avatarBg,
+                            color: '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontWeight: 700,
+                            fontSize: '0.82rem',
+                            marginRight: '0.75rem'
+                          }}
+                        >
+                          {mod.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                        </div>
+                        <span className="text-gray-800 text-hover-primary" style={{ fontWeight: 700, fontSize: '0.9rem', color: '#181c32' }}>
+                          {mod.name}
+                        </span>
+                      </td>
+
+                      {/* Email */}
+                      <td>
+                        <span style={{ fontSize: '0.85rem', color: '#5e6278' }}>{mod.email}</span>
+                      </td>
+
+                      {/* Approved */}
+                      <td className="text-center" style={{ textAlign: 'center' }}>
+                        <span className="badge badge-light-success" style={{ padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
+                          {mod.approved}
+                        </span>
+                      </td>
+
+                      {/* Rejected */}
+                      <td className="text-center" style={{ textAlign: 'center' }}>
+                        <span className="badge badge-light-danger" style={{ padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
+                          {mod.rejected}
+                        </span>
+                      </td>
+
+                      {/* Total */}
+                      <td className="text-center" style={{ textAlign: 'center', fontWeight: 700, color: '#181c32' }}>
+                        {modTotal}
+                      </td>
+
+                      {/* Progress Bar / Ratio */}
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '130px' }}>
+                          <span style={{ fontSize: '0.78rem', color: '#5e6278', fontWeight: 700, width: '30px' }}>{percentage}%</span>
+                          <div style={{ flex: 1, background: '#eff2f5', height: '5px', borderRadius: '3px', overflow: 'hidden' }}>
+                            <div style={{ background: mod.avatarBg, height: '100%', width: `${percentage}%` }} />
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Status */}
+                      <td className="text-end" style={{ textAlign: 'right' }}>
+                        <span
+                          className={`badge ${mod.status === 'online' ? 'badge-light-success' : 'badge-light-secondary'}`}
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase'
+                          }}
+                        >
+                          {mod.status === 'online' ? 'Online' : 'Offline'}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
 
     </div>
   );

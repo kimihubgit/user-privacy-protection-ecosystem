@@ -26,6 +26,7 @@ type Service interface {
 	GetReportStatsByReporter(ctx context.Context, email string, ip string) (map[string]int64, error)
 	GetReportByID(ctx context.Context, id string) (*entity.Report, error)
 	GetGlobalStats(ctx context.Context) (map[string]int64, error)
+	GetWeeklyStats(ctx context.Context) (dailyCounts map[string]int64, total int64, err error)
 }
 
 type service struct {
@@ -127,6 +128,26 @@ func (s *service) pushToBackendCheck(ctx context.Context, r *entity.Report) erro
 			_ = s.sendAdminRequest(ctx, baseUrl+"/api/admin/scammers", apiKey, payload)
 		}
 
+		// Push bank accounts
+		for _, bAccount := range r.Raw.Other.BankAccount {
+			if bAccount == "" {
+				continue
+			}
+			bankName := ""
+			if len(r.Raw.Other.BankName) > 0 {
+				bankName = r.Raw.Other.BankName[0]
+			}
+			payload := map[string]string{
+				"target":           bAccount,
+				"type":             "bank_account",
+				"name":             strings.Join(r.Raw.Other.Name, " / "),
+				"bank_name":        bankName,
+				"description":      r.Raw.Detail,
+				"source_report_id": r.ID.Hex(),
+			}
+			_ = s.sendAdminRequest(ctx, baseUrl+"/api/admin/scammers", apiKey, payload)
+		}
+
 		// Push social accounts
 		for _, sProfile := range r.Raw.Other.Social {
 			if sProfile == "" {
@@ -203,4 +224,8 @@ func (s *service) GetReportByID(ctx context.Context, id string) (*entity.Report,
 
 func (s *service) GetGlobalStats(ctx context.Context) (map[string]int64, error) {
 	return s.reportRepo.GetGlobalStats(ctx)
+}
+
+func (s *service) GetWeeklyStats(ctx context.Context) (dailyCounts map[string]int64, total int64, err error) {
+	return s.reportRepo.GetWeeklyStats(ctx)
 }

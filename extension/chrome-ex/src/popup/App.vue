@@ -38,6 +38,16 @@
           </svg>
         </button>
         <button 
+          :class="['nav-item', { active: activeTab === 'datashield' }]" 
+          @click="setActiveTab('datashield')"
+          :title="t('nav.datashield')"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+        </button>
+        <button 
           :class="['nav-item', { active: activeTab === 'adblock' }]" 
           @click="setActiveTab('adblock')"
           :title="t('nav.adblock')"
@@ -74,6 +84,7 @@
           </svg>
           <span class="proxy-dot" :class="{ active: proxyActive }" style="display: none;"></span>
         </button>
+        <!-- 2FA Authenticator Button (Hidden for future development)
         <button 
           :class="['nav-item', { active: activeTab === 'authenticator' }]" 
           @click="setActiveTab('authenticator')"
@@ -83,6 +94,7 @@
             <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 21 1.726-2.761a8 8 0 0 0 1.06-2.671l.059-.291a8.002 8.002 0 0 0 .155-1.57V12m-9 3.5c.5-1 1-2.043 1-3.5 0-1.74.556-3.352 1.5-4.665m0 11.165c2-2 2.5-5.237 2.5-6.5a4 4 0 0 1 7.954-.61M19.5 17.5c.5-2 .5-4 .5-5.5A8 8 0 0 0 8 5.07M15.954 15c-.174 1.393-.666 3.181-1.954 5.5"/>
           </svg>
         </button>
+        -->
         <button 
           :class="['nav-item', { active: activeTab === 'stats' }]" 
           @click="setActiveTab('stats')"
@@ -141,6 +153,11 @@
         <TrackingTab :currentDomain="currentDomain" :domainReputation="domainReputation" />
       </div>
 
+      <!-- Tab Pane: Data Shield -->
+      <div :class="['tab-pane', { active: activeTab === 'datashield' }]" id="tab-datashield" style="height: 100%;">
+        <DataShieldTab />
+      </div>
+
       <!-- Tab Pane: Adblock -->
       <div :class="['tab-pane', { active: activeTab === 'adblock' }]" id="tab-adblock" style="height: 100%;">
         <AdblockTab :blockedCount="adsCount" />
@@ -156,10 +173,11 @@
         <ProxyTab />
       </div>
 
-      <!-- Tab Pane: Authenticator -->
+      <!-- Tab Pane: Authenticator (Hidden for future development)
       <div :class="['tab-pane', { active: activeTab === 'authenticator' }]" id="tab-authenticator" style="height: 100%;">
         <AuthenticatorTab />
       </div>
+      -->
 
       <!-- Tab Pane: Stats -->
       <div :class="['tab-pane', { active: activeTab === 'stats' }]" id="tab-stats" style="height: 100%;">
@@ -168,7 +186,7 @@
 
       <!-- Tab Pane: Settings -->
       <div :class="['tab-pane', { active: activeTab === 'settings' }]" id="tab-settings" style="height: 100%;">
-        <SettingsTab @recheck-domain="checkActiveTabDomain" @show-feedback="showFeedbackOverlay = true" />
+        <SettingsTab @recheck-domain="checkActiveTabDomain" @show-feedback="showFeedbackOverlay = true" @show-about="showAboutOverlay = true" />
       </div>
     </div>
 
@@ -178,6 +196,7 @@
     <!-- Overlays -->
     <TermsOverlay v-if="isLoaded && !termsAccepted" @accept="acceptTerms" />
     <FeedbackOverlay v-else-if="showFeedbackOverlay" @close="showFeedbackOverlay = false" />
+    <AboutOverlay v-else-if="showAboutOverlay" @close="showAboutOverlay = false" />
     <CwsOverlay 
       v-else-if="isLoaded && isCwsPage" 
       :cwsDownloading="cwsDownloading"
@@ -200,6 +219,7 @@ import { cwsViewSource, cwsDownloadZip, cwsDownloadCrx } from './utils/cwsHelper
 // Import child components
 import DashboardTab from './views/DashboardTab.vue';
 import TrackingTab from './views/TrackingTab.vue';
+import DataShieldTab from './views/DataShieldTab.vue';
 import AdblockTab from './views/AdblockTab.vue';
 import AdvisorTab from './views/AdvisorTab.vue';
 import ProxyTab from './views/ProxyTab.vue';
@@ -208,6 +228,7 @@ import StatsTab from './views/StatsTab.vue';
 import SettingsTab from './views/SettingsTab.vue';
 import TermsOverlay from './components/TermsOverlay.vue';
 import FeedbackOverlay from './components/FeedbackOverlay.vue';
+import AboutOverlay from './components/AboutOverlay.vue';
 import CwsOverlay from './components/CwsOverlay.vue';
 
 export default {
@@ -215,6 +236,7 @@ export default {
   components: {
     DashboardTab,
     TrackingTab,
+    DataShieldTab,
     AdblockTab,
     AdvisorTab,
     ProxyTab,
@@ -223,6 +245,7 @@ export default {
     SettingsTab,
     TermsOverlay,
     FeedbackOverlay,
+    AboutOverlay,
     CwsOverlay
   },
   setup() {
@@ -234,6 +257,7 @@ export default {
     const activeTab = ref('dashboard');
     const globalEnabled = ref(true);
     const showFeedbackOverlay = ref(false);
+    const showAboutOverlay = ref(false);
     const trackerActive = ref(true);
     const adActive = ref(true);
 
@@ -546,7 +570,8 @@ export default {
       triggerViewSource,
       triggerDownloadZip,
       triggerDownloadCrx,
-      showFeedbackOverlay
+      showFeedbackOverlay,
+      showAboutOverlay
     };
   }
 };

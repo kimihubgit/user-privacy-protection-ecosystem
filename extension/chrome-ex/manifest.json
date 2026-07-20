@@ -6,7 +6,7 @@
   "version": "1.0",
   "short_name": "KiGuard",
   "author": "Kimidev",
-  "homepage_url": "https://kide.vn",
+  "homepage_url": "https://blog.kimidev.net",
   "minimum_chrome_version": "88",
   "browser_specific_settings": {
     "gecko": {
@@ -74,6 +74,7 @@
         "src/content/modules/ScamShield.js",
         "src/content/modules/ClickjackingShield.js",
         "src/content/modules/TranslateShield.js",
+        "src/content/modules/DataBlurShield.js",
         "src/content/content.js"
       ],
       "css": [

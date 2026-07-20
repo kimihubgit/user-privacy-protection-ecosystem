@@ -1,18 +1,86 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquareCode, X } from 'lucide-react';
 import { useChatbot } from '../../../hooks';
 
+const parseInlineStyle = (text) => {
+  if (!text) return '';
+  const parts = text.split(/\*\*([^*]+)\*\*/g);
+  return parts.map((part, idx) => {
+    if (idx % 2 === 1) {
+      return <strong key={idx}>{part}</strong>;
+    }
+    return part;
+  });
+};
+
 const renderMessageText = (text) => {
   if (!text) return '';
   return text.split('\n').map((line, index) => {
-    if (line.startsWith('## ')) {
-      return <h4 key={index} style={{ margin: '0.5rem 0 0.25rem 0', fontWeight: 'bold', color: 'inherit' }}>{line.replace('## ', '')}</h4>;
+    const trimmed = line.trim();
+
+    // Horizontal Rule
+    if (trimmed === '---') {
+      return <hr key={index} style={{ margin: '1rem 0', border: 'none', borderTop: '1px solid rgba(255, 255, 255, 0.1)' }} />;
     }
-    if (line.startsWith('- ')) {
-      return <li key={index} style={{ marginLeft: '1rem', listStyleType: 'disc', color: 'inherit' }}>{line.replace('- ', '')}</li>;
+
+    // Headings (ordered from longest to shortest prefix)
+    if (trimmed.startsWith('### ')) {
+      return (
+        <h4 key={index} style={{ margin: '0.8rem 0 0.35rem 0', fontWeight: 'bold', color: 'inherit', fontSize: '1.05rem' }}>
+          {parseInlineStyle(trimmed.substring(4))}
+        </h4>
+      );
     }
-    return <p key={index} style={{ margin: '0.25rem 0', color: 'inherit' }}>{line}</p>;
+    if (trimmed.startsWith('## ')) {
+      return (
+        <h3 key={index} style={{ margin: '0.9rem 0 0.4rem 0', fontWeight: 'bold', color: 'inherit', fontSize: '1.25rem' }}>
+          {parseInlineStyle(trimmed.substring(3))}
+        </h3>
+      );
+    }
+    if (trimmed.startsWith('# ')) {
+      return (
+        <h2 key={index} style={{ margin: '1rem 0 0.5rem 0', fontWeight: 'bold', color: 'inherit', fontSize: '1.45rem' }}>
+          {parseInlineStyle(trimmed.substring(2))}
+        </h2>
+      );
+    }
+
+    // Numbered lists (e.g. "1. ", "2. ")
+    const numberMatch = trimmed.match(/^(\d+)\.\s(.*)/);
+    if (numberMatch) {
+      const num = numberMatch[1];
+      const rest = numberMatch[2];
+      return (
+        <div key={index} style={{ marginLeft: '1.25rem', margin: '0.25rem 0', display: 'flex', gap: '0.35rem', alignItems: 'flex-start', lineHeight: '1.5' }}>
+          <span style={{ fontWeight: 'bold', flexShrink: 0, minWidth: '1.2rem' }}>{num}.</span>
+          <span style={{ flex: 1 }}>{parseInlineStyle(rest)}</span>
+        </div>
+      );
+    }
+
+    // Bullet lists (e.g. "- ", "* ")
+    if (trimmed.startsWith('- ') || trimmed.startsWith('* ')) {
+      return (
+        <div key={index} style={{ marginLeft: '1.25rem', margin: '0.25rem 0', display: 'flex', gap: '0.5rem', alignItems: 'flex-start', lineHeight: '1.5' }}>
+          <span style={{ flexShrink: 0, color: 'var(--text-secondary)' }}>•</span>
+          <span style={{ flex: 1 }}>{parseInlineStyle(trimmed.substring(2))}</span>
+        </div>
+      );
+    }
+
+    // Empty line
+    if (!trimmed) {
+      return <div key={index} style={{ height: '0.5rem' }} />;
+    }
+
+    // Regular paragraph
+    return (
+      <p key={index} style={{ margin: '0.35rem 0', color: 'inherit', lineHeight: '1.5' }}>
+        {parseInlineStyle(line)}
+      </p>
+    );
   });
 };
 
@@ -35,10 +103,11 @@ export default function FloatingChat({
     const userMsg = { sender: 'user', text: query };
     setChatMessages(prev => [...prev, userMsg]);
     setChatInput('');
-    setIsThinking(true);
 
+    // Fallback chatbot response
+    setIsThinking(true);
     try {
-      let replyText = await askChatbot(query);
+      let replyText = await askChatbot(query, 'ai', chatMessages);
       if (!replyText) {
         replyText = getAgentReply(query, 'ai');
       }

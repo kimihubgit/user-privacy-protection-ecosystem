@@ -1,0 +1,713 @@
+/* ==========================
+   Design Tokens (CSS Variables)
+   Shared with popup.css for consistency
+   ========================== */
+:root {
+  /* Colors - Primary */
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+  --color-primary-outline: rgba(124, 58, 237, 0.6);
+  --color-primary-bg-hover: rgba(124, 58, 237, 0.05);
+
+  /* Colors - Text */
+  --color-text-primary: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-text-hover: #e4e4e7;
+  --color-white: #ffffff;
+
+  /* Colors - Backgrounds */
+  --color-bg-primary: #0a0a0a;
+  --color-bg-secondary: #212121;
+  --color-bg-elevated: #262626;
+  --color-bg-badge: #3f3f46;
+
+  /* Colors - Overlays (White) */
+  --color-overlay-subtle: rgba(255, 255, 255, 0.05);
+  --color-overlay-light: rgba(255, 255, 255, 0.1);
+  --color-overlay-medium: rgba(255, 255, 255, 0.12);
+
+  /* Colors - Overlays (Black) */
+  --color-shadow-subtle: rgba(0, 0, 0, 0.05);
+  --color-shadow-light: rgba(0, 0, 0, 0.1);
+  --color-shadow-medium: rgba(0, 0, 0, 0.2);
+  --color-tooltip-bg: rgba(0, 0, 0, 0.8);
+
+  /* Colors - Borders */
+  --color-border-default: rgba(255, 255, 255, 0.1);
+  --color-border-transparent: transparent;
+
+  /* Colors - Status */
+  --color-success: #22c55e;
+  --color-success-bg: rgba(34, 197, 94, 0.15);
+  --color-success-bg-hover: rgba(34, 197, 94, 0.25);
+  --color-success-border: rgba(34, 197, 94, 0.4);
+  --color-success-border-hover: rgba(34, 197, 94, 0.5);
+  --color-error: #f04438;
+  --color-error-bg: rgba(212, 24, 61, 0.15);
+  --color-error-border: rgba(212, 24, 61, 0.4);
+
+  /* Spacing Scale */
+  --spacing-xs: 0.25rem; /* 4px */
+  --spacing-sm: 0.5rem; /* 8px */
+  --spacing-md: 0.75rem; /* 12px */
+  --spacing-lg: 1rem; /* 16px */
+  --spacing-xl: 1.5rem; /* 24px */
+  --spacing-2xl: 2rem; /* 32px */
+
+  /* Border Radius */
+  --radius-xs: 0.125rem; /* 2px */
+  --radius-sm: 0.25rem; /* 4px */
+  --radius-md: 0.5rem; /* 8px */
+  --radius-lg: 0.75rem; /* 12px */
+  --radius-xl: 1rem; /* 16px */
+  --radius-full: 9999px;
+  --radius-circle: 50%;
+
+  /* Typography - Font Families */
+  --font-mono:
+    'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+    monospace;
+  --font-ui:
+    system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell,
+    'Open Sans', 'Helvetica Neue', Arial, sans-serif;
+
+  /* Typography - Font Sizes */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px */
+  --text-base: 1rem; /* 16px */
+  --text-lg: 1.125rem; /* 18px */
+
+  /* Typography - Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+
+  /* Typography - Line Heights */
+  --leading-tight: 1;
+  --leading-snug: 1.2;
+  --leading-normal: 1.25;
+  --leading-relaxed: 1.5;
+
+  /* Transitions - Durations */
+  --duration-fast: 0.1s;
+  --duration-normal: 0.15s;
+  --duration-medium: 0.2s;
+  --duration-slow: 0.3s;
+
+  /* Transitions - Timing Functions */
+  --ease-default: ease-in-out;
+  --ease-out: ease-out;
+  --ease-in: ease-in;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 var(--color-shadow-subtle);
+  --shadow-md: 0 10px 15px -3px var(--color-shadow-light), 0 4px 6px -4px var(--color-shadow-light);
+  --shadow-lg:
+    0 10px 15px -3px var(--color-shadow-medium), 0 4px 6px -4px var(--color-shadow-light);
+
+  /* Z-Index Scale */
+  --z-base: 0;
+  --z-toggle: 1;
+  --z-overlay: 1000000;
+  --z-interaction: 1000002;
+  --z-controls: 1000003;
+  --z-toolbar: 1000004;
+  --z-modal: 1000005;
+  --z-tooltip: 1000005;
+}
+
+/* Unified blur outline styles - dashed to indicate interactivity (outline will be blurred for text/area) */
+.datablur-text-selection.datablur-text-outline,
+.datablur-area-pointer-point-outline,
+.datablur-element-pointer-point,
+.datablur-point-outline {
+  outline: 2px dashed var(--color-primary-outline) !important;
+  outline-offset: 0px !important;
+  border-radius: 0.125rem;
+  /* Smooth transition for outline changes when edit mode toggles */
+  transition: outline 0.1s ease-out;
+}
+
+.datablur-element-pointer-global-cursor {
+  cursor: pointer;
+}
+
+.datablur-area-pointer-global-cursor {
+  cursor: crosshair;
+}
+
+.datablur-text-pointer-global-cursor {
+  cursor: text;
+}
+
+.datablur-area-pointer-point {
+  /* Prevent internal scrollbars within the blur area */
+  overflow: hidden;
+  position: absolute;
+  resize: none;
+  z-index: var(--z-overlay);
+  /* Semi-transparent background for backdrop-filter visibility (required for Brave/Chrome compatibility) */
+  background-color: var(--color-shadow-subtle);
+  /* Create proper stacking context for backdrop-filter to work correctly */
+  isolation: isolate;
+  /* Hint to browser to optimize backdrop-filter rendering */
+  will-change: backdrop-filter;
+  /* Apply blur effect with vendor prefixes for broad browser support */
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  /* Smooth transition for background changes when edit mode toggles */
+  transition: background-color 0.1s ease-out;
+}
+
+.datablur-area-pointer-point-hide {
+  display: none;
+}
+
+.datablur-area-pointer-point-container {
+  height: 100%;
+  position: relative;
+  width: 100%;
+}
+
+.datablur-area-pointer-point-dimensions-change,
+.datablur-area-pointer-point-position-change {
+  position: absolute;
+}
+
+.datablur-area-pointer-point-position-change {
+  cursor: grabbing;
+  height: 100%;
+  width: 100%;
+  z-index: var(--z-base);
+}
+
+.datablur-area-pointer-point-dimensions-change {
+  background-color: transparent;
+  border-style: solid;
+  border-width: 0 0 15px 15px;
+  border-color: transparent transparent var(--color-primary) transparent;
+  bottom: 0;
+  cursor: nwse-resize;
+  height: 0;
+  right: 0;
+  width: 0;
+  z-index: var(--z-toggle);
+}
+
+.datablur-area-pointer-point-hide-controllers .datablur-area-pointer-point-dimensions-change {
+  display: none;
+}
+
+.datablur-area-pointer-point-hide-controllers .datablur-area-pointer-point-position-change {
+  pointer-events: none;
+}
+
+.datablur-blur-controllers-button,
+.datablur-button,
+.datablur-toolbar-button {
+  border: none;
+  box-sizing: border-box;
+  color: inherit;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: inherit;
+  opacity: 1;
+  padding: 0;
+  text-decoration: none;
+  user-select: none;
+}
+
+.datablur-blur-controllers-button {
+  background-color: var(--color-primary) !important;
+  padding: 0.5em;
+  border: 1px solid var(--color-border-default) !important;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+  position: relative;
+}
+
+.datablur-blur-controllers-button:hover {
+  background:
+    linear-gradient(0deg, var(--color-overlay-light) 0%, var(--color-overlay-light) 100%),
+    var(--color-primary);
+  border: 1px solid var(--color-border-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: visible;
+}
+
+.datablur-blur-controllers-button,
+.datablur-button,
+.datablur-button:hover,
+.datablur-toolbar-button {
+  transition: 0.15s linear;
+  transition-property: color, background-color, border-color, opacity;
+}
+
+.datablur-button:hover,
+.datablur-toolbar-button:hover {
+  border: 1px solid var(--color-border-default) !important;
+  background-color: var(--color-bg-elevated) !important;
+}
+
+.datablur-blur-controllers-button:focus,
+.datablur-button:focus,
+.datablur-toolbar-button:focus {
+  outline: none;
+}
+
+.datablur-button-disabled {
+  pointer-events: none;
+}
+
+.datablur-blur-controllers-button > svg,
+.datablur-svg-icon,
+.datablur-toolbar-button > svg {
+  fill: var(--color-white);
+  height: 20px;
+  width: 20px;
+  margin: 0;
+  overflow: visible;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.datablur-blur-controllers-button > svg,
+.datablur-svg-icon,
+.datablur-svg-icon:hover,
+.datablur-toolbar-button > svg {
+  transition: inherit;
+  transition-property: fill;
+}
+
+/* Keyframe animation for smooth controller fade-out */
+@keyframes datablur-fade-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+.datablur-blur-controllers {
+  font-size: 16px;
+  position: fixed;
+  z-index: var(--z-controls);
+  display: flex;
+  flex-direction: row;
+}
+
+.datablur-blur-controllers-hide {
+  pointer-events: none;
+  animation: datablur-fade-out 0.1s ease-out forwards;
+}
+
+/* Synchronize button transitions with parent fade animation to prevent timing mismatches */
+.datablur-blur-controllers-hide .datablur-blur-controllers-button {
+  transition-duration: 0.1s !important;
+}
+
+/* Explicitly fade icons to ensure they disappear with backgrounds, not after */
+.datablur-blur-controllers-hide .datablur-blur-controllers-button > svg {
+  transition: opacity 0.1s ease-out !important;
+  opacity: 0;
+}
+
+.datablur-blur-controllers-container {
+  box-sizing: border-box;
+  height: auto;
+  overflow: auto;
+  width: auto;
+  display: flex;
+  flex-direction: row;
+}
+
+.datablur-blur-controllers-buttons {
+  align-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  gap: 0.3em;
+}
+
+.datablur-blur-controllers-buttons > * {
+  margin-right: 0;
+}
+
+.datablur-blur-controllers-buttons > :last-child {
+  margin-right: 0;
+}
+
+.datablur-blur-controllers-button {
+  padding: 0.5em;
+  background: var(--color-primary) !important;
+  border: 1px solid var(--color-border-default) !important;
+  border-radius: 0.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.datablur-blur-controllers-button-hide {
+  display: none !important;
+}
+
+.datablur-toolbar-button > svg {
+  fill: var(--color-white);
+  height: 20px;
+  width: 20px;
+  pointer-events: none;
+}
+
+.datablur-interaction-block {
+  position: absolute;
+  z-index: var(--z-interaction);
+}
+
+.datablur-toolbar {
+  background: var(--color-bg-primary);
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    Segoe UI,
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    Open Sans,
+    Helvetica Neue,
+    Arial,
+    sans-serif;
+  font-size: 16px;
+  font-stretch: normal;
+  font-style: normal;
+  font-weight: 400;
+  letter-spacing: normal;
+  position: fixed;
+  bottom: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-toolbar);
+  border-radius: 1rem;
+  border: 1px solid var(--color-border-default);
+  box-shadow: var(--shadow-md);
+}
+
+/* Minimal CSS protection from common page CSS interference (Elementor, WordPress, etc.) */
+.datablur-toolbar button {
+  /* Only override properties commonly set by page builders */
+  text-decoration: none !important;
+  text-transform: none !important;
+  border-style: solid !important;
+}
+
+.datablur-toolbar-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+}
+
+.datablur-toolbar-spacing-small {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 4px;
+}
+
+.datablur-toolbar-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5em;
+  position: relative;
+  border: 1px solid var(--color-bg-primary);
+  border-radius: 0.5rem;
+}
+
+.datablur-toolbar-button.active {
+  background: var(--color-primary-hover) !important;
+  border: 1px solid var(--color-border-default) !important;
+}
+
+.datablur-chevron-button {
+  width: 20px;
+  height: 38px;
+  min-width: 20px;
+  padding: 0;
+}
+
+.datablur-chevron-button > svg {
+  width: 12px;
+  height: 12px;
+}
+
+.datablur-toolbar-text {
+  color: var(--color-white);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95em;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  padding: 0 0.3em;
+  min-width: 28px;
+}
+
+.datablur-toolbar-separator {
+  background-color: var(--color-white);
+  width: 1px;
+  height: 24px;
+  opacity: 0.3;
+  margin: 0 4px;
+  align-self: center;
+}
+
+.datablur-toolbar-button::before,
+.datablur-toolbar-button::after {
+  position: absolute;
+  left: 50%;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.2s ease,
+    visibility 0.2s ease;
+}
+
+.datablur-toolbar-button::before {
+  content: '';
+  bottom: 100%;
+  margin-bottom: -5px;
+  border: 5px solid transparent;
+  border-top-color: var(--color-tooltip-bg);
+  transform: translateX(-50%) translateY(-5px);
+  z-index: var(--z-tooltip);
+}
+
+.datablur-toolbar-button::after {
+  content: attr(data-tooltip);
+  bottom: 100%;
+  transform: translateX(-50%) translateY(-10px);
+  padding: 8px 12px;
+  z-index: var(--z-toolbar);
+  background: var(--color-tooltip-bg);
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 12px;
+  line-height: 1.2;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.datablur-toolbar-button:hover::before,
+.datablur-toolbar-button:hover::after {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Category Panel - Dropdown for PII category selection */
+.datablur-category-panel {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: var(--z-modal);
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-default);
+  border-radius: 1rem;
+  padding: 12px;
+  box-shadow: var(--shadow-md);
+  min-width: 280px;
+  max-width: 320px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  /* Override CSS variables to use px instead of rem (rem is relative to page root, which varies) */
+  --text-xs: 12px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --radius-md: 8px;
+}
+
+/* PII Category Badge Grid */
+.datablur-pii-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+/* Badge styles - using CSS variables from popup.css */
+.datablur-category-panel .datablur-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: var(--color-bg-badge) !important;
+  border: 1px solid var(--color-border-transparent);
+  border-radius: var(--radius-md);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+  color: var(--color-text-primary) !important;
+}
+
+/* Clickable PII Category Badge - increase specificity to beat page CSS */
+.datablur-category-panel .datablur-pii-category-badge.datablur-badge {
+  cursor: pointer;
+  transition:
+    opacity var(--duration-normal) var(--ease-default),
+    transform var(--duration-normal) var(--ease-default);
+  user-select: none;
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  line-height: var(--leading-tight);
+}
+
+.datablur-category-panel .datablur-pii-category-badge.datablur-badge:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  /* Higher specificity (0-3-1) beats Elementor (0-2-1), so colors inherit from base badge */
+}
+
+.datablur-category-panel .datablur-pii-category-badge.datablur-badge:active {
+  transform: translateY(0);
+}
+
+.datablur-category-panel .datablur-pii-category-badge.datablur-badge:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Badge Active State (Primary Purple) - higher specificity */
+.datablur-category-panel .datablur-badge-active.datablur-pii-category-badge {
+  background-color: var(--color-primary) !important;
+  color: var(--color-white) !important;
+}
+
+.datablur-category-panel .datablur-badge-active.datablur-pii-category-badge:hover {
+  background-color: var(--color-primary-hover) !important;
+}
+
+/* Auto-detect notification */
+.datablur-auto-detect-notification {
+  position: fixed;
+  z-index: var(--z-modal);
+  padding: 8px 12px;
+  background: var(--color-tooltip-bg);
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 12px;
+  line-height: 1.2;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  animation: datablur-notification-fade 3s ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes datablur-notification-fade {
+  0% {
+    opacity: 0;
+  }
+
+  15%,
+  85% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+/* Auto-detection sensitive content spans */
+.datablur-sensitive-content {
+  /* These spans wrap auto-detected sensitive text for precise blurring */
+  display: inline;
+  /* The span itself is invisible, blur is applied by DataBlur system */
+}
+
+/* Text Blur Functionality */
+.datablur-text-blur {
+  /* Text blurs use CSS filter like other blur types for intensity control */
+  /* border-radius moved to unified outline styles above */
+  user-select: none !important;
+  pointer-events: none !important;
+}
+
+/* Hover state for all blurred elements - provides feedback and maintains dashed outline */
+.datablur-text-selection.datablur-text-outline:hover,
+.datablur-element-pointer-point:hover,
+.datablur-area-pointer-point-outline:hover {
+  outline: 2px dashed var(--color-primary);
+  background-color: var(--color-primary-bg-hover) !important;
+}
+
+/* Edit mode styling - outlines are always dashed by default */
+/* When not in edit mode, hide outlines and interactive visual feedback */
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-outline,
+body:not([data-datablur-edit-mode]) .datablur-point-outline,
+body:not([data-datablur-edit-mode]) .datablur-element-pointer-point,
+body:not([data-datablur-edit-mode]) .datablur-text-selection.datablur-text-outline {
+  outline: none !important;
+}
+
+/* Hide blur background color hover effects when not in edit mode */
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point {
+  background-color: transparent !important;
+}
+
+/* Prevent hover effects from showing when not in edit mode */
+body:not([data-datablur-edit-mode]) .datablur-text-selection.datablur-text-outline:hover,
+body:not([data-datablur-edit-mode]) .datablur-element-pointer-point:hover,
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-outline:hover {
+  outline: none !important;
+  background-color: transparent !important;
+}
+
+/* Hide resize handles when not in edit mode */
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-dimensions-change,
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-resize-left,
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-resize-right,
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-resize-top,
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-dimensions-change-tl,
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-dimensions-change-tr,
+body:not([data-datablur-edit-mode]) .datablur-area-pointer-point-dimensions-change-bl {
+  display: none !important;
+}
+
+.datablur-text-selection {
+  display: inline !important;
+  position: relative !important;
+}
+
+.datablur-category-header {
+  color: var(--color-text-primary);
+  font-family:
+    'Geist Mono', 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New',
+    monospace;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.datablur-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
