@@ -9,6 +9,7 @@ web_modules/
 .env.*
 !.env.example
 !.env.dist
+backend/scripts/top10milliondomains.csv
 
 # Python
 .venv/
