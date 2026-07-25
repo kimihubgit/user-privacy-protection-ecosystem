@@ -1,4 +1,5 @@
 from abc import ABC
+from typing import AsyncIterator
 
 from application.builders.prompt_builder import PromptBuilder
 from application.models.agent_context import AgentContext
@@ -29,6 +30,24 @@ class BaseAgent(ABC):
         )
 
         return await self._llm.generate(
+            prompt=prompt,
+            system_prompt=self.SYSTEM_PROMPT,
+            temperature=self.TEMPERATURE,
+        )
+
+    def stream_run(
+        self,
+        context: AgentContext,
+    ) -> AsyncIterator[str]:
+        """
+        Giống run(), nhưng trả lời theo dạng streaming (từng đoạn text).
+        """
+
+        prompt = PromptBuilder.build(
+            context=context,
+        )
+
+        return self._llm.generate_stream(
             prompt=prompt,
             system_prompt=self.SYSTEM_PROMPT,
             temperature=self.TEMPERATURE,

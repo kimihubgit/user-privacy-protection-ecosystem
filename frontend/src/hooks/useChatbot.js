@@ -7,6 +7,7 @@ import { useState, useCallback } from 'react';
  */
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 const CHAT_ENDPOINT = `${API_BASE_URL}/api/chat/`;
+const CHAT_STREAM_ENDPOINT = `${API_BASE_URL}/api/chat/stream`;
 const CHAT_IMAGE_ENDPOINT = `${API_BASE_URL}/api/chat/image/`;
 const REQUEST_TIMEOUT_MS = 30000;
 const IMAGE_REQUEST_TIMEOUT_MS = 45000;
@@ -106,6 +107,68 @@ export function useChatbot() {
     }
   }, []);
 
+  /**
+   * Gọi backend theo dạng streaming (SSE) - gọi onChunk(text) mỗi khi có
+   * đoạn text mới. Trả về true nếu nhận được ít nhất 1 đoạn nội dung,
+   * false nếu lỗi/không nhận được gì (để nơi gọi tự fallback).
+   */
+  const askChatbotStream = useCallback(async (question, onChunk) => {
+    try {
+      const response = await fetch(CHAT_STREAM_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ message: question }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error(`Chatbot Stream API trả về lỗi ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let buffer = '';
+      let receivedAny = false;
+
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        const events = buffer.split('\n\n');
+        // Giữ lại phần cuối chưa hoàn chỉnh (chưa có \n\n kết thúc event)
+        buffer = events.pop() || '';
+
+        for (const event of events) {
+          const line = event.trim();
+          if (!line.startsWith('data:')) continue;
+
+          const raw = line.slice(5).trim();
+          if (raw === '[DONE]') {
+            return receivedAny;
+          }
+
+          try {
+            const parsed = JSON.parse(raw);
+            if (parsed.chunk) {
+              receivedAny = true;
+              onChunk(parsed.chunk);
+            }
+          } catch (e) {
+            // Bỏ qua dòng không đúng định dạng JSON
+          }
+        }
+      }
+
+      return receivedAny;
+    } catch (e) {
+      console.warn('Chatbot Stream API connection failed.', e);
+      return false;
+    }
+  }, []);
+
   return {
     chatInput,
     setChatInput,
@@ -113,6 +176,7 @@ export function useChatbot() {
     setIsThinking,
     getAgentReply,
     askChatbot,
+    askChatbotStream,
     askChatbotImage,
   };
 }

@@ -8,6 +8,7 @@ Mọi adapter (Gemini, Claude, OpenAI...)
 """
 
 from abc import ABC, abstractmethod
+from typing import AsyncIterator
 
 from domain.entities.agent_response import AgentResponse
 
@@ -42,5 +43,33 @@ class LLMPort(ABC):
         Returns
         -------
         AgentResponse
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def generate_stream(
+        self,
+        *,
+        prompt: str,
+        system_prompt: str | None = None,
+        temperature: float = 0.3,
+    ) -> AsyncIterator[str]:
+        """
+        Sinh câu trả lời từ LLM theo dạng streaming (từng đoạn text).
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def generate_text(
+        self,
+        *,
+        prompt: str,
+        system_prompt: str | None = None,
+        temperature: float = 0.3,
+    ) -> str:
+        """
+        Sinh raw text từ LLM.
+
+        Dùng cho Planner, Evaluation, Query Rewrite...
         """
         raise NotImplementedError

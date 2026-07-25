@@ -8,21 +8,15 @@ Pipeline:
 User
     │
     ▼
-FastPath
+Orchestrator
     │
-    ├── URL
-    ├── Email
-    ├── Phone
-    │
-    ▼
-Intent Classification
-    │
-    ▼
-Dispatcher
-    │
-    ▼
-Agent
+    ├── Planner
+    ├── Tool Executor
+    ├── Retrieval & Eval
+    └── Response
 """
+
+from typing import AsyncIterator
 
 from application.models.conversation_context import (
     ConversationContext,
@@ -33,23 +27,17 @@ from application.services.context_manager import (
 from application.models.agent_context import (
     AgentContext,
 )
-from application.use_cases.fast_path import FastPath
-from application.use_cases.classify_intent import ClassifyIntentUseCase
-from application.use_cases.dispatcher import Dispatcher
+from application.agents.orchestrator import AgentOrchestrator
 from domain.entities.agent_response import AgentResponse
 
 
 class HandleChatMessageUseCase:
     def __init__(
         self,
-        fast_path: FastPath,
-        classifier: ClassifyIntentUseCase,
-        dispatcher: Dispatcher,
+        orchestrator: AgentOrchestrator,
         context_manager: ContextManager,
     ):
-        self._fast_path = fast_path
-        self._classifier = classifier
-        self._dispatcher = dispatcher
+        self._orchestrator = orchestrator
         self._context_manager = context_manager
 
     async def execute(
@@ -60,30 +48,10 @@ class HandleChatMessageUseCase:
         message = message.strip()
 
         if not message:
-
             return AgentResponse(
                 success=False,
                 reply="Tin nhắn không được để trống.",
             )
-
-        # ==========================================
-        # Fast Path
-        # ==========================================
-
-        fast_response = await self._fast_path.execute(
-            message=message,
-        )
-
-        if fast_response is not None:
-            return fast_response
-
-        # ==========================================
-        # Intent Classification
-        # ==========================================
-
-        intent = await self._classifier.execute(
-            message=message,
-        )
 
         # ==========================================
         # Conversation Context
@@ -94,7 +62,6 @@ class HandleChatMessageUseCase:
         )
 
         # Lưu message của user
-
         self._context_manager.add_user_message(
             conversation=conversation,
             message=message,
@@ -106,15 +73,14 @@ class HandleChatMessageUseCase:
 
         context = self._context_manager.build(
             conversation=conversation,
-            message=intent.corrected_text or message,
+            message=message,
         )
 
         # ==========================================
-        # Dispatch
+        # Orchestrator
         # ==========================================
 
-        response = await self._dispatcher.dispatch(
-            intent=intent,
+        response = await self._orchestrator.execute(
             context=context,
         )
 
@@ -128,3 +94,52 @@ class HandleChatMessageUseCase:
         )
 
         return response
+
+    async def execute_stream(
+        self,
+        message: str,
+    ) -> AsyncIterator[str]:
+        """
+        Giống execute(), nhưng trả lời theo dạng streaming (SSE).
+        """
+
+        message = message.strip()
+
+        if not message:
+            yield "Tin nhắn không được để trống."
+            return
+
+        # ==========================================
+        # Conversation Context
+        # ==========================================
+
+        conversation = ConversationContext(
+            session_id="default",
+        )
+
+        self._context_manager.add_user_message(
+            conversation=conversation,
+            message=message,
+        )
+
+        context = self._context_manager.build(
+            conversation=conversation,
+            message=message,
+        )
+
+        # ==========================================
+        # Orchestrator (stream) + tích lũy để lưu context
+        # ==========================================
+
+        full_reply_parts: list[str] = []
+
+        async for chunk in self._orchestrator.execute_stream(
+            context=context,
+        ):
+            full_reply_parts.append(chunk)
+            yield chunk
+
+        self._context_manager.add_assistant_message(
+            conversation=conversation,
+            message="".join(full_reply_parts),
+        )

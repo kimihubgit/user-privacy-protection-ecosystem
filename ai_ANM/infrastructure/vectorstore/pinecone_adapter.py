@@ -7,6 +7,7 @@ Implement VectorStorePort.
 from __future__ import annotations
 
 import asyncio
+import time
 
 from pinecone import Pinecone
 
@@ -19,6 +20,8 @@ from config.settings import settings
 from domain.entities.retrieved_document import (
     RetrievedDocument,
 )
+
+from observability.logger import logger
 
 
 class PineconeAdapter(VectorStorePort):
@@ -77,12 +80,21 @@ class PineconeAdapter(VectorStorePort):
         namespace: str,
     ) -> list[RetrievedDocument]:
 
+        started_at = time.perf_counter()
+
         result = await asyncio.to_thread(
             self._index.query,
             vector=vector,
             top_k=top_k,
             include_metadata=True,
             namespace=namespace,
+        )
+
+        elapsed_ms = (time.perf_counter() - started_at) * 1000
+
+        logger.info(
+            f"[pinecone] query namespace={namespace!r} top_k={top_k} "
+            f"elapsed={elapsed_ms:.1f}ms matches={len(result.matches)}",
         )
 
         documents = []
@@ -97,14 +109,18 @@ class PineconeAdapter(VectorStorePort):
                 or ""
             )
 
+            source = (
+                metadata.get("source")
+                or metadata.get("ten_van_ban")
+                or metadata.get("source_file")
+                or ""
+            )
+
             documents.append(
                 RetrievedDocument(
                     id=match.id,
                     content=content,
-                    source=metadata.get(
-                        "source",
-                        "",
-                    ),
+                    source=source,
                     score=match.score,
                     metadata=metadata,
                 )

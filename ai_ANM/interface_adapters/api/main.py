@@ -11,6 +11,10 @@ from interface_adapters.api.routes.chat_image import (
     router as chat_image_router,
 )
 
+from interface_adapters.api.routes.chat_stream import (
+    router as chat_stream_router,
+)
+
 from interface_adapters.api.routes.health import (
     router as health_router,
 )
@@ -38,6 +42,10 @@ app.include_router(
 
 app.include_router(
     chat_image_router,
+)
+
+app.include_router(
+    chat_stream_router,
 )
 
 app.include_router(

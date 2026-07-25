@@ -74,7 +74,7 @@ const renderMessageText = (text) => {
 export default function AiChatbotFullPage({ addToast }) {
   const navigate = useNavigate();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply, askChatbot, askChatbotImage } = useChatbot();
+  const { chatInput, setChatInput, isThinking, setIsThinking, getAgentReply, askChatbot, askChatbotStream, askChatbotImage } = useChatbot();
   const [conversations, setConversations] = useState([
     { id: '1', title: 'Hội thoại chính', messages: [] }
   ]);
@@ -108,6 +108,10 @@ export default function AiChatbotFullPage({ addToast }) {
     const text = textToSend || chatInput;
     if (!text.trim()) return;
 
+    // Chốt lại conversation đích để không bị lệch nếu người dùng đổi
+    // hội thoại giữa lúc đang stream.
+    const convId = activeConvId;
+
     // Add user message
     const userMsg = { sender: 'user', text: text };
 
@@ -119,7 +123,7 @@ export default function AiChatbotFullPage({ addToast }) {
     const titleUpdate = isFirstMsg ? (text.length > 22 ? text.substring(0, 20) + '...' : text) : activeConv.title;
 
     setConversations(prev => prev.map(c => {
-      if (c.id === activeConvId) {
+      if (c.id === convId) {
         return {
           ...c,
           title: titleUpdate,
@@ -135,35 +139,95 @@ export default function AiChatbotFullPage({ addToast }) {
 
     setIsThinking(true);
 
+    // Bubble bot rỗng để hiện hiệu ứng gõ chữ dần khi stream về
+    setConversations(prev => prev.map(c => {
+      if (c.id === convId) {
+        return { ...c, messages: [...c.messages, { sender: 'bot', text: '' }] };
+      }
+      return c;
+    }));
+
+    const appendToLastBotMessage = (chunk) => {
+      setConversations(prev => prev.map(c => {
+        if (c.id !== convId) return c;
+        const msgs = [...c.messages];
+        const lastIdx = msgs.length - 1;
+        msgs[lastIdx] = { ...msgs[lastIdx], text: msgs[lastIdx].text + chunk };
+        return { ...c, messages: msgs };
+      }));
+    };
+
+    // ==========================================
+    // Hiệu ứng gõ chữ mượt (typewriter)
+    // ==========================================
+    // Gemini trả về theo từng cụm câu khá lớn (không phải từng token nhỏ
+    // như một số LLM khác), nên nếu hiện thẳng nguyên chunk sẽ có cảm giác
+    // "nhảy cục" thay vì "gõ chữ" mượt. Ở đây mình dồn các chunk nhận được
+    // vào 1 hàng đợi, rồi "nhả" ra màn hình vài ký tự một cách đều đặn,
+    // độc lập với tốc độ chunk thật sự đến từ mạng.
+    let typeBuffer = '';
+    let isDraining = false;
+    const CHARS_PER_TICK = 3;
+    const TICK_MS = 16;
+
+    const drainTypeBuffer = () => {
+      if (isDraining) return;
+      isDraining = true;
+
+      const tick = () => {
+        if (typeBuffer.length === 0) {
+          isDraining = false;
+          return;
+        }
+        const piece = typeBuffer.slice(0, CHARS_PER_TICK);
+        typeBuffer = typeBuffer.slice(CHARS_PER_TICK);
+        appendToLastBotMessage(piece);
+        setTimeout(tick, TICK_MS);
+      };
+
+      tick();
+    };
+
+    const enqueueForTyping = (chunk) => {
+      typeBuffer += chunk;
+      drainTypeBuffer();
+    };
+
+    const replaceLastBotMessage = (replyText) => {
+      setConversations(prev => prev.map(c => {
+        if (c.id !== convId) return c;
+        const msgs = [...c.messages];
+        msgs[msgs.length - 1] = { sender: 'bot', text: replyText };
+        return { ...c, messages: msgs };
+      }));
+    };
+
+    let streamedAny = false;
+
     try {
-      let replyText = await askChatbot(text);
+      streamedAny = await askChatbotStream(text, (chunk) => {
+        setIsThinking(false);
+        enqueueForTyping(chunk);
+      });
+    } catch (err) {
+      streamedAny = false;
+    }
+
+    if (!streamedAny) {
+      // Backend stream lỗi/offline -> thử API thường, rồi tới câu trả lời offline
+      let replyText = null;
+      try {
+        replyText = await askChatbot(text);
+      } catch (err) {
+        replyText = null;
+      }
       if (!replyText) {
         replyText = getAgentReply(text);
       }
-
-      setConversations(prev => prev.map(c => {
-        if (c.id === activeConvId) {
-          return {
-            ...c,
-            messages: [...c.messages, { sender: 'bot', text: replyText }]
-          };
-        }
-        return c;
-      }));
-    } catch (err) {
-      const replyText = getAgentReply(text);
-      setConversations(prev => prev.map(c => {
-        if (c.id === activeConvId) {
-          return {
-            ...c,
-            messages: [...c.messages, { sender: 'bot', text: replyText }]
-          };
-        }
-        return c;
-      }));
-    } finally {
-      setIsThinking(false);
+      replaceLastBotMessage(replyText);
     }
+
+    setIsThinking(false);
   };
 
   const handleInputKeyDown = (e) => {
@@ -340,23 +404,30 @@ export default function AiChatbotFullPage({ addToast }) {
                 </div>
               </div>
 
-              {activeConv.messages.map((msg, idx) => (
-                <div key={idx} className={`chat-bubble-row ${msg.sender}`}>
-                  <div className="chat-avatar-wrap" style={{ backgroundColor: msg.sender === 'bot' ? AGENT.color : undefined }}>
-                    {msg.sender === 'user' ? 'U' : AGENT.name[0]}
+              {activeConv.messages.map((msg, idx) => {
+                const isEmptyStreamingPlaceholder =
+                  msg.sender === 'bot' && msg.text === '' && !msg.image && isThinking && idx === activeConv.messages.length - 1;
+
+                if (isEmptyStreamingPlaceholder) return null;
+
+                return (
+                  <div key={idx} className={`chat-bubble-row ${msg.sender}`}>
+                    <div className="chat-avatar-wrap" style={{ backgroundColor: msg.sender === 'bot' ? AGENT.color : undefined }}>
+                      {msg.sender === 'user' ? 'U' : AGENT.name[0]}
+                    </div>
+                    <div className="chat-msg-bubble">
+                      {msg.image && (
+                        <img
+                          src={msg.image}
+                          alt="Ảnh đã gửi"
+                          style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', display: 'block', marginBottom: msg.text ? '0.5rem' : 0 }}
+                        />
+                      )}
+                      {renderMessageText(msg.text)}
+                    </div>
                   </div>
-                  <div className="chat-msg-bubble">
-                    {msg.image && (
-                      <img
-                        src={msg.image}
-                        alt="Ảnh đã gửi"
-                        style={{ maxWidth: '220px', maxHeight: '220px', borderRadius: '8px', display: 'block', marginBottom: msg.text ? '0.5rem' : 0 }}
-                      />
-                    )}
-                    {renderMessageText(msg.text)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
 
               {isThinking && (
                 <div className="chat-bubble-row bot thinking">

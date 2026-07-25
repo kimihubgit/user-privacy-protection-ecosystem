@@ -1,28 +1,5 @@
 """
-Prompt Builder V5
-
-Input:
-    CollectorResult
-    EvidenceResult
-
-Output:
-    Prompt
-
-Không chứa:
-- Rule
-- Risk
-- Score
-- Judgment
-
-Tối ưu so với V4:
-- Bỏ field "summary" trùng lặp với "reason" (2 field cùng tóm tắt 1 việc)
-- "reason" rút từ đoạn văn 40-80 từ -> một câu <=25 từ
-- "indicators" từ mảng object (indicator+reason+severity) -> mảng string
-  (severity/reason chi tiết đã nằm trong câu "reason" chính, không cần
-  lặp lại cho từng indicator)
-- Gộp rule về "reason" về đúng 1 chỗ (_output), bỏ lặp ở _system
-=> Output token giảm mạnh (đây là phần quyết định tốc độ phản hồi,
-   vì sinh token là tuần tự và chậm hơn nhiều so với đọc input).
+Prompt Builder V6 (Optimized)
 
 Author: Anti Scam Detector
 """
@@ -32,8 +9,8 @@ from __future__ import annotations
 from app.domain.entities.collector import CollectorResult
 from app.presentation.api.schemas.evidence_result import EvidenceResult
 
-class PromptBuilder:
 
+class PromptBuilder:
     """
     Prompt Builder
     """
@@ -41,171 +18,136 @@ class PromptBuilder:
     def build(
         self,
         collector: CollectorResult,
-        evidences: EvidenceResult
+        evidences: EvidenceResult,
     ) -> str:
 
-        prompt = []
-
-        prompt.append(self._system())
-
-        prompt.append(
-            self._website(
-                collector
-            )
-        )
-
-        prompt.append(
-            self._evidence(
-                evidences
-            )
-        )
-
-        prompt.append(
+        prompt = [
+            self._system(),
+            self._website(collector),
+            self._evidence(evidences),
             self._output()
-        )
+        ]
 
         return "\n\n".join(prompt)
 
-    #
+    # ==========================================================
     # SYSTEM
-    #
+    # ==========================================================
 
     def _system(self):
-
         return """
-You are an expert cybersecurity analyst.
+You are an expert cybersecurity analyst and online fraud investigator.
+Classify the website risk based ONLY on the provided factual observations.
 
-The observations below are automatically collected from a website.
-They are factual observations only, NOT conclusions.
+# Core Principles
+- Evaluate holistic risk: cybersecurity, phishing, fraud, financial, and user safety.
+- Technical security (HTTPS, Cloudflare, CDN, valid SSL, professional design, fast loading, normal hosting) does NOT prove a website is safe.
+- Do NOT classify as malicious based on a single weak observation (e.g., login page, OTP, new domain, QR code). Multiple indicators are required.
+- Default to "suspicious" if evidence is weak, incomplete, or conflicting.
+- Never invent evidence.
 
-Classify the website as: safe | suspicious | malicious.
+# High-Risk Categories
+Websites primarily involving phishing, credential theft, fake banking/government, malware, ransomware, online gambling, casino, betting, Ponzi schemes, fake investments/crypto/exchanges, and loan/romance/tech support scams normally MUST NOT be classified as "safe" unless strongly contradicted by evidence.
 
-Evaluate ALL observations together. Never conclude malicious from a
-single observation alone (e.g. login form, password field, OTP field,
-Cloudflare, GitHub Pages, new domain, brand keyword) — these are common
-on legitimate sites too. Only classify malicious when multiple
-independent observations consistently point to malicious intent. If
-evidence is incomplete or conflicting, classify as suspicious. Never
-invent or infer evidence that is not provided.
-
-Examples
-
-Safe: Website chia sẻ kiến thức lập trình, tên miền hoạt động ổn định,
-không có dấu hiệu bất thường.
-
-Suspicious: Website tài chính yêu cầu đăng nhập, tên miền còn mới, cần
-kiểm tra kỹ trước khi dùng.
-
-Malicious: Website yêu cầu tài khoản, mật khẩu, OTP và dùng tên thương
-hiệu nhưng địa chỉ không tương ứng, không nên tiếp tục sử dụng.
+# Examples
+- Programming tutorials -> safe
+- News website, limited evidence -> suspicious
+- Bank login on a suspicious domain -> malicious
+- Football betting platform -> malicious
+- Investment platform promising guaranteed profit -> malicious
+- E-commerce with valid payment, clear info, stable domain -> safe
 """
 
-    #
+    # ==========================================================
     # WEBSITE
-    #
+    # ==========================================================
 
     def _website(
         self,
-        collector
+        collector: CollectorResult,
     ):
+        title = collector.title or "Unknown"
+        url = collector.final_url or "Unknown"
 
         return f"""
-Website
-
-URL:
-{collector.final_url}
-
-Title:
-{collector.title}
+# Website
+URL: {url}
+Title: {title}
 """
 
-    #
+    # ==========================================================
     # EVIDENCE
-    #
+    # ==========================================================
 
     def _evidence(
         self,
-        evidences
+        evidences: EvidenceResult,
     ):
+        lines = ["# Observed Evidence"]
 
-        lines = [
-            "Observed Evidence"
-        ]
+        if not evidences:
+            lines.append("- No evidence collected.")
+            return "\n".join(lines)
 
         for group in evidences:
+            detector = getattr(group, "detector", "Unknown")
+            lines.append(f"\n[{detector}]")
 
-            lines.append(
-                f"\n[{group.detector}]"
-            )
+            if len(group) == 0:
+                lines.append("- No observations.")
+                continue
 
             for evidence in group:
+                evidence_type = getattr(evidence, "type", "Unknown")
+                name = getattr(evidence, "name", "")
+                value = getattr(evidence, "value", "")
+                location = getattr(evidence, "location", "")
 
-                lines.append(
-                    f"- {evidence.type}"
-                    f" | {evidence.name}"
-                    f" | {evidence.value}"
-                    f" | {evidence.location}"
-                )
+                lines.append(f"- {evidence_type} | {name} | {value} | {location}")
 
-                if evidence.context:
-
-                    lines.append(
-                        f"  Context: {evidence.context}"
-                    )
+                context = getattr(evidence, "context", None)
+                if context:
+                    lines.append(f"  Context: {context}")
 
         return "\n".join(lines)
 
-    #
+    # ==========================================================
     # OUTPUT
-    #
+    # ==========================================================
 
     def _output(self):
-
         return """
-Return ONLY valid JSON, no markdown, no explanation outside JSON.
+# Output Requirements
+Return ONLY valid JSON. Do NOT return markdown. Do NOT explain anything outside JSON.
 
 {
-    "analysis_type":"LLM",
-
-    "risk_score":0,
-
-    "status":"safe | suspicious | malicious",
-
-    "level":"Low | Medium | High",
-
-    "confidence":0.0,
-
-    "categories":[
+    "analysis_type": "LLM",
+    
+    // 0-20: Legitimate/Safe. 21-40: Minor concerns. 41-60: Suspicious. 61-80: High-risk/Fraud. 81-100: Malicious/Theft.
+    "risk_score": 0,
+    
+    // Choose exactly one.
+    "status": "safe | suspicious | malicious",
+    
+    // Low: risk_score <= 20. Medium: 21-60. High: 61-100.
+    "level": "Low | Medium | High",
+    
+    // 0.0 to 1.0. Reflect confidence based ONLY on provided evidence strength.
+    "confidence": 0.0,
+    
+    // Choose exactly ONE primary category: banking, shopping, education, government, technology, blog, news, social, forum, business, finance, gambling, casino, crypto, investment, loan, phishing, malware, scam, unknown.
+    "categories": [
         "..."
     ],
-
-    "indicators":[
+    
+    // 2-5 short Vietnamese phrases (2-5 words each). Factual observations only, no explanation. (e.g., "Yêu cầu đăng nhập", "Tên miền mới").
+    "indicators": [
         "..."
     ],
-
-    "reason":[
+    
+    // EXACTLY ONE Vietnamese sentence. Max 25 words. Simple language. Mention: website purpose + main observation + concise conclusion. Do NOT mention AI, confidence, or internal analysis.
+    "reason": [
         "..."
     ]
 }
-
-Requirements
-
-risk_score: 0-20 = safe, 21-60 = suspicious, 61-100 = malicious.
-
-confidence: 0.0-1.0, phản ánh mức độ evidence hỗ trợ kết luận (evidence
-mỏng/mâu thuẫn -> confidence thấp).
-
-categories: chỉ chọn category phù hợp nhất, ví dụ:
-["banking"] ["gambling"] ["crypto"] ["news"] ["education"] ["blog"]
-["government"] ["shopping"] ["social"] ["unknown"]
-
-indicators: mảng các cụm từ ngắn bằng tiếng Việt (2-5 từ mỗi cụm), mỗi
-cụm nêu MỘT dấu hiệu quan sát được, không giải thích thêm. Tối đa 5 mục.
-Ví dụ: ["Yêu cầu đăng nhập", "Tên miền mới", "Không khớp thương hiệu"]
-
-reason: MỘT câu duy nhất trong mảng, tiếng Việt, tối đa 25 từ, ngôn ngữ
-đơn giản cho người dùng phổ thông (tránh thuật ngữ bảo mật, không nhắc
-đến AI/confidence/xác suất/phân tích nội bộ). Câu phải nêu: website về
-gì + dấu hiệu quan trọng nhất + kết luận ngắn gọn. Không lặp lại nội
-dung đã có trong indicators dưới dạng câu văn.
 """

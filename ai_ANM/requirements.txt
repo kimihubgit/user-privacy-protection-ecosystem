@@ -19,6 +19,18 @@ pydantic-settings
 google-genai
 
 # =========================
+# Local LLM (LM Studio) & Groq (OpenAI-compatible)
+# =========================
+
+openai
+
+# =========================
+# Hybrid Retrieval (BM25 rerank)
+# =========================
+
+rank-bm25
+
+# =========================
 # Vector Database
 # =========================
 
@@ -67,3 +79,5 @@ tenacity
 pytest
 
 pytest-asyncio
+
+tavily-python

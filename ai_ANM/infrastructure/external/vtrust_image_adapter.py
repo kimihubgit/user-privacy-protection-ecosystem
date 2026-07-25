@@ -109,9 +109,10 @@ class VtrustImageAdapter(
                 reasons = [reasons]
 
             lines = [
-                "🔎 Kết quả phân tích ảnh:",
-                f"- Trạng thái: {status_label}",
+                "### 🔎 Kết quả phân tích ảnh",
             ]
+
+            lines.append(f"\n**Trạng thái:** {status_label}")
 
             if level_label:
 
@@ -122,15 +123,15 @@ class VtrustImageAdapter(
                 )
 
                 lines.append(
-                    f"- Mức độ rủi ro: {level_label}{score_part}",
+                    f"\n**Mức độ rủi ro:** {level_label}{score_part}",
                 )
 
             if reasons:
 
-                lines.append("- Lý do:")
+                lines.append("\n### 🔍 Lý do\n")
 
-                lines.extend(
-                    f"  • {reason}" for reason in reasons
+                lines.append(
+                    "\n".join(f"- {reason}" for reason in reasons),
                 )
 
             return "\n".join(lines)
@@ -173,6 +174,27 @@ class VtrustImageAdapter(
 
         return str(item)
 
+    # Emoji riêng theo mức độ rủi ro, dùng cho heading "Mức độ rủi ro"
+    # (khác RISK_LEVEL_LABELS vì label chỉ dùng emoji cảnh báo chung).
+    _RISK_LEVEL_EMOJI = {
+        "critical": "🚨",
+        "high": "⚠️",
+        "medium": "⚠️",
+        "low": "🔍",
+        "safe": "✅",
+    }
+
+    # Nhãn PHẲNG (không kèm emoji) cho mức độ rủi ro, dùng trong phần
+    # in đậm dưới heading — heading đã có emoji riêng (_RISK_LEVEL_EMOJI)
+    # nên không lặp lại emoji ở đây.
+    _RISK_LEVEL_LABELS_PLAIN = {
+        "critical": "Nghiêm trọng",
+        "high": "Cao",
+        "medium": "Trung bình",
+        "low": "Thấp",
+        "safe": "An toàn",
+    }
+
     @staticmethod
     def _format_vtrust_analysis(data: dict) -> str:
         """
@@ -183,15 +205,23 @@ class VtrustImageAdapter(
           "scamSignals": [...],
           "recommendations": [...]
         }
+
+        Dùng markdown heading ("### <emoji> Tên mục") thay vì gạch đầu
+        dòng thô, đồng bộ phong cách trình bày với các câu trả lời
+        khác của chatbot (SCAM_RESPONSE_PROMPT).
         """
 
         analysis = data.get("analysis")
 
-        risk_level = data.get("riskLevel")
+        risk_level = (data.get("riskLevel") or "").lower()
 
-        risk_label = RISK_LEVEL_LABELS.get(
-            (risk_level or "").lower(),
-            risk_level or "Chưa xác định",
+        risk_label = VtrustImageAdapter._RISK_LEVEL_LABELS_PLAIN.get(
+            risk_level,
+            data.get("riskLevel") or "Chưa xác định",
+        )
+
+        risk_emoji = VtrustImageAdapter._RISK_LEVEL_EMOJI.get(
+            risk_level, "🔎",
         )
 
         scam_signals = data.get("scamSignals") or []
@@ -204,33 +234,38 @@ class VtrustImageAdapter(
         if isinstance(recommendations, str):
             recommendations = [recommendations]
 
-        lines = [
-            "🔎 Kết quả phân tích ảnh:",
-            f"- Mức độ rủi ro: {risk_label}",
+        sections = [
+            f"### {risk_emoji} Mức độ rủi ro\n\n**{risk_label}**",
         ]
 
         if analysis:
-            lines.append(f"- Phân tích: {analysis}")
+            sections.append(
+                f"### 🔍 Phân tích\n\n{analysis.strip()}",
+            )
 
         if scam_signals:
 
-            lines.append("- Dấu hiệu lừa đảo phát hiện được:")
-
-            lines.extend(
-                f"  • {VtrustImageAdapter._stringify_list_item(item)}"
+            signals_text = "\n".join(
+                f"- {VtrustImageAdapter._stringify_list_item(item)}"
                 for item in scam_signals
+            )
+
+            sections.append(
+                f"### ⚠️ Dấu hiệu lừa đảo phát hiện được\n\n{signals_text}",
             )
 
         if recommendations:
 
-            lines.append("- Khuyến nghị:")
-
-            lines.extend(
-                f"  • {VtrustImageAdapter._stringify_list_item(item)}"
+            recs_text = "\n".join(
+                f"- {VtrustImageAdapter._stringify_list_item(item)}"
                 for item in recommendations
             )
 
-        return "\n".join(lines)
+            sections.append(
+                f"### 💡 Khuyến nghị\n\n{recs_text}",
+            )
+
+        return "\n\n".join(sections)
 
     async def analyze_image(
         self,
