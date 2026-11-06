@@ -1,0 +1,14 @@
+{
+  "appName": {
+    "message": "KiGuard Detector",
+    "description": "Tên tiện ích bảo vệ quyền riêng tư"
+  },
+  "appShortName": {
+    "message": "KiGuard",
+    "description": "Tên viết tắt tiện ích"
+  },
+  "appDesc": {
+    "message": "Tiện ích bảo vệ bạn khỏi các trang web lừa đảo, giả mạo, chặn quảng cáo, chặn theo dõi và rò rỉ dữ liệu.",
+    "description": "Mô tả chi tiết tiện ích"
+  }
+}

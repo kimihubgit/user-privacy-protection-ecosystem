@@ -6,7 +6,7 @@ const PARTNERS = [
     name: "NCSC Việt Nam",
     logo: (
       <svg viewBox="0 0 120 40" width="120" height="40" style={{ display: 'block' }}>
-        <path d="M12 8 L24 13 V22 C24 29 19 33 12 35 C5 33 0 29 0 22 V13 Z" fill="#DA251D"/>
+        <path d="M12 8 L24 13 V22 C24 29 19 33 12 35 C5 33 0 29 0 22 V13 Z" fill="#DA251D" />
         <text x="32" y="24" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="15" fill="#0b1a30">NCSC</text>
         <text x="32" y="33" fontFamily="'Outfit', sans-serif" fontWeight="700" fontSize="7" fill="#64748b" letterSpacing="1.2">VIETNAM</text>
       </svg>
@@ -36,13 +36,13 @@ const PARTNERS = [
     )
   },
   {
-    name: "Chống Lừa Đảo",
+    name: "shield",
     logo: (
       <svg viewBox="0 0 130 40" width="130" height="40" style={{ display: 'block' }}>
-        <path d="M15 6 L30 12 V22 C30 31 24 36 15 38 C6 36 0 31 0 22 V12 Z" fill="#23b56c"/>
+        <path d="M15 6 L30 12 V22 C30 31 24 36 15 38 C6 36 0 31 0 22 V12 Z" fill="#23b56c" />
         <polygon points="15,14 17,19 22.5,19 18,23 20,28.5 15,25 10,28.5 12,23 7.5,19 13,19" fill="#FFFF00" />
-        <text x="36" y="21" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="12" fill="#0b1a30">CHỐNG LỪA ĐẢO</text>
-        <text x="36" y="31" fontFamily="'Outfit', sans-serif" fontWeight="700" fontSize="7" fill="#64748b" letterSpacing="0.5">CHONGLUADAO.VN</text>
+        <text x="36" y="21" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="12" fill="#0b1a30">shield</text>
+        <text x="36" y="31" fontFamily="'Outfit', sans-serif" fontWeight="700" fontSize="7" fill="#64748b" letterSpacing="0.5">shield.VN</text>
       </svg>
     )
   },
@@ -60,7 +60,7 @@ const PARTNERS = [
     name: "Google Security",
     logo: (
       <svg viewBox="0 0 120 40" width="120" height="40" style={{ display: 'block' }}>
-        <path d="M18 20c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.4l-2.8 2.8C27.9 16.3 27 16 26 16c-2.2 0-4 1.8-4 4s1.8 4 4 4c1.8 0 3-.9 3.5-2.2H26v-3.5h7.3c.1.4.2.8.2 1.3 0 4.4-3.6 8.4-7.5 8.4-4.4 0-8-3.6-8-8z" fill="#4285F4"/>
+        <path d="M18 20c0-4.4 3.6-8 8-8 2.2 0 4.2.9 5.7 2.4l-2.8 2.8C27.9 16.3 27 16 26 16c-2.2 0-4 1.8-4 4s1.8 4 4 4c1.8 0 3-.9 3.5-2.2H26v-3.5h7.3c.1.4.2.8.2 1.3 0 4.4-3.6 8.4-7.5 8.4-4.4 0-8-3.6-8-8z" fill="#4285F4" />
         <text x="42" y="22" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="15" fill="#0b1a30">Google</text>
         <text x="42" y="31" fontFamily="'Outfit', sans-serif" fontWeight="700" fontSize="7" fill="#64748b" letterSpacing="1">SECURITY</text>
       </svg>
@@ -70,7 +70,7 @@ const PARTNERS = [
     name: "BKAV Security",
     logo: (
       <svg viewBox="0 0 120 40" width="120" height="40" style={{ display: 'block' }}>
-        <path d="M15 6 L27 12 V22 C27 29 22 34 15 36 C8 34 3 29 3 22 V12 Z" fill="#E65100"/>
+        <path d="M15 6 L27 12 V22 C27 29 22 34 15 36 C8 34 3 29 3 22 V12 Z" fill="#E65100" />
         <text x="15" y="24" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="12" fill="#fff" textAnchor="middle">B</text>
         <text x="34" y="22" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="15" fill="#0b1a30">Bkav</text>
         <text x="34" y="31" fontFamily="'Outfit', sans-serif" fontWeight="700" fontSize="7" fill="#64748b" letterSpacing="0.8">SECURITY</text>
@@ -81,7 +81,7 @@ const PARTNERS = [
     name: "CMC Cyber Security",
     logo: (
       <svg viewBox="0 0 120 40" width="120" height="40" style={{ display: 'block' }}>
-        <path d="M15 8 L27 20 L15 32 L3 20 Z" fill="#0288D1"/>
+        <path d="M15 8 L27 20 L15 32 L3 20 Z" fill="#0288D1" />
         <text x="34" y="21" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="15" fill="#0b1a30">CMC</text>
         <text x="34" y="31" fontFamily="'Outfit', sans-serif" fontWeight="700" fontSize="7" fill="#64748b" letterSpacing="0.5">CYBER SECURITY</text>
       </svg>
@@ -116,7 +116,7 @@ const PARTNERS = [
     name: "Cloudflare",
     logo: (
       <svg viewBox="0 0 120 40" width="120" height="40" style={{ display: 'block' }}>
-        <path d="M22 17.5c0-2.5-2-4.5-4.5-4.5H17c-.5-3.3-3.3-5.8-6.8-5.8-2.6 0-4.9 1.4-6 3.6C1.8 11.2 0 13.4 0 16c0 3.3 2.7 6 6 6h11.5c2.5 0 4.5-2 4.5-4.5z" fill="#F38020"/>
+        <path d="M22 17.5c0-2.5-2-4.5-4.5-4.5H17c-.5-3.3-3.3-5.8-6.8-5.8-2.6 0-4.9 1.4-6 3.6C1.8 11.2 0 13.4 0 16c0 3.3 2.7 6 6 6h11.5c2.5 0 4.5-2 4.5-4.5z" fill="#F38020" />
         <text x="30" y="23" fontFamily="'Outfit', sans-serif" fontWeight="900" fontSize="14" fill="#0b1a30">Cloudflare</text>
         <text x="30" y="32" fontFamily="'Outfit', sans-serif" fontWeight="700" fontSize="7" fill="#64748b" letterSpacing="0.8">SECURITY</text>
       </svg>
@@ -185,7 +185,7 @@ export default function Partners() {
   return (
     <section className="partners-global-section">
       <div className="container">
-        
+
         {/* Left Column: Heading */}
         <div className="partners-left-content">
           <span className="partners-sub-label">Đối tác chiến lược</span>
@@ -199,22 +199,22 @@ export default function Partners() {
         <div className="partners-grid-wrapper">
           <div className="partners-grid">
             {visiblePartners.map((partner, index) => (
-              <div 
-                key={index} 
-                className={`partner-logo-item ${transitioningSlots[index] ? 'slot-fade' : ''}`} 
+              <div
+                key={index}
+                className={`partner-logo-item ${transitioningSlots[index] ? 'slot-fade' : ''}`}
                 title={partner.name}
               >
                 {partner.logo}
               </div>
             ))}
           </div>
-          
+
           {/* Hover Overlay with Central Cooperation CTA Button */}
           <div className="partners-grid-overlay">
-            <a 
-              href="https://chongluadao.vn/lien-he" 
-              target="_blank" 
-              rel="noreferrer" 
+            <a
+              href="https://shield.vn/lien-he"
+              target="_blank"
+              rel="noreferrer"
               className="partners-cta-button"
             >
               Hợp tác cùng chúng tôi

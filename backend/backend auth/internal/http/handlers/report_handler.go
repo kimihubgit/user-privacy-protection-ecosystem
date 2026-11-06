@@ -205,7 +205,15 @@ func (h *ReportHandler) UpdateReportStatus(c *gin.Context) {
 		return
 	}
 
-	err := h.service.UpdateReportStatus(c.Request.Context(), id, req.Status)
+	var reviewerEmail, reviewerName string
+	if emailVal, exists := c.Get("email"); exists {
+		reviewerEmail, _ = emailVal.(string)
+	}
+	if nameVal, exists := c.Get("name"); exists {
+		reviewerName, _ = nameVal.(string)
+	}
+
+	err := h.service.UpdateReportStatus(c.Request.Context(), id, req.Status, reviewerEmail, reviewerName)
 	if err != nil {
 		response.SendError(c, http.StatusInternalServerError, "INTERNAL_ERROR", err.Error())
 		return
@@ -213,6 +221,22 @@ func (h *ReportHandler) UpdateReportStatus(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Report status updated successfully",
+	})
+}
+
+func (h *ReportHandler) GetModeratorStats(c *gin.Context) {
+	stats, globalTotal, err := h.service.GetModeratorStats(c.Request.Context())
+	if err != nil {
+		response.SendError(c, http.StatusInternalServerError, "DATABASE_ERROR", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"global_total_processed": globalTotal,
+			"moderators":             stats,
+		},
 	})
 }
 

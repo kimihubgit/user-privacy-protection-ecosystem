@@ -1,5 +1,7 @@
+import { useState, useEffect } from 'react';
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { Shield, Globe, Phone, CreditCard, Clock, CheckCircle, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { api } from '../../../lib/api';
 
 const WEEKLY_THREATS_DATA = [
   { name: 'Thứ 2', reports: 12 },
@@ -21,28 +23,46 @@ const THREAT_CATEGORIES_DATA = [
 
 const METRONIC_COLORS = ['#009ef7', '#50cd89', '#f1416c', '#ffc700', '#7239ea'];
 
-export default function AdminOverviewTab({ reportsStats, dashboardStats }) {
-  const totalReports = dashboardStats?.checks?.total !== undefined ? dashboardStats.checks.total : (reportsStats.total || 0);
-  const pendingReports = reportsStats.pending || 0;
-  const approvedReports = dashboardStats?.scam_urls !== undefined ? dashboardStats.scam_urls : (reportsStats.approved || 0);
-  const rejectedReports = reportsStats.rejected || 0;
-  const usersCount = dashboardStats?.users?.total !== undefined ? dashboardStats.users.total : '1.2k';
+export default function AdminOverviewTab({ token, reportsStats, dashboardStats }) {
+  const [modStatsData, setModStatsData] = useState(null);
+
+  useEffect(() => {
+    const fetchModeratorStats = async () => {
+      if (!token) return;
+      try {
+        const res = await api.getAdminModeratorStats(token);
+        if (res && res.success && res.data) {
+          setModStatsData(res.data);
+        }
+      } catch (err) {
+        console.warn("Failed to fetch live moderator stats from API:", err);
+      }
+    };
+
+    fetchModeratorStats();
+  }, [token]);
+
+  const totalReports = dashboardStats?.checks?.total ?? (reportsStats?.total || 0);
+  const pendingReports = reportsStats?.pending || 0;
+  const approvedReports = dashboardStats?.scam_urls ?? (reportsStats?.approved || 0);
+  const rejectedReports = reportsStats?.rejected || 0;
+  const usersCount = dashboardStats?.users?.total ?? 0;
 
   // Calculate approval rate
   const resolvedCount = approvedReports + rejectedReports;
-  const approvalRate = resolvedCount > 0 ? Math.round((approvedReports / resolvedCount) * 100) : 98;
+  const approvalRate = resolvedCount > 0 ? Math.round((approvedReports / resolvedCount) * 100) : 0;
 
   // Threat types breakdown data
   const threatTypesData = [
-    { name: 'Giả mạo (Phishing)', value: dashboardStats?.categories?.phishing || 380090, color: '#009ef7' },
-    { name: 'Lừa đảo (Scam)', value: dashboardStats?.categories?.scam || 118302, color: '#ffc700' },
-    { name: 'Khác', value: dashboardStats?.categories?.none || 50, color: '#f1416c' }
+    { name: 'Giả mạo (Phishing)', value: dashboardStats?.categories?.phishing || 0, color: '#009ef7' },
+    { name: 'Lừa đảo (Scam)', value: dashboardStats?.categories?.scam || 0, color: '#ffc700' },
+    { name: 'Khác', value: dashboardStats?.categories?.none || 0, color: '#f1416c' }
   ];
 
   const threatCategoriesData = [
-    { name: 'Phishing', val: dashboardStats?.categories?.phishing || 380090 },
-    { name: 'Scam', val: dashboardStats?.categories?.scam || 118302 },
-    { name: 'None', val: dashboardStats?.categories?.none || 50 }
+    { name: 'Phishing', val: dashboardStats?.categories?.phishing || 0 },
+    { name: 'Scam', val: dashboardStats?.categories?.scam || 0 },
+    { name: 'None', val: dashboardStats?.categories?.none || 0 }
   ];
 
   return (
@@ -323,93 +343,99 @@ export default function AdminOverviewTab({ reportsStats, dashboardStats }) {
                 </tr>
               </thead>
               <tbody className="text-gray-600 fw-semibold">
-                {[
-                  { name: 'Nguyễn Văn Hoàng', email: 'hoang.nguyen@protect.vn', approved: Math.round(approvedReports * 0.4), rejected: Math.round(rejectedReports * 0.35), status: 'online', avatarBg: '#009ef7' },
-                  { name: 'Trần Thị Mai', email: 'mai.tran@protect.vn', approved: Math.round(approvedReports * 0.3), rejected: Math.round(rejectedReports * 0.25), status: 'online', avatarBg: '#50cd89' },
-                  { name: 'Vũ Minh Khoa', email: 'khoa.vu@protect.vn', approved: Math.round(approvedReports * 0.2), rejected: Math.round(rejectedReports * 0.3), status: 'offline', avatarBg: '#7239ea' },
-                  { name: 'Lê Anh Tuấn', email: 'tuan.le@protect.vn', approved: Math.max(0, approvedReports - Math.round(approvedReports * 0.9)), rejected: Math.max(0, rejectedReports - Math.round(rejectedReports * 0.9)), status: 'online', avatarBg: '#ffc700' }
-                ].map((mod, idx) => {
-                  const modTotal = mod.approved + mod.rejected;
-                  const grandTotal = (approvedReports + rejectedReports) || 1;
-                  const percentage = Math.round((modTotal / grandTotal) * 100);
+                {(!modStatsData || !Array.isArray(modStatsData.moderators) || modStatsData.moderators.length === 0) ? (
+                  <tr>
+                    <td colSpan="7" className="text-center" style={{ padding: '3rem', textAlign: 'center', color: '#a1a5b7' }}>
+                      Chưa có dữ liệu thống kê kiểm duyệt viên từ máy chủ.
+                    </td>
+                  </tr>
+                ) : (
+                  modStatsData.moderators.map((m, idx) => {
+                    const approved = m.approved || 0;
+                    const rejected = m.rejected || 0;
+                    const modTotal = m.total_processed !== undefined ? m.total_processed : (approved + rejected);
+                    const percentage = typeof m.contribution_percentage === 'number' ? Math.round(m.contribution_percentage) : (m.contribution_percentage || 0);
+                    const avatarBg = METRONIC_COLORS[idx % METRONIC_COLORS.length];
+                    const initials = (m.name || m.email || 'M').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-                  return (
-                    <tr key={idx} style={{ borderBottom: '1px solid #eff2f5' }}>
-                      {/* Name & Avatar */}
-                      <td style={{ display: 'flex', alignItems: 'center', borderBottom: 'none', padding: '1rem 0' }}>
-                        <div
-                          className="symbol symbol-circle symbol-35px me-3"
-                          style={{
-                            width: '35px',
-                            height: '35px',
-                            borderRadius: '50%',
-                            backgroundColor: mod.avatarBg,
-                            color: '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontWeight: 700,
-                            fontSize: '0.82rem',
-                            marginRight: '0.75rem'
-                          }}
-                        >
-                          {mod.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
-                        </div>
-                        <span className="text-gray-800 text-hover-primary" style={{ fontWeight: 700, fontSize: '0.9rem', color: '#181c32' }}>
-                          {mod.name}
-                        </span>
-                      </td>
-
-                      {/* Email */}
-                      <td>
-                        <span style={{ fontSize: '0.85rem', color: '#5e6278' }}>{mod.email}</span>
-                      </td>
-
-                      {/* Approved */}
-                      <td className="text-center" style={{ textAlign: 'center' }}>
-                        <span className="badge badge-light-success" style={{ padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
-                          {mod.approved}
-                        </span>
-                      </td>
-
-                      {/* Rejected */}
-                      <td className="text-center" style={{ textAlign: 'center' }}>
-                        <span className="badge badge-light-danger" style={{ padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
-                          {mod.rejected}
-                        </span>
-                      </td>
-
-                      {/* Total */}
-                      <td className="text-center" style={{ textAlign: 'center', fontWeight: 700, color: '#181c32' }}>
-                        {modTotal}
-                      </td>
-
-                      {/* Progress Bar / Ratio */}
-                      <td>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '130px' }}>
-                          <span style={{ fontSize: '0.78rem', color: '#5e6278', fontWeight: 700, width: '30px' }}>{percentage}%</span>
-                          <div style={{ flex: 1, background: '#eff2f5', height: '5px', borderRadius: '3px', overflow: 'hidden' }}>
-                            <div style={{ background: mod.avatarBg, height: '100%', width: `${percentage}%` }} />
+                    return (
+                      <tr key={idx} style={{ borderBottom: '1px solid #eff2f5' }}>
+                        {/* Name & Avatar */}
+                        <td style={{ display: 'flex', alignItems: 'center', borderBottom: 'none', padding: '1rem 0' }}>
+                          <div
+                            className="symbol symbol-circle symbol-35px me-3"
+                            style={{
+                              width: '35px',
+                              height: '35px',
+                              borderRadius: '50%',
+                              backgroundColor: avatarBg,
+                              color: '#fff',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontWeight: 700,
+                              fontSize: '0.82rem',
+                              marginRight: '0.75rem'
+                            }}
+                          >
+                            {initials}
                           </div>
-                        </div>
-                      </td>
+                          <span className="text-gray-800 text-hover-primary" style={{ fontWeight: 700, fontSize: '0.9rem', color: '#181c32' }}>
+                            {m.name || m.email?.split('@')[0] || 'Kiểm duyệt viên'}
+                          </span>
+                        </td>
 
-                      {/* Status */}
-                      <td className="text-end" style={{ textAlign: 'right' }}>
-                        <span
-                          className={`badge ${mod.status === 'online' ? 'badge-light-success' : 'badge-light-secondary'}`}
-                          style={{
-                            fontSize: '0.72rem',
-                            fontWeight: 'bold',
-                            textTransform: 'uppercase'
-                          }}
-                        >
-                          {mod.status === 'online' ? 'Online' : 'Offline'}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
+                        {/* Email */}
+                        <td>
+                          <span style={{ fontSize: '0.85rem', color: '#5e6278' }}>{m.email}</span>
+                        </td>
+
+                        {/* Approved */}
+                        <td className="text-center" style={{ textAlign: 'center' }}>
+                          <span className="badge badge-light-success" style={{ padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
+                            {approved}
+                          </span>
+                        </td>
+
+                        {/* Rejected */}
+                        <td className="text-center" style={{ textAlign: 'center' }}>
+                          <span className="badge badge-light-danger" style={{ padding: '0.25rem 0.6rem', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>
+                            {rejected}
+                          </span>
+                        </td>
+
+                        {/* Total */}
+                        <td className="text-center" style={{ textAlign: 'center', fontWeight: 700, color: '#181c32' }}>
+                          {modTotal}
+                        </td>
+
+                        {/* Progress Bar / Ratio */}
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', width: '130px' }}>
+                            <span style={{ fontSize: '0.78rem', color: '#5e6278', fontWeight: 700, width: '30px' }}>{percentage}%</span>
+                            <div style={{ flex: 1, background: '#eff2f5', height: '5px', borderRadius: '3px', overflow: 'hidden' }}>
+                              <div style={{ background: avatarBg, height: '100%', width: `${Math.min(100, percentage)}%` }} />
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* Status */}
+                        <td className="text-end" style={{ textAlign: 'right' }}>
+                          <span
+                            className="badge badge-light-success"
+                            style={{
+                              fontSize: '0.72rem',
+                              fontWeight: 'bold',
+                              textTransform: 'uppercase'
+                            }}
+                          >
+                            Hoạt động
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
           </div>

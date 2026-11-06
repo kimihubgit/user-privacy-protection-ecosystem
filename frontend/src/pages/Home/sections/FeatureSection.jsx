@@ -10,7 +10,7 @@ export default function FeatureSection() {
       id: 0,
       title: 'Tiện ích miễn phí',
       highlightTitle: 'AN TOÀN TRONG TẦM TAY',
-      desc: 'Cốt lõi của hệ thống danh sách chặn Chongluadao là bảo vệ người dùng Internet một cách tự động và âm thầm khi bạn sử dụng các trình duyệt sau: Microsoft Edge, Chrome, Opera, Brave, Firefox và Cốc Cốc. Ngoài ra, dữ liệu danh sách chặn của chúng tôi được tích hợp vào OpenDNS, NextDNS, Twitter và nhiều nhà cung cấp phần mềm diệt virus phổ biến.',
+      desc: 'Cốt lõi của hệ thống danh sách chặn shield là bảo vệ người dùng Internet một cách tự động và âm thầm khi bạn sử dụng các trình duyệt sau: Microsoft Edge, Chrome, Opera, Brave, Firefox và Cốc Cốc. Ngoài ra, dữ liệu danh sách chặn của chúng tôi được tích hợp vào OpenDNS, NextDNS, Twitter và nhiều nhà cung cấp phần mềm diệt virus phổ biến.',
       graphic: (
         <div className="laptop-screen-slide slide-security">
           {/* Animated safe browser mockup */}
@@ -23,7 +23,7 @@ export default function FeatureSection() {
               </div>
               <div className="browser-address">
                 <Shield size={10} color="#23b56c" fill="#23b56c" />
-                <span>chongluadao.vn/checker</span>
+                <span>shield.vn/checker</span>
               </div>
             </div>
             <div className="browser-body">

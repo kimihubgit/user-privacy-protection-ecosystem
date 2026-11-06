@@ -15,7 +15,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('reports'); // 'reports' | 'chat'
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   // Auth details
   const token = localStorage.getItem('token');
   const userEmail = localStorage.getItem('userEmail');
@@ -35,7 +35,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
   useEffect(() => {
     if (!token) return;
 
-    const wsUrl = `ws://localhost:8081/api/v1/ws/chat?token=${token}`;
+    const wsUrl = `ws://localhost:8081/api/v1/ws/chat?token=${token}&type=moderator`;
     const socket = new WebSocket(wsUrl);
     socketRef.current = socket;
 
@@ -77,7 +77,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
         setChatThreads(prev => {
           const thread = prev[senderSessionId] || [];
           const calculatedSender = data.role === 'moderator' ? 'moderator' : 'user';
-          
+
           // Check for duplicate message
           const isDuplicate = thread.some(m => m.text === msgText && m.sender === calculatedSender);
           if (isDuplicate) return prev;
@@ -239,7 +239,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
       id: generateId('log'),
       action,
       target,
-      operator: userEmail || 'support@chongluadao.vn',
+      operator: userEmail || 'support@shield.vn',
       date: new Date().toISOString(),
       details
     };
@@ -248,7 +248,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
 
   // Live support chat state
   const [chatUsers, setChatUsers] = useState([]);
-  
+
   const [chatThreads, setChatThreads] = useState({});
 
   const [inputMessage, setInputMessage] = useState('');
@@ -347,7 +347,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
     };
 
     saveBlacklistData([newItem, ...blacklist]);
-    
+
     // Remove from local storage queue
     const savedReports = localStorage.getItem('admin_pending_reports');
     if (savedReports) {
@@ -364,7 +364,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
 
     if (addToast) addToast(`Đã duyệt chặn đối tượng "${activeReportDetail.target}" vào danh sách đen!`, 'success');
     setActiveReportDetail(null);
-    
+
     // Fetch next report!
     fetchNextReport();
   };
@@ -391,7 +391,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
 
       addAuditLog('Từ chối Báo cáo', report.target, `Từ chối yêu cầu duyệt báo cáo.`);
       if (addToast) addToast(`Đã từ chối báo cáo đối với "${report.target}".`, 'info');
-      
+
       // Fetch next report!
       fetchNextReport();
     }
@@ -423,13 +423,13 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
 
   return (
     <div className="telegram-moderator-container">
-      
+
       {/* GLOBAL SIDEBAR: Navigation & Actions */}
       <div className="moderator-global-navigation">
         <div className="global-nav-logo" onClick={() => navigate('/')} title="Về trang chủ">
           <Shield size={24} />
         </div>
-        
+
         <div className="global-nav-items">
           <button
             className={`global-nav-btn ${activeTab === 'reports' ? 'active' : ''}`}
@@ -444,7 +444,13 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
 
           <button
             className={`global-nav-btn ${activeTab === 'chat' ? 'active' : ''}`}
-            onClick={() => { setActiveTab('chat'); setSearchQuery(''); }}
+            onClick={() => {
+              setActiveTab('chat');
+              setSearchQuery('');
+              if (!selectedChatUserId && chatUsers.length > 0) {
+                setSelectedChatUserId(chatUsers[0].id);
+              }
+            }}
             title="Hỗ trợ chat trực tuyến"
           >
             <MessageSquare size={20} />
@@ -524,7 +530,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
 
       {/* 2. RIGHT MAIN VIEW AREA */}
       <div className="telegram-main-area">
-        
+
         {/* CASE A: NO SELECTION OR EMPTY QUEUE */}
         {((activeTab === 'reports' && !currentReport) || (activeTab === 'chat' && !selectedChatUser)) && (
           <div className="telegram-empty-view">
@@ -535,8 +541,8 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
               {activeTab === 'reports' ? 'Đã duyệt xong tất cả báo cáo!' : 'Chào mừng bạn đến với Command Center'}
             </h4>
             <p style={{ margin: 0, fontSize: '0.8rem', maxWidth: '300px', lineHeight: 1.5, color: '#7f91a4' }}>
-              {activeTab === 'reports' 
-                ? 'Không còn báo cáo nào đang chờ duyệt trong hệ thống.' 
+              {activeTab === 'reports'
+                ? 'Không còn báo cáo nào đang chờ duyệt trong hệ thống.'
                 : 'Chọn một phiên hỗ trợ chat ở cột bên trái để bắt đầu hỗ trợ người dùng.'}
             </p>
           </div>
@@ -558,7 +564,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
 
             {/* Scrollable details view */}
             <div className="telegram-report-scroll">
-              
+
               {/* Queue progress stats header */}
               <div className="telegram-queue-progress-header">
                 <div className="queue-progress-info">
@@ -643,7 +649,7 @@ export default function ModeratorDashboard({ addToast, onLogout }) {
         )}
 
         {/* CASE C: ACTIVE CHAT SUPPORT IS SELECTED */}
-        {selectedChatUser && (
+        {activeTab === 'chat' && selectedChatUser && (
           <>
             {/* Header */}
             <div className="telegram-main-header">

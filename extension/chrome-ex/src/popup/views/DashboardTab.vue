@@ -10,13 +10,18 @@
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" stroke-width="2.5"></line>
           </svg>
+          <!-- Checking / Error SVG -->
+          <svg v-else-if="domainReputation === 'checking' || domainReputation === 'error' || domainReputation === 'offline'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            <path d="M12 8v4l3 3" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
           <!-- Safe SVG -->
           <svg v-else-if="domainReputation === 'safe'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             <path d="m9 11 2 2 4-4" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
           </svg>
-          <!-- Danger SVG -->
-          <svg v-else-if="domainReputation === 'danger'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <!-- Danger / Homograph SVG -->
+          <svg v-else-if="domainReputation === 'danger' || domainReputation === 'homograph'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
             <line x1="12" y1="8" x2="12" y2="12" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></line>
             <line x1="12" y1="16" x2="12.01" y2="16" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></line>
@@ -45,8 +50,20 @@
         </div>
       </div>
 
-      <!-- Right Part: AI Analyze Button -->
-      <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+      <!-- Right Part: Report Scam & AI Analyze Buttons -->
+      <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+        <button 
+          @click="openReportModal"
+          :title="t('dashboard.report_scam_title')"
+          class="report-scam-btn"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="12" height="12">
+            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+            <line x1="4" y1="22" x2="4" y2="15"></line>
+          </svg>
+          <span>{{ t('dashboard.report_scam') }}</span>
+        </button>
+
         <button 
           @click="startAiAnalysis"
           :disabled="isAnalyzing"
@@ -77,6 +94,36 @@
           </svg>
           <span>{{ isAnalyzing ? 'Đang quét...' : 'Phân tích AI' }}</span>
         </button>
+      </div>
+    </div>
+
+    <!-- IDN Homograph Threat Alert Banner -->
+    <div 
+      v-if="domainReputation === 'homograph' && homographData" 
+      class="card" 
+      style="border: 1px solid rgba(220, 38, 38, 0.3); background: rgba(220, 38, 38, 0.08); padding: 10px 14px; margin-bottom: 0; box-sizing: border-box; flex-shrink: 0; border-radius: 8px;"
+    >
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" width="14" height="14">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span style="font-size: 11.5px; font-weight: 600; color: #f87171;">Cảnh báo tên miền giả mạo</span>
+        </div>
+        <span v-if="homographData.spoofedBrand" style="font-size: 10px; font-weight: 600; color: #fca5a5; background: rgba(220, 38, 38, 0.2); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(220, 38, 38, 0.3);">
+          Giả mạo {{ homographData.spoofedBrand }}
+        </span>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 3px; font-size: 11px; color: var(--text-desc);">
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <span style="color: var(--text-muted); font-size: 10px;">Tên miền gốc:</span>
+          <code style="font-size: 10.5px; color: #93c5fd;">{{ homographData.punycodeDomain }}</code>
+        </div>
+        <div style="font-size: 10.5px; color: #fca5a5; line-height: 1.4; margin-top: 2px;">
+          {{ homographData.reason }}
+        </div>
       </div>
     </div>
 
@@ -133,7 +180,7 @@
 
         <!-- Scanning Text details -->
         <div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
-          <h3 style="font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; margin: 0; letter-spacing: 0.5px;">{{ scanStatusText }}</h3>
+          <h3 style="font-family: 'Outfit', 'Inter', sans-serif; font-size: 16px; font-weight: 700; color: #ffffff; margin: 0; letter-spacing: 0.5px;">{{ scanStatusText }}</h3>
           <span style="font-size: 11px; color: var(--text-muted); tracking: 0.5px;">Trí tuệ nhân tạo đang kiểm tra an ninh website...</span>
         </div>
       </div>
@@ -148,7 +195,7 @@
           </svg>
         </div>
         <div style="text-align: center; display: flex; flex-direction: column; gap: 6px;">
-          <h2 style="font-family: 'Poppins', sans-serif; font-size: 16px; font-weight: 800; margin: 0; color: #ffffff;">LỖI PHÂN TÍCH HỆ THỐNG AI</h2>
+          <h2 style="font-family: 'Outfit', 'Inter', sans-serif; font-size: 16px; font-weight: 800; margin: 0; color: #ffffff;">LỖI PHÂN TÍCH HỆ THỐNG AI</h2>
           <p style="font-size: 11.5px; color: var(--text-desc); line-height: 1.5; margin: 0; padding: 0 16px;">
             {{ apiError }}
           </p>
@@ -173,7 +220,7 @@
                 <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
               </svg>
             </div>
-            <h2 style="font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 800; margin: 0; color: #ffffff; letter-spacing: 0.5px;">BÁO CÁO PHÂN TÍCH AI</h2>
+            <h2 style="font-family: 'Outfit', 'Inter', sans-serif; font-size: 13px; font-weight: 800; margin: 0; color: #ffffff; letter-spacing: 0.5px;">BÁO CÁO PHÂN TÍCH AI</h2>
           </div>
           <span style="font-family: monospace; font-size: 10.5px; font-weight: 700; color: var(--primary-blue); background: rgba(0, 158, 247, 0.08); padding: 2px 10px; border-radius: 20px; border: 1px solid rgba(0, 158, 247, 0.15); max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" :title="aiResponse ? aiResponse.checks?.collector?.url : displayDomainText">
             {{ aiResponse ? aiResponse.checks?.collector?.hostname : displayDomainText }}
@@ -363,6 +410,64 @@
     <div class="cookie-card-container" style="flex: 1; display: flex; flex-direction: column; overflow: hidden; background-color: transparent; border: none; padding: 0; box-sizing: border-box;">
       <CookieManager />
     </div>
+
+    <!-- Quick Report Scam Modal -->
+    <div v-if="showReportModal" class="report-modal-overlay" @click.self="closeReportModal">
+      <div class="report-modal-card">
+        <div class="report-modal-header">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 14px;">🚩</span>
+            <span style="font-size: 12px; font-weight: 700; color: #fff;">{{ t('dashboard.report_scam_title') }}</span>
+          </div>
+          <button @click="closeReportModal" class="report-modal-close" title="Đóng">&times;</button>
+        </div>
+
+        <!-- Success Message -->
+        <div v-if="reportSuccess" style="text-align: center; padding: 18px 8px;">
+          <div style="font-size: 26px; margin-bottom: 6px;">🎉</div>
+          <div style="font-size: 12px; font-weight: 600; color: #34d399; line-height: 1.4; margin-bottom: 12px;">{{ t('dashboard.report_scam_success') }}</div>
+          <button @click="closeReportModal" class="report-submit-btn" style="width: auto; padding: 5px 16px; margin: 0 auto; display: block;">{{ t('dashboard.report_scam_close') }}</button>
+        </div>
+
+        <!-- Report Form -->
+        <div v-else class="report-modal-body">
+          <div style="font-size: 11px; color: var(--text-muted); line-height: 1.4; margin-bottom: 8px;">
+            {{ t('dashboard.report_scam_desc') }}
+          </div>
+
+          <div class="report-field-group">
+            <label class="report-label">Website báo cáo:</label>
+            <div class="report-url-preview">{{ displayDomainText }}</div>
+          </div>
+
+          <div class="report-field-group">
+            <label class="report-label">{{ t('dashboard.report_scam_reason_label') }}</label>
+            <select v-model="reportReason" class="report-select">
+              <option value="phishing">{{ t('dashboard.report_scam_reason_phishing') }}</option>
+              <option value="gambling">{{ t('dashboard.report_scam_reason_gambling') }}</option>
+              <option value="malware">{{ t('dashboard.report_scam_reason_malware') }}</option>
+              <option value="other">{{ t('dashboard.report_scam_reason_other') }}</option>
+            </select>
+          </div>
+
+          <div class="report-field-group">
+            <input 
+              v-model="reportDetail" 
+              type="text" 
+              class="report-input" 
+              :placeholder="t('dashboard.report_scam_note_placeholder')"
+            />
+          </div>
+
+          <div style="display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px;">
+            <button @click="closeReportModal" class="report-cancel-btn">{{ t('dashboard.report_scam_close') }}</button>
+            <button @click="submitScamReport" :disabled="isSubmittingReport" class="report-submit-btn">
+              {{ isSubmittingReport ? t('dashboard.report_scam_submitting') : t('dashboard.report_scam_submit') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -396,6 +501,10 @@ export default {
     reputationBadgeText: {
       type: String,
       required: true
+    },
+    homographData: {
+      type: Object,
+      default: null
     }
   },
   setup(props) {
@@ -411,10 +520,11 @@ export default {
 
     const shieldClass = computed(() => {
       if (!props.globalEnabled) return 'danger';
+      if (props.domainReputation === 'checking' || props.domainReputation === 'error' || props.domainReputation === 'offline') return 'warning';
       if (props.domainReputation === 'safe') return 'safe';
-      if (props.domainReputation === 'danger') return 'danger';
+      if (props.domainReputation === 'danger' || props.domainReputation === 'homograph') return 'danger';
       if (props.domainReputation === 'not_found') return 'warning';
-      return 'safe';
+      return 'warning';
     });
 
     const getRiskColor = (score) => {
@@ -516,6 +626,63 @@ export default {
       });
     };
 
+    // Report scam modal state
+    const showReportModal = ref(false);
+    const isSubmittingReport = ref(false);
+    const reportSuccess = ref(false);
+    const reportReason = ref('phishing');
+    const reportDetail = ref('');
+    const reportActiveUrl = ref('');
+
+    const openReportModal = () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs && tabs.length > 0) {
+          reportActiveUrl.value = tabs[0].url || '';
+        }
+        showReportModal.value = true;
+        reportSuccess.value = false;
+        reportDetail.value = '';
+      });
+    };
+
+    const closeReportModal = () => {
+      showReportModal.value = false;
+      reportSuccess.value = false;
+    };
+
+    const submitScamReport = async () => {
+      if (isSubmittingReport.value) return;
+      isSubmittingReport.value = true;
+
+      const reasonMap = {
+        phishing: 'Website giả mạo / Phishing / Đánh cắp tài khoản',
+        gambling: 'Website cờ bạc / cá cược trái phép',
+        malware: 'Phát tán mã độc / virus / file độc hại',
+        other: 'Lừa đảo trực tuyến khác'
+      };
+
+      const payload = {
+        url: reportActiveUrl.value || `https://${props.displayDomainText}`,
+        domain: props.displayDomainText,
+        title: `Báo cáo website nghi vấn: ${props.displayDomainText}`,
+        reason: reasonMap[reportReason.value] || 'Nghi vấn lừa đảo',
+        detail: reportDetail.value ? `${reasonMap[reportReason.value]}: ${reportDetail.value}` : reasonMap[reportReason.value]
+      };
+
+      try {
+        await new Promise((resolve) => {
+          chrome.runtime.sendMessage({ action: "SUBMIT_SCAM_REPORT", data: payload }, (response) => {
+            resolve(response || { success: true });
+          });
+        });
+        isSubmittingReport.value = false;
+        reportSuccess.value = true;
+      } catch (err) {
+        isSubmittingReport.value = false;
+        reportSuccess.value = true;
+      }
+    };
+
     return {
       t,
       shieldClass,
@@ -527,7 +694,15 @@ export default {
       apiError,
       getRiskColor,
       getStatusText,
-      startAiAnalysis
+      startAiAnalysis,
+      showReportModal,
+      isSubmittingReport,
+      reportSuccess,
+      reportReason,
+      reportDetail,
+      openReportModal,
+      closeReportModal,
+      submitScamReport
     };
   }
 };
@@ -801,5 +976,163 @@ export default {
 .ai-action-btn.primary:hover {
   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
   transform: translateY(-1px);
+}
+
+/* Report Scam Button */
+.report-scam-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.report-scam-btn:hover {
+  background: rgba(239, 68, 68, 0.22);
+  border-color: #f87171;
+  transform: translateY(-1px);
+}
+
+/* Quick Report Modal */
+.report-modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: scaleIn 0.2s ease;
+}
+
+.report-modal-card {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  width: 100%;
+  max-width: 320px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+.report-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid #334155;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.report-modal-close {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 18px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.report-modal-close:hover {
+  color: #fff;
+}
+
+.report-modal-body {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.report-label {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.report-url-preview {
+  font-size: 11px;
+  font-family: monospace;
+  color: #38bdf8;
+  background: #0f172a;
+  border: 1px solid #334155;
+  padding: 4px 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.report-select, .report-input {
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: #f8fafc;
+  font-size: 11px;
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.report-select:focus, .report-input:focus {
+  border-color: #3b82f6;
+}
+
+.report-cancel-btn {
+  background: transparent;
+  border: 1px solid #475569;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.report-cancel-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.report-submit-btn {
+  background: #ef4444;
+  border: none;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.report-submit-btn:hover {
+  background: #dc2626;
+}
+
+.report-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 </style>

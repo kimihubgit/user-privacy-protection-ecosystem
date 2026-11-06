@@ -22,8 +22,8 @@ if __name__ == "__main__":
                     pass
         
         print(f"Khởi chạy API Server tại http://{host}:{port} ...")
-        # Sử dụng uvicorn để khởi động API từ src/api.py
-        uvicorn.run("api:app", host=host, port=port, reload=True)
+        # Sử dụng uvicorn để khởi động API từ interface_adapters/api/main.py
+        uvicorn.run("interface_adapters.api.main:app", host=host, port=port, reload=True)
     else:
         from cli import run  
         run()

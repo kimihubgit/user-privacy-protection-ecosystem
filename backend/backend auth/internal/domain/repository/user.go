@@ -15,6 +15,7 @@ type UserRepository interface {
 	FindBySocialAccount(ctx context.Context, provider, providerID string) (*entity.User, error)
 	FindByCredentialID(ctx context.Context, credentialID []byte) (*entity.User, error)
 	Update(ctx context.Context, user *entity.User) error
+	Delete(ctx context.Context, id primitive.ObjectID) error
 	List(ctx context.Context, page, limit int64, search string) ([]entity.User, int64, error)
 	GetStats(ctx context.Context) (total int64, newToday int64, err error)
 }

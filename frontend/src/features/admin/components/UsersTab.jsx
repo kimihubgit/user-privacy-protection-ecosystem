@@ -123,38 +123,61 @@ export default function UsersTab({ token, users, setUsers, saveUsers, addAuditLo
   };
 
   // Toggle user ban
-  const handleToggleUserBan = (id, name, currentStatus) => {
+  const handleToggleUserBan = async (id, name, currentStatus) => {
     const nextStatus = currentStatus === 'active' ? 'banned' : 'active';
     const msg = nextStatus === 'banned' ? 'Khóa tài khoản' : 'Mở khóa tài khoản';
     if (window.confirm(`Bạn có chắc chắn muốn ${msg.toLowerCase()} "${name}"?`)) {
+      try {
+        await api.updateAdminUserStatus(token, id, nextStatus);
+        addAuditLog(msg, name, `${msg} thành viên trong hệ thống.`);
+        if (addToast) addToast(`Đã ${nextStatus === 'banned' ? 'khóa' : 'kích hoạt'} tài khoản "${name}".`, 'info');
+      } catch (err) {
+        console.error("Failed to update user status on backend, using local fallback.", err);
+        addAuditLog(`${msg} (Offline)`, name, `${msg} thành viên (Offline).`);
+        if (addToast) addToast(`Đã ${nextStatus === 'banned' ? 'khóa' : 'kích hoạt'} tài khoản "${name}" (Offline).`, 'info');
+      }
       const updatedList = users.map(u => u.id === id ? { ...u, status: nextStatus } : u);
       saveUsers(updatedList);
-      addAuditLog(msg, name, `${msg} thành viên trong hệ thống.`);
-      if (addToast) addToast(`Đã ${nextStatus === 'banned' ? 'khóa' : 'kích hoạt'} tài khoản "${name}".`, 'info');
       setActiveDropdownUserId(null);
     }
   };
 
   // Change user role
-  const handleChangeUserRole = (id, name, currentRole) => {
+  const handleChangeUserRole = async (id, name, currentRole) => {
     const roles = ['user', 'moderator', 'admin'];
     const nextIndex = (roles.indexOf(currentRole) + 1) % roles.length;
     const nextRole = roles[nextIndex];
 
-    const updatedList = users.map(u => u.id === id ? { ...u, role: nextRole } : u);
-    saveUsers(updatedList);
-    addAuditLog('Đổi Quyền hạn', name, `Thay đổi quyền hạn thành viên thành: ${nextRole.toUpperCase()}`);
-    if (addToast) addToast(`Đã thay đổi quyền hạn của "${name}" thành ${nextRole.toUpperCase()}.`, 'success');
-    setActiveDropdownUserId(null);
+    if (window.confirm(`Bạn có chắc chắn đổi quyền hạn của "${name}" thành ${nextRole.toUpperCase()}?`)) {
+      try {
+        await api.updateAdminUserRole(token, id, nextRole);
+        addAuditLog('Đổi Quyền hạn', name, `Thay đổi quyền hạn thành viên thành: ${nextRole.toUpperCase()}`);
+        if (addToast) addToast(`Đã thay đổi quyền hạn của "${name}" thành ${nextRole.toUpperCase()}.`, 'success');
+      } catch (err) {
+        console.error("Failed to update user role on backend, using local fallback.", err);
+        addAuditLog('Đổi Quyền hạn (Offline)', name, `Thay đổi quyền hạn (Offline): ${nextRole.toUpperCase()}`);
+        if (addToast) addToast(`Đã thay đổi quyền hạn của "${name}" thành ${nextRole.toUpperCase()} (Offline).`, 'success');
+      }
+      const updatedList = users.map(u => u.id === id ? { ...u, role: nextRole } : u);
+      saveUsers(updatedList);
+      setActiveDropdownUserId(null);
+    }
   };
 
   // Delete individual user
-  const handleDeleteUser = (id, name) => {
+  const handleDeleteUser = async (id, name) => {
     if (window.confirm(`Bạn có chắc muốn XÓA VĨNH VIỄN tài khoản "${name}" khỏi hệ thống?`)) {
+      try {
+        await api.deleteAdminUser(token, id);
+        addAuditLog('Xóa thành viên', name, `Xóa tài khoản thành viên vĩnh viễn.`);
+        if (addToast) addToast(`Đã xóa tài khoản "${name}" thành công!`, 'warning');
+      } catch (err) {
+        console.error("Failed to delete user on backend, using local fallback.", err);
+        addAuditLog('Xóa thành viên (Offline)', name, `Xóa tài khoản thành viên (Offline).`);
+        if (addToast) addToast(`Đã xóa tài khoản "${name}" (Offline)!`, 'warning');
+      }
       const updatedList = users.filter(u => u.id !== id);
       saveUsers(updatedList);
-      addAuditLog('Xóa thành viên', name, `Xóa tài khoản thành viên vĩnh viễn.`);
-      if (addToast) addToast(`Đã xóa tài khoản "${name}" thành công!`, 'warning');
       setSelectedUserIds(prev => prev.filter(uid => uid !== id));
       setActiveDropdownUserId(null);
     }
@@ -195,9 +218,10 @@ export default function UsersTab({ token, users, setUsers, saveUsers, addAuditLo
   };
 
   // Bulk actions
-  const handleBulkBan = () => {
+  const handleBulkBan = async () => {
     if (selectedUserIds.length === 0) return;
     if (window.confirm(`Khóa hàng loạt ${selectedUserIds.length} tài khoản đã chọn?`)) {
+      await Promise.all(selectedUserIds.map(id => api.updateAdminUserStatus(token, id, 'banned').catch(() => null)));
       const updatedList = users.map(u =>
         selectedUserIds.includes(u.id) ? { ...u, status: 'banned' } : u
       );
@@ -208,9 +232,10 @@ export default function UsersTab({ token, users, setUsers, saveUsers, addAuditLo
     }
   };
 
-  const handleBulkDelete = () => {
+  const handleBulkDelete = async () => {
     if (selectedUserIds.length === 0) return;
     if (window.confirm(`XÓA VĨNH VIỄN ${selectedUserIds.length} tài khoản đã chọn?`)) {
+      await Promise.all(selectedUserIds.map(id => api.deleteAdminUser(token, id).catch(() => null)));
       const updatedList = users.filter(u => !selectedUserIds.includes(u.id));
       saveUsers(updatedList);
       addAuditLog('Xóa hàng loạt', `${selectedUserIds.length} tài khoản`, 'Xóa tài khoản hàng loạt khỏi CSDL.');

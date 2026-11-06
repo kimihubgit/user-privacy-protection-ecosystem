@@ -95,3 +95,50 @@ func (h *ScamUserHandler) DeleteScamUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Scammer successfully deleted"})
 }
+
+// GetScamUser retrieves a single scammer by ID
+func (h *ScamUserHandler) GetScamUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID parameter is required"})
+		return
+	}
+
+	scammer, err := h.service.GetScammerByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if scammer == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Scammer not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"data": scammer})
+}
+
+// UpdateScamUser updates an existing scammer entry
+func (h *ScamUserHandler) UpdateScamUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID parameter is required"})
+		return
+	}
+
+	var input request.AddScamUserInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationError(err)})
+		return
+	}
+
+	scammer, err := h.service.AddScammerFromInput(c.Request.Context(), input.Target, input.Type, input.Name, input.BankName, input.Description, input.SourceReportID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Scammer successfully updated",
+		"data":    scammer,
+	})
+}

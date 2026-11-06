@@ -1,66 +1,36 @@
-import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
-import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
+﻿import { useState, useEffect, Suspense, useMemo } from 'react';
+import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import { X, CheckCircle2, Shield, Key, AlertCircle } from 'lucide-react';
-import { api } from '../lib/api';
-import Header from '../components/Header';
-import Footer from '../components/Footer';
-import SplashOverlay from '../components/SplashOverlay';
-import Home from '../pages/Home/Home';
 
-// Lazy loaded page components for bundle code splitting
-const ReportForm = lazy(() => import('../pages/Report'));
-const PrivacyPolicy = lazy(() => import('../pages/Privacy/PrivacyPolicy'));
-const ScanDetail = lazy(() => import('../pages/ScanDetail'));
-const AiChatbotFullPage = lazy(() => import('../pages/AiChatbot'));
-const UserDashboard = lazy(() => import('../pages/Dashboard'));
-const AdminLogin = lazy(() => import('../pages/AdminLogin'));
-const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
-const ModeratorDashboard = lazy(() => import('../pages/ModeratorDashboard'));
-
-import { useToast } from '../hooks/useToast';
-
-// Refactored common components
-import BackgroundGlows from '../components/BackgroundGlows';
-import FloatingActions from '../components/FloatingActions';
-import FloatingChat from '../features/chatbot/components/FloatingChat';
-import LoginModal from '../features/auth/components/LoginModal';
-import ProtectedRoute from '../components/ProtectedRoute';
+import { useAuth } from '@/context/AuthContext';
+import { useToast } from '@/hooks/useToast';
+import {
+  Header,
+  Footer,
+  SplashOverlay,
+  BackgroundGlows,
+  FloatingActions
+} from '@/components';
+import FloatingChat from '@/features/chatbot/components/FloatingChat';
+import LoginModal from '@/features/auth/components/LoginModal';
+import { getAppRoutes } from './routes';
 
 export default function App() {
   const location = useLocation();
   const navigate = useNavigate();
+  const { isLoggedIn, user, logout, isLoginOpen, setIsLoginOpen } = useAuth();
+  const { toasts, addToast, removeToast } = useToast();
+
   const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const { toasts, addToast, removeToast } = useToast();
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
 
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'));
-  const [userName, setUserName] = useState(() => localStorage.getItem('userName') || "");
-  const [userAvatar, setUserAvatar] = useState(() => localStorage.getItem('userAvatar') || '');
-
-  const handleLogout = useCallback(async () => {
-    try {
-      const token = localStorage.getItem('token');
-      if (token) {
-        await api.logout(token);
-      }
-    } catch (error) {
-      console.warn('API logout failed, performing local logout:', error);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('userName');
-      localStorage.removeItem('userEmail');
-      localStorage.removeItem('userAvatar');
-      setIsLoggedIn(false);
-      setUserName('anonymous');
-      setUserAvatar('');
-      if (addToast) {
-        addToast('Đã đăng xuất tài khoản thành công.', 'info');
-      }
+  const handleLogout = async () => {
+    await logout(() => {
+      addToast('Đã đăng xuất tài khoản thành công.', 'info');
       navigate('/');
-    }
-  }, [navigate, addToast]);
+    });
+  };
 
   // Reopen floating chatbot if redirected from full-page view via minimize query parameter
   useEffect(() => {
@@ -71,63 +41,7 @@ export default function App() {
     }
   }, [location.search, navigate]);
 
-  // Fetch and update user profile on mount or when auth-change is dispatched
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        if (token.startsWith('mock-admin-') || token.startsWith('mock-moderator-')) {
-          setIsLoggedIn(true);
-          return;
-        }
-        try {
-          const res = await api.getMe(token);
-          let nameToSet = '';
-          let emailToSet = '';
-          let avatarToSet = '';
-
-          if (res.user) {
-            nameToSet = res.user.name || res.user.username || '';
-            emailToSet = res.user.email || '';
-            avatarToSet = res.user.avatar || '';
-          } else {
-            nameToSet = res.name || res.username || '';
-            emailToSet = res.email || '';
-            avatarToSet = res.avatar || '';
-          }
-
-          if (nameToSet) {
-            setUserName(nameToSet);
-            localStorage.setItem('userName', nameToSet);
-          }
-          if (emailToSet) {
-            localStorage.setItem('userEmail', emailToSet);
-          }
-          if (avatarToSet) {
-            setUserAvatar(avatarToSet);
-            localStorage.setItem('userAvatar', avatarToSet);
-          }
-          setIsLoggedIn(true);
-        } catch (error) {
-          console.warn('Không thể đồng bộ thông tin tài khoản:', error);
-          if (error.status) {
-            handleLogout();
-          }
-        }
-      } else {
-        setIsLoggedIn(false);
-        setUserName('');
-        setUserAvatar('');
-      }
-    };
-    
-    fetchProfile();
-    window.addEventListener('auth-change', fetchProfile);
-    return () => {
-      window.removeEventListener('auth-change', fetchProfile);
-    };
-  }, [handleLogout]);
-
+  // Sync dark theme class on document body
   useEffect(() => {
     if (isDarkMode) {
       document.body.classList.add('dark-theme');
@@ -139,30 +53,15 @@ export default function App() {
   }, [isDarkMode]);
 
   const toggleTheme = () => {
-    setIsDarkMode(prev => !prev);
+    setIsDarkMode((prev) => !prev);
   };
 
-  // Determine activeTab based on pathname
-  let activeTab = 'checker';
-  const path = location.pathname.toLowerCase();
-
-  if (path === '/report') activeTab = 'report';
-  else if (path === '/privacy' || path === '/privacypolicies') activeTab = 'privacy';
-
-  const isAdminPage = path.startsWith('/admin') || path.startsWith('/moderator');
-
-  const setActiveTab = (tab) => {
-    if (tab === 'checker') {
-      navigate('/');
-    } else {
-      navigate(`/${tab}`);
-    }
-  };
-
+  // Scroll to top on pathname change
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
+  // Track window scroll for scroll-to-top button
   useEffect(() => {
     let hasCrossedThreshold = false;
     const handleScroll = () => {
@@ -183,16 +82,44 @@ export default function App() {
     });
   };
 
+  // Determine active tab & layout mode
+  const path = location.pathname.toLowerCase();
+  let activeTab = 'checker';
+  if (path === '/report') activeTab = 'report';
+  else if (path === '/privacy' || path === '/privacypolicies') activeTab = 'privacy';
+
+  const isFullPage = path.startsWith('/admin') || path.startsWith('/moderator') || path === '/tro-ly-ai';
+
+  const setActiveTab = (tab) => {
+    if (tab === 'checker') {
+      navigate('/');
+    } else {
+      navigate(`/${tab}`);
+    }
+  };
+
+  // Centralized route elements hook
+  const routeList = useMemo(
+    () =>
+      getAppRoutes({
+        addToast,
+        setActiveTab,
+        onLoginToggle: () => setIsLoginOpen(true),
+        onAiChatToggle: () => setIsAiChatOpen(!isAiChatOpen),
+        onLogout: handleLogout
+      }),
+    [addToast, isAiChatOpen, setIsLoginOpen]
+  );
+
+  const routeElements = useRoutes(routeList);
 
   return (
     <>
       <SplashOverlay />
-
-      {/* Cyber ambient grid and glows background */}
       <BackgroundGlows />
 
       {/* Global Navigation */}
-      {!isAdminPage && (
+      {!isFullPage && (
         <Header
           activeTab={activeTab}
           setActiveTab={setActiveTab}
@@ -200,63 +127,51 @@ export default function App() {
           onLoginToggle={() => setIsLoginOpen(!isLoginOpen)}
           addToast={addToast}
           isLoggedIn={isLoggedIn}
-          userName={userName}
-          userAvatar={userAvatar}
+          userName={user.name}
+          userAvatar={user.avatar}
           onLogout={handleLogout}
           onDashboardClick={() => navigate('/dashboard')}
         />
       )}
 
-      {/* Tab Routing views using react-router-dom */}
+      {/* Main Routed Content with Suspense Loading */}
       <main style={{ flexGrow: 1 }}>
-        <Suspense fallback={
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '0.75rem', color: 'var(--text-muted)' }}>
-            <div className="spinner" style={{ width: '24px', height: '24px', borderWidth: '2px', borderStyle: 'solid', color: 'var(--primary)' }}></div>
-            <span style={{ fontSize: '0.85rem' }}>Đang tải trang...</span>
-          </div>
-        }>
-          <Routes>
-            <Route
-              path="/"
-              element={
-                <Home
-                  addToast={addToast}
-                  onAiChatToggle={() => setIsAiChatOpen(!isAiChatOpen)}
-                />
-              }
-            />
-          
-            <Route path="/report" element={<ReportForm addToast={addToast} setActiveTab={setActiveTab} onLoginToggle={() => setIsLoginOpen(true)} />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/detail/:target" element={<ScanDetail addToast={addToast} />} />
-            <Route path="/tro-ly-ai" element={<AiChatbotFullPage addToast={addToast} />} />
-            <Route path="/dashboard/*" element={
-              <ProtectedRoute>
-                <UserDashboard addToast={addToast} onLogout={handleLogout} />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/login" element={<AdminLogin addToast={addToast} />} />
-            <Route path="/admin/*" element={
-              <ProtectedRoute requiredRole="admin">
-                <AdminDashboard addToast={addToast} onLogout={handleLogout} />
-              </ProtectedRoute>
-            } />
-
-            <Route path="/moderator" element={
-              <ProtectedRoute requiredRole="moderator">
-                <ModeratorDashboard addToast={addToast} onLogout={handleLogout} />
-              </ProtectedRoute>
-            } />
-            <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+        <Suspense
+          fallback={
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '50vh',
+                gap: '0.75rem',
+                color: 'var(--text-muted)'
+              }}
+            >
+              <div
+                className="spinner"
+                style={{
+                  width: '24px',
+                  height: '24px',
+                  borderWidth: '2px',
+                  borderStyle: 'solid',
+                  color: 'var(--primary)'
+                }}
+              />
+              <span style={{ fontSize: '0.85rem' }}>Đang tải trang...</span>
+            </div>
+          }
+        >
+          {routeElements}
         </Suspense>
       </main>
 
-      {/* Redeveloped Authentic Footer */}
-      {!isAdminPage && <Footer setActiveTab={setActiveTab} />}
+      {/* Footer */}
+      {!isFullPage && <Footer setActiveTab={setActiveTab} />}
 
       {/* Theme Toggling & Scroll Actions */}
-      {!isAdminPage && (
+      {!isFullPage && (
         <FloatingActions
           showScrollTop={showScrollTop}
           scrollToTop={scrollToTop}
@@ -267,7 +182,7 @@ export default function App() {
       )}
 
       {/* AI Floating Chat Assistant */}
-      {!isAdminPage && (
+      {!isFullPage && (
         <FloatingChat
           isAiChatOpen={isAiChatOpen}
           setIsAiChatOpen={setIsAiChatOpen}
@@ -280,27 +195,25 @@ export default function App() {
         isOpen={isLoginOpen}
         onClose={() => setIsLoginOpen(false)}
         addToast={addToast}
-        setIsLoggedIn={setIsLoggedIn}
-        setUserName={setUserName}
-        setUserAvatar={setUserAvatar}
       />
 
       {/* Toast Notification Container */}
       <div className="toast-container">
-        {toasts && toasts.map((toast) => (
-          <div key={toast.id} className={`toast-item toast-${toast.type}`}>
-            <div className="toast-icon-wrap">
-              {toast.type === 'success' && <CheckCircle2 size={18} className="toast-icon success" />}
-              {toast.type === 'error' && <AlertCircle size={18} className="toast-icon error" />}
-              {toast.type === 'info' && <Shield size={18} className="toast-icon info" />}
-              {toast.type === 'warning' && <Key size={18} className="toast-icon warning" />}
+        {toasts &&
+          toasts.map((toast) => (
+            <div key={toast.id} className={`toast-item toast-${toast.type}`}>
+              <div className="toast-icon-wrap">
+                {toast.type === 'success' && <CheckCircle2 size={18} className="toast-icon success" />}
+                {toast.type === 'error' && <AlertCircle size={18} className="toast-icon error" />}
+                {toast.type === 'info' && <Shield size={18} className="toast-icon info" />}
+                {toast.type === 'warning' && <Key size={18} className="toast-icon warning" />}
+              </div>
+              <div className="toast-message">{toast.message}</div>
+              <button className="toast-close" onClick={() => removeToast(toast.id)}>
+                <X size={14} />
+              </button>
             </div>
-            <div className="toast-message">{toast.message}</div>
-            <button className="toast-close" onClick={() => removeToast(toast.id)}>
-              <X size={14} />
-            </button>
-          </div>
-        ))}
+          ))}
       </div>
     </>
   );

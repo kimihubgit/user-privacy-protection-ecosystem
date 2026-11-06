@@ -93,14 +93,15 @@ export const checkService = {
       };
     }
 
-    // 3. Default Safe Response
+    // 3. Default Unverified Response (Not in Blacklist, but Not in Whitelist)
     return {
       url,
       domain,
-      status: 'safe',
+      status: 'unverified',
       category: 'none',
-      description: 'Không phát hiện thấy mối đe dọa nào. Tên miền này hiện chưa nằm trong danh sách đen.',
-      isSafe: true,
+      description: 'Chưa ghi nhận vi phạm trong cơ sở dữ liệu. Tuy nhiên, tên miền này chưa thuộc danh sách xác minh an toàn (Whitelist), quý khách nên cẩn trọng khi giao dịch.',
+      isSafe: false,
+      isUnverified: true,
       source: 'system'
     };
   },
@@ -201,25 +202,6 @@ export const checkService = {
       }
     } catch (e) {
       console.warn('Backend API getDetail failed:', e);
-    }
-    return null;
-  },
-
-  // Get domain breach/whois info (Public)
-  async getDomainWhois(domain) {
-    try {
-      const targetUrl = `${API_BASE_URL}/urls/whois?url=${encodeURIComponent(domain)}`;
-      const response = await fetch(targetUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      if (response.ok) {
-        return await response.json();
-      }
-    } catch (e) {
-      console.warn('Backend API getDomainWhois failed:', e);
     }
     return null;
   }

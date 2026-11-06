@@ -15,7 +15,7 @@
     <!-- Unified container -->
     <div class="about-unified-container">
       
-      <!-- Content Header with Futuristic Styling -->
+      <!-- Content Header -->
       <div class="about-header">
         <div class="about-brand-header">
           <div class="shield-badge-glowing">
@@ -25,11 +25,9 @@
             <div class="shield-pulse-ring"></div>
           </div>
           <div class="brand-text-block">
-            <h2 class="brand-name-glow">KiGuard Detector</h2>
+            <h2 class="brand-name-glow">Giới Thiệu KiGuard Privacy</h2>
             <div class="brand-subtitle-tech">
-              <span>SECURITY ENGINE v1.0</span>
-              <span class="dot-separator">•</span>
-              <span class="status-online-text">ACTIVE PROTECTION</span>
+              <span>HỆ THỐNG BẢO VỆ QUYỀN RIÊNG TƯ & AN NINH MẠNG TOÀN DIỆN</span>
             </div>
           </div>
         </div>
@@ -37,71 +35,72 @@
 
       <!-- Main Layout -->
       <div class="about-grid">
-        <!-- Left Panel: Product details & credentials combined in a single card to optimize height -->
+        <!-- Left Panel: Product Overview & Privacy Focus -->
         <div class="about-left-panel">
           <div class="glass-card main-summary">
             <div class="card-glow-border"></div>
             
+            <h3 class="panel-section-title" style="margin-bottom: 8px;">Mục Tiêu Bảo Vệ</h3>
             <p class="summary-paragraph">
-              KiGuard là lá chắn bảo mật hoạt động trực tiếp tại thiết bị cục bộ. 
-              Hệ thống tự động phát hiện, ngăn chặn mối đe dọa trực tuyến và bảo vệ dữ liệu nhạy cảm theo thời gian thực mà không thu thập lịch sử duyệt web của bạn.
+              <strong>KiGuard</strong> là giải pháp bảo vệ quyền riêng tư và an toàn thông tin cá nhân hàng đầu khi bạn duyệt web hằng ngày.
             </p>
-            
-            <div class="metadata-section">
-              <h4 class="tech-label">System Metadata</h4>
-              <div class="metadata-rows">
-                <div class="metadata-row">
-                  <span class="meta-lbl">Engine:</span>
-                  <span class="meta-val">Vite / Vue 3 / MV3</span>
-                </div>
-                <div class="metadata-row">
-                  <span class="meta-lbl">Developer:</span>
-                  <a href="https://blog.kimidev.net" target="_blank" class="meta-val-link">Kimidev</a>
-                </div>
-                <div class="metadata-row">
-                  <span class="meta-lbl">Official Site:</span>
-                  <a href="https://blog.kimidev.net" target="_blank" class="meta-val-link">blog.kimidev.net</a>
-                </div>
-                <div class="metadata-row">
-                  <span class="meta-lbl">License:</span>
-                  <span class="meta-val-highlight">MIT License</span>
-                </div>
-              </div>
-            </div>
-            
-            <div class="copyright-text">
-              © 2026 KiGuard Project. Crafted with care.
+            <p class="summary-paragraph">
+              Tiện ích hoạt động xử lý trực tiếp tại thiết bị cục bộ, tự động ngăn chặn nguy cơ lừa đảo trực tuyến, làm mờ dữ liệu cá nhân nhạy cảm, chặn sạch quảng cáo phiền phức và ngăn các công ty quảng cáo theo dõi hành vi của bạn.
+            </p>
+
+            <div class="privacy-note-box">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#50cd89" stroke-width="2" width="16" height="16" style="flex-shrink: 0; margin-top: 1px;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <path d="M9 12l2 2 4-4"></path>
+              </svg>
+              <span>100% Bảo mật dữ liệu nội bộ. Không thu thập, lưu trữ hay chia sẻ lịch sử duyệt web của bạn ra máy chủ bên ngoài.</span>
             </div>
           </div>
         </div>
 
-        <!-- Right Panel: Key Features Interactive List -->
+        <!-- Right Panel: Key Features List -->
         <div class="about-right-panel">
-          <h3 class="panel-section-title">Core Security Shields</h3>
+          <h3 class="panel-section-title">Danh Sách Tính Năng Bảo Vệ</h3>
           <div class="features-scrollable-area">
             
-            <!-- Shield 1 -->
+            <!-- Feature 1 -->
             <div class="shield-card-premium block-glow-blue">
               <div class="shield-card-border"></div>
               <div class="shield-icon-wrapper b-blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
               </div>
               <div class="shield-content">
                 <div class="shield-title-row">
-                  <span class="shield-title">Web Threat Prevention</span>
-                  <span class="shield-status-active">ONLINE</span>
+                  <span class="shield-title">Lá Chắn Chống Lừa Đảo (Web Shield)</span>
                 </div>
-                <p class="shield-desc">Chặn đứng các trang web lừa đảo, tấn công giả mạo (phishing) dựa trên cơ sở dữ liệu thời gian thực.</p>
+                <p class="shield-desc">Tự động phát hiện và cảnh báo chặn truy cập các trang web giả mạo ngân hàng, độc hại, lừa đảo trực tuyến.</p>
               </div>
             </div>
 
-            <!-- Shield 2 -->
+            <!-- Feature 2 -->
             <div class="shield-card-premium block-glow-teal">
               <div class="shield-card-border"></div>
               <div class="shield-icon-wrapper b-teal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                </svg>
+              </div>
+              <div class="shield-content">
+                <div class="shield-title-row">
+                  <span class="shield-title">Bộ Lọc Quảng Cáo (Adblocker)</span>
+                </div>
+                <p class="shield-desc">Chặn sạch quảng cáo phiền phức, banner, video ads và cửa sổ tự động mở (popups).</p>
+              </div>
+            </div>
+
+            <!-- Feature 3 -->
+            <div class="shield-card-premium block-glow-indigo">
+              <div class="shield-card-border"></div>
+              <div class="shield-icon-wrapper b-indigo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                   <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                   <line x1="9" y1="9" x2="15" y2="15"></line>
                   <line x1="15" y1="9" x2="9" y2="15"></line>
@@ -109,36 +108,17 @@
               </div>
               <div class="shield-content">
                 <div class="shield-title-row">
-                  <span class="shield-title">PII Data Blur Masking</span>
-                  <span class="shield-status-active">ONLINE</span>
+                  <span class="shield-title">Lá Chắn Che Mờ Dữ Liệu (DataBlur)</span>
                 </div>
-                <p class="shield-desc">Tự động quét và làm mờ Email, SĐT, số tài khoản trên màn hình bằng công nghệ làm mờ thông minh.</p>
+                <p class="shield-desc">Tự động nhận diện và làm mờ Email, SĐT, Thẻ tín dụng, Mật khẩu hiển thị trên trang web tránh lộ thông tin.</p>
               </div>
             </div>
 
-            <!-- Shield 3 -->
-            <div class="shield-card-premium block-glow-indigo">
-              <div class="shield-card-border"></div>
-              <div class="shield-icon-wrapper b-indigo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
-                  <path d="M12 6v6l4 2"></path>
-                </svg>
-              </div>
-              <div class="shield-content">
-                <div class="shield-title-row">
-                  <span class="shield-title">Anti-Fingerprint Spoofing</span>
-                  <span class="shield-status-active">ONLINE</span>
-                </div>
-                <p class="shield-desc">Bảo vệ dấu vân tay Canvas, tạo nhiễu ngẫu nhiên ngăn các bên thứ ba theo dõi hành vi trực tuyến.</p>
-              </div>
-            </div>
-
-            <!-- Shield 4 -->
+            <!-- Feature 4 -->
             <div class="shield-card-premium block-glow-danger">
               <div class="shield-card-border"></div>
               <div class="shield-icon-wrapper b-danger">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
                   <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
                   <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
                   <line x1="6" y1="6" x2="6" y2="6.01"></line>
@@ -147,29 +127,44 @@
               </div>
               <div class="shield-content">
                 <div class="shield-title-row">
-                  <span class="shield-title">Advanced Proxy Routing</span>
-                  <span class="shield-status-active">ONLINE</span>
+                  <span class="shield-title">Kết Nối Proxy & Fake GPS Vị Trí</span>
                 </div>
-                <p class="shield-desc">Tự động cấu hình giả lập GPS, Timezone, User-Agent đồng bộ hoàn hảo với máy chủ proxy.</p>
+                <p class="shield-desc">Tạo kết nối Proxy ẩn danh mã hóa, đồng thời tự động giả lập GPS, Timezone và User-Agent đồng bộ theo IP Proxy.</p>
               </div>
             </div>
 
-            <!-- Shield 5 -->
-            <div class="shield-card-premium block-glow-warning">
+
+            <!-- Feature 6 -->
+            <div class="shield-card-premium block-glow-blue">
               <div class="shield-card-border"></div>
-              <div class="shield-icon-wrapper b-warning">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="16" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              <div class="shield-icon-wrapper b-blue">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                  <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
+                  <path d="M12 6v6l4 2"></path>
                 </svg>
               </div>
               <div class="shield-content">
                 <div class="shield-title-row">
-                  <span class="shield-title">MFA Vault (2FA)</span>
-                  <span class="shield-status-active">ONLINE</span>
+                  <span class="shield-title">Vệ Sĩ Tự Động Xóa Cookie</span>
                 </div>
-                <p class="shield-desc">Quản lý mã OTP xác thực 2 bước an toàn, mã hóa đầu cuối với khóa bảo mật PIN chủ cá nhân.</p>
+                <p class="shield-desc">Tự động dọn dẹp Cookie và bộ nhớ đệm khi đóng tab hoặc đổi trang web để ngăn chặn bám vết hành vi.</p>
+              </div>
+            </div>
+
+            <!-- Feature 7 -->
+            <div class="shield-card-premium block-glow-indigo">
+              <div class="shield-card-border"></div>
+              <div class="shield-icon-wrapper b-indigo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <div class="shield-content">
+                <div class="shield-title-row">
+                  <span class="shield-title">Két Sắt Mã Hóa 2FA Vault</span>
+                </div>
+                <p class="shield-desc">Lưu trữ và quản lý mã OTP xác thực 2 lớp an toàn, mã hóa đầu cuối với PIN chủ cá nhân bảo vệ tối đa.</p>
               </div>
             </div>
 
@@ -439,75 +434,19 @@ export default {
   margin: 0 0 14px 0;
 }
 
-.metadata-section {
-  border-top: 1px dashed rgba(255, 255, 255, 0.08);
-  padding-top: 12px;
-  margin-top: 2px;
-}
-
-.tech-label {
-  font-size: 9.5px;
-  font-weight: 800;
-  color: #009ef7;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  margin: 0 0 8px 0;
-}
-
-.metadata-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.metadata-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 10.5px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.02);
-  padding-bottom: 4px;
-}
-
-.meta-lbl {
-  color: #5e6278;
-  font-weight: 500;
-}
-
-.meta-val-link {
-  color: #009ef7;
-  text-decoration: none;
-  font-weight: 600;
-  transition: color 0.15s;
-}
-
-.meta-val-link:hover {
-  color: #187de4;
-  text-decoration: underline;
-}
-
-.meta-val-highlight {
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 9.5px;
-  background-color: rgba(255, 255, 255, 0.05);
-  padding: 1px 5px;
-  border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.meta-val {
-  color: #ffffff;
-  font-weight: 600;
-}
-
-.copyright-text {
-  font-size: 8.5px;
-  color: #5e6278;
-  text-align: center;
-  line-height: 1.4;
+.privacy-note-box {
   margin-top: auto;
-  padding-top: 10px;
+  background: rgba(80, 205, 137, 0.06);
+  border: 1px solid rgba(80, 205, 137, 0.2);
+  border-radius: 8px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 10px;
+  line-height: 1.45;
+  color: #50cd89;
+  font-weight: 500;
 }
 
 /* Right Panel: Feature list styling */
@@ -538,7 +477,8 @@ export default {
 }
 
 .features-scrollable-area {
-  flex-grow: 1;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -569,13 +509,15 @@ export default {
   position: relative;
   display: flex;
   gap: 10px;
-  background: rgba(30, 30, 45, 0.25);
-  border: 1px solid rgba(255, 255, 255, 0.04);
+  background: rgba(30, 30, 45, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   border-radius: 8px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   align-items: flex-start;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
   overflow: hidden;
+  flex-shrink: 0; /* CRITICAL: Prevent cards from shrinking/collapsing into each other */
+  box-sizing: border-box;
 }
 
 .shield-card-border {
@@ -583,14 +525,14 @@ export default {
   left: 0;
   top: 0;
   bottom: 0;
-  width: 2px;
+  width: 3px;
   background-color: transparent;
   transition: background-color 0.3s;
 }
 
 .shield-card-premium:hover {
   transform: translateX(4px);
-  background: rgba(30, 30, 45, 0.5);
+  background: rgba(30, 30, 45, 0.6);
 }
 
 /* Color codes */
@@ -606,26 +548,28 @@ export default {
 .block-glow-warning:hover .shield-card-border { background-color: #f1bc19; }
 
 .shield-icon-wrapper {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
   border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  margin-top: 1px;
 }
 
-.shield-icon-wrapper.b-blue { background-color: rgba(0, 158, 247, 0.08); color: #009ef7; }
-.shield-icon-wrapper.b-teal { background-color: rgba(80, 205, 137, 0.08); color: #50cd89; }
-.shield-icon-wrapper.b-indigo { background-color: rgba(137, 80, 252, 0.08); color: #8950fc; }
-.shield-icon-wrapper.b-danger { background-color: rgba(241, 65, 108, 0.08); color: #f1416c; }
-.shield-icon-wrapper.b-warning { background-color: rgba(241, 188, 25, 0.08); color: #f1bc19; }
+.shield-icon-wrapper.b-blue { background-color: rgba(0, 158, 247, 0.1); color: #009ef7; }
+.shield-icon-wrapper.b-teal { background-color: rgba(80, 205, 137, 0.1); color: #50cd89; }
+.shield-icon-wrapper.b-indigo { background-color: rgba(137, 80, 252, 0.1); color: #8950fc; }
+.shield-icon-wrapper.b-danger { background-color: rgba(241, 65, 108, 0.1); color: #f1416c; }
+.shield-icon-wrapper.b-warning { background-color: rgba(241, 188, 25, 0.1); color: #f1bc19; }
 
 .shield-content {
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  flex-grow: 1;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
 }
 
 .shield-title-row {
@@ -636,9 +580,10 @@ export default {
 }
 
 .shield-title {
-  font-size: 10.5px;
+  font-size: 11px;
   font-weight: 700;
   color: #ffffff;
+  line-height: 1.3;
 }
 
 .shield-status-active {
@@ -652,10 +597,11 @@ export default {
 }
 
 .shield-desc {
-  font-size: 9px;
-  line-height: 1.35;
+  font-size: 9.5px;
+  line-height: 1.4;
   color: #a1a5b7;
   margin: 0;
+  word-break: break-word;
 }
 
 @keyframes fadeIn {

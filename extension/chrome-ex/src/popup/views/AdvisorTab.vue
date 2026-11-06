@@ -86,7 +86,6 @@ export default {
     const { t } = useI18n();
     const activeSubTab = ref('explore');
 
-    // Guide configurations matching original backup popup.html
     const guides = computed(() => [
       { brand: 'Amazon', action: t('advisor.amazon_action'), time: t('advisor.time_2m'), isCompleted: false, url: 'https://www.amazon.com/gp/history' },
       { brand: 'Facebook', action: t('advisor.facebook_action'), time: t('advisor.time_5m'), isCompleted: false, url: 'https://www.facebook.com/settings?tab=privacy' },
@@ -102,7 +101,6 @@ export default {
     const completedGuides = computed(() => guides.value.filter(g => g.isCompleted));
 
     const getIconPath = (brand) => {
-      // Maps to matching assets/social/*.svg names
       let name = brand;
       if (brand === 'X') name = 'Twitter';
       return chrome.runtime.getURL(`assets/social/${name}.svg`);

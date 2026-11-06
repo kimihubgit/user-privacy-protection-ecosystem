@@ -7,7 +7,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterModerator, setFilterModerator] = useState('all');
   const [filterAction, setFilterAction] = useState('all');
-  
+
   // Selected detail modal state
   const [selectedRecord, setSelectedRecord] = useState(null);
 
@@ -85,7 +85,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
     .filter(log => log.action.includes('Duyệt') || log.action.includes('Từ chối') || log.action.includes('AI'))
     .map(log => {
       const isApprove = log.action.toLowerCase().includes('duyệt') || log.action.toLowerCase().includes('đẩy');
-      
+
       // Determine type
       let type = 'url';
       if (log.target.match(/^\d{9,14}$/)) type = 'bank_account';
@@ -94,7 +94,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
       return {
         id: log.id,
         operator: log.operator,
-        operatorName: log.operator === 'admin@chongluadao.vn' ? 'Quản trị viên (Admin)' : log.operator.split('@')[0],
+        operatorName: log.operator === 'admin@shield.vn' ? 'Quản trị viên (Admin)' : log.operator.split('@')[0],
         action: isApprove ? 'Duyệt chặn (Approve)' : 'Từ chối (Reject)',
         target: log.target,
         type: type,
@@ -116,7 +116,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
   const filteredHistory = combinedHistory.filter(record => {
     // Moderator filter
     if (filterModerator !== 'all') {
-      if (filterModerator === 'admin' && record.operator !== 'admin@chongluadao.vn') return false;
+      if (filterModerator === 'admin' && record.operator !== 'admin@shield.vn') return false;
       if (filterModerator === 'hoang' && record.operator !== 'hoang.nguyen@protect.vn') return false;
       if (filterModerator === 'mai' && record.operator !== 'mai.tran@protect.vn') return false;
       if (filterModerator === 'khoa' && record.operator !== 'khoa.vu@protect.vn') return false;
@@ -133,8 +133,8 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return record.target.toLowerCase().includes(query) ||
-             record.operatorName.toLowerCase().includes(query) ||
-             record.details.toLowerCase().includes(query);
+        record.operatorName.toLowerCase().includes(query) ||
+        record.details.toLowerCase().includes(query);
     }
 
     return true;
@@ -154,7 +154,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
       <div className="card">
         {/* Card header */}
         <div className="card-header border-0 pt-6" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', borderBottom: 'none' }}>
-          
+
           <div className="card-title">
             <h3 className="card-label fw-bold fs-3 mb-1" style={{ color: '#181c32', fontSize: '1.15rem', display: 'flex', alignItems: 'center', gap: '0.4rem', margin: 0 }}>
               Lịch sử kiểm duyệt viên (Moderator Audit Trail)
@@ -164,7 +164,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
           {/* Filters and search toolbar */}
           <div className="card-toolbar">
             <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-              
+
               {/* Filter Moderator */}
               <select
                 className="form-select form-select-solid w-180px"
@@ -234,7 +234,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
                 ) : (
                   paginatedHistory.map((record, index) => (
                     <tr key={record.id} className={index % 2 === 0 ? 'odd' : 'even'}>
-                      
+
                       {/* Operator Name */}
                       <td style={{ display: 'flex', alignItems: 'center', borderBottom: 'none' }}>
                         <div
@@ -243,7 +243,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
                             width: '35px',
                             height: '35px',
                             borderRadius: '50%',
-                            backgroundColor: record.operator === 'admin@chongluadao.vn' ? '#009ef7' : '#7239ea',
+                            backgroundColor: record.operator === 'admin@shield.vn' ? '#009ef7' : '#7239ea',
                             color: '#fff',
                             display: 'flex',
                             alignItems: 'center',
@@ -367,7 +367,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
       {selectedRecord && (
         <div className="signature-modal-overlay">
           <div className="signature-modal" style={{ maxWidth: '600px', width: '90%', textAlign: 'left' }}>
-            
+
             {/* Modal Header */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f3f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
               <h3 className="signature-modal-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#181c32' }}>
@@ -381,7 +381,7 @@ export default function ModeratorHistoryTab({ auditLogs, addToast }) {
 
             {/* Modal Body */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-              
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                 <div>
                   <span className="profile-field-label">Kiểm duyệt viên thực hiện</span>

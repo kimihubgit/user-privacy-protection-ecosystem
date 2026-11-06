@@ -31,7 +31,7 @@ export default function AdminLogin({ addToast }) {
     if (import.meta.env.DEV && username.trim().toLowerCase() === 'admin' && password.trim() === 'admin123') {
       localStorage.setItem('token', 'mock-admin-token-' + Date.now());
       localStorage.setItem('userName', 'Quản trị viên');
-      localStorage.setItem('userEmail', 'admin@chongluadao.vn');
+      localStorage.setItem('userEmail', 'admin@shield.vn');
       window.dispatchEvent(new Event('auth-change'));
 
       addToast('Đăng nhập Quản trị viên thành công! (DEV Mode)', 'success');
@@ -62,7 +62,7 @@ export default function AdminLogin({ addToast }) {
           <h1 className="admin-login-title">
             COMMAND <span className="gradient-text-danger">CENTER</span>
           </h1>
-          <p className="admin-login-subtitle">Hệ thống quản trị an ninh mạng Chống Lừa Đảo</p>
+          <p className="admin-login-subtitle">Hệ thống quản trị an ninh mạng S.H.I.E.L.D</p>
         </div>
 
         {/* Login Panel */}

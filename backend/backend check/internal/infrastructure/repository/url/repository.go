@@ -28,8 +28,11 @@ type Repository interface {
 	InsertCheckLogsBatch(ctx context.Context, logs []*models.CheckLog) error
 	GetStats(ctx context.Context) (*response.StatsResponse, error)
 
+	UpdateURL(ctx context.Context, id primitive.ObjectID, scamURL *models.ScamURL) error
+
 	// Allowlist methods
 	InsertAllowURL(ctx context.Context, allowURL *models.AllowURL) error
+	UpdateAllowURL(ctx context.Context, id primitive.ObjectID, allowURL *models.AllowURL) error
 	DeleteAllowURL(ctx context.Context, id primitive.ObjectID) error
 	GetAllowURLByID(ctx context.Context, id primitive.ObjectID) (*models.AllowURL, error)
 	ListAllowURLs(ctx context.Context, page, limit int64) ([]models.AllowURL, int64, error)
@@ -449,4 +452,44 @@ func (r *mongoRepository) ListAllowURLs(ctx context.Context, page, limit int64) 
 	}
 
 	return urls, total, nil
+}
+
+func (r *mongoRepository) UpdateURL(ctx context.Context, id primitive.ObjectID, scamURL *models.ScamURL) error {
+	update := bson.M{
+		"$set": bson.M{
+			"url":         scamURL.URL,
+			"domain":      scamURL.Domain,
+			"category":    scamURL.Category,
+			"status":      scamURL.Status,
+			"description": scamURL.Description,
+			"updated_at":  time.Now(),
+		},
+	}
+	res, err := r.urlsCollection().UpdateOne(ctx, bson.M{"_id": id}, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+	return nil
+}
+
+func (r *mongoRepository) UpdateAllowURL(ctx context.Context, id primitive.ObjectID, allowURL *models.AllowURL) error {
+	update := bson.M{
+		"$set": bson.M{
+			"url":         allowURL.URL,
+			"domain":      allowURL.Domain,
+			"description": allowURL.Description,
+			"updated_at":  time.Now(),
+		},
+	}
+	res, err := r.allowlistCollection().UpdateOne(ctx, bson.M{"_id": id}, update)
+	if err != nil {
+		return err
+	}
+	if res.MatchedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+	return nil
 }

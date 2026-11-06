@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { computed, ref, onMounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from '../composables/useI18n.js';
 
 export default {
@@ -34,15 +34,29 @@ export default {
     const { t } = useI18n();
     const adActive = ref(true);
 
-    onMounted(() => {
+    const loadState = () => {
       chrome.storage.local.get(['adActive'], (res) => {
         adActive.value = res.adActive !== false;
       });
+    };
+
+    const handleStorageChange = (changes, area) => {
+      if (area === 'local' && changes.adActive) {
+        adActive.value = changes.adActive.newValue !== false;
+      }
+    };
+
+    onMounted(() => {
+      loadState();
+      chrome.storage.onChanged.addListener(handleStorageChange);
+    });
+
+    onUnmounted(() => {
+      chrome.storage.onChanged.removeListener(handleStorageChange);
     });
 
     const updateAdStorage = () => {
       chrome.storage.local.set({ adActive: adActive.value });
-      // Dispatch an event to update counts
       window.dispatchEvent(new Event('adActiveChanged'));
     };
 

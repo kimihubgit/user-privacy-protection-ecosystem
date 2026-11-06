@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { ChevronRight, ChevronLeft, CheckCircle2, User, Mail, Loader2, ImagePlus, X, FileImage, Sparkles, Phone, MessageSquare, PenTool, Trash2 } from 'lucide-react';
 import { api } from '../../../lib/api';
 
@@ -63,6 +64,18 @@ export default function ReportForm({ addToast, setActiveTab, onLoginToggle }) {
       window.removeEventListener('auth-change', handleAuthChange);
     };
   }, []);
+
+  const location = useLocation();
+
+  // Pre-fill target and jump to step 3 when navigating from ScanDetail
+  useEffect(() => {
+    if (location.state?.initialTarget || location.state?.target) {
+      const targetVal = location.state.initialTarget || location.state.target;
+      setReportUrl(targetVal);
+      setReportType('url');
+      setStep(3);
+    }
+  }, [location.state]);
 
   // Close country code dropdown on outside click
   useEffect(() => {

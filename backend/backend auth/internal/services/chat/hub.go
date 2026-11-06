@@ -141,25 +141,24 @@ func (h *Hub) isModeratorOnline(username string) bool {
 	return false
 }
 
-// sendToModerator sends the message payload to a specific moderator client.
+// sendToModerator sends the message payload to all active online moderator clients.
 func (h *Hub) sendToModerator(username string, message []byte) {
 	for client := range h.clients {
-		if (client.Role == "moderator" || client.Role == "admin" || client.Role == "super_admin") && client.Username == username {
+		if client.Role == "moderator" || client.Role == "admin" || client.Role == "super_admin" {
 			select {
 			case client.Send <- message:
 			default:
 				close(client.Send)
 				delete(h.clients, client)
 			}
-			return
 		}
 	}
 }
 
-// sendToGuest sends the message payload to the specific guest client.
+// sendToGuest sends the message payload to the specific guest or user client.
 func (h *Hub) sendToGuest(sessionID string, message []byte) {
 	for client := range h.clients {
-		if client.Role == "guest" && client.SessionID == sessionID {
+		if (client.Role == "guest" || client.Role == "user") && client.SessionID == sessionID {
 			select {
 			case client.Send <- message:
 			default:

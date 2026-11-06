@@ -5,7 +5,7 @@
         <h2 class="title" style="margin: 0;">{{ t('stats.title') || 'Thống Kê Hoạt Động' }}</h2>
         <p class="subtitle" style="margin: 2px 0 0 0;">{{ t('stats.subtitle') || 'Theo dõi thời gian sử dụng mạng xã hội và hoạt động của lá chắn bảo mật.' }}</p>
       </div>
-      <button v-if="historyList.length > 0 || sortedTopSites.length > 0" @click="clearHistory" class="clear-btn" :title="t('stats.btn_clear') || 'Xóa lịch sử'">
+      <button v-if="sortedTopSites.length > 0" @click="clearHistory" class="clear-btn" :title="t('stats.btn_clear') || 'Xóa lịch sử'">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12" style="margin-right: 4px;">
           <polyline points="3 6 5 6 21 6"></polyline>
           <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
@@ -25,7 +25,7 @@
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
             </div>
-            <span style="font-weight: 700; font-size: 13px; color: #ffffff;">{{ t('stats.fb_screentime') || 'Thời gian lướt Facebook hôm nay' }}</span>
+            <span style="font-weight: 700; font-size: 13px; color: var(--text-title);">{{ t('stats.fb_screentime') || 'Thời gian lướt Facebook hôm nay' }}</span>
           </div>
           <div class="time-formatted">{{ formatTime(fbSeconds) }}</div>
           <div style="font-size: 10px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; margin-top: 4px;">
@@ -201,35 +201,6 @@
         </div>
       </div>
 
-      <!-- Section 4: History Activity Log -->
-      <div class="history-section">
-        <div class="history-header">
-          <span>{{ t('stats.history_title') || 'Nhật ký hoạt động bảo vệ' }}</span>
-          <span class="badge badge-light-blue" style="font-size: 9px; font-weight: 700;">{{ historyList.length }}</span>
-        </div>
-        
-        <div class="history-list">
-          <div v-if="historyList.length === 0" class="empty-state" style="padding: 24px 12px;">
-            {{ t('stats.history_empty') || 'Chưa ghi nhận lịch sử duyệt web.' }}
-          </div>
-          <div 
-            v-else
-            v-for="(item, idx) in historyList" 
-            :key="idx" 
-            class="history-item"
-          >
-            <div class="history-left">
-              <span class="history-domain" :title="item.url">{{ item.domain }}</span>
-              <span class="history-time">{{ formatTimestamp(item.timestamp) }}</span>
-            </div>
-            <span 
-              :class="['badge-status', getStatusClass(item.status)]"
-            >
-              {{ getStatusLabel(item.status) }}
-            </span>
-          </div>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -251,7 +222,6 @@ export default {
       scamChecked: 0,
       scamBlocked: 0
     });
-    const historyList = ref([]);
     const topSitesData = ref({});
 
     const loadStats = () => {
@@ -264,7 +234,6 @@ export default {
         'stats_total_trackers_blocked',
         'stats_total_scam_checked',
         'stats_total_scam_blocked',
-        'navHistory',
         'topVisitedSites'
       ], (res) => {
         if (res.fb_timer_date === todayStr) {
@@ -279,8 +248,7 @@ export default {
         stats.value.scamChecked = res.stats_total_scam_checked || 0;
         stats.value.scamBlocked = res.stats_total_scam_blocked || 0;
 
-        // 3. Fetch history list & top sites
-        historyList.value = res.navHistory || [];
+        // 3. Fetch top sites
         topSitesData.value = res.topVisitedSites || {};
       });
     };
@@ -385,33 +353,6 @@ export default {
       return `${secs} giây`;
     };
 
-    const formatTimestamp = (ts) => {
-      if (!ts) return '';
-      const date = new Date(ts);
-      const hrs = String(date.getHours()).padStart(2, '0');
-      const mins = String(date.getMinutes()).padStart(2, '0');
-      const secs = String(date.getSeconds()).padStart(2, '0');
-      return `${hrs}:${mins}:${secs}`;
-    };
-
-    const getStatusClass = (status) => {
-      if (status === 'unsafe') return 'status-danger';
-      if (status === 'not_found') return 'status-warning';
-      return 'status-safe';
-    };
-
-    const getStatusLabel = (status) => {
-      if (status === 'unsafe') return t('dashboard.reputation_danger') || 'Nguy hiểm';
-      if (status === 'not_found') return t('dashboard.reputation_not_found') || 'Chưa đánh giá';
-      return t('dashboard.reputation_safe') || 'An toàn';
-    };
-
-    const getStatusColor = (status) => {
-      if (status === 'unsafe') return 'var(--danger)';
-      if (status === 'not_found') return 'var(--warning)';
-      return 'var(--accent-teal)';
-    };
-
     const getStatusBarGradient = (status) => {
       if (status === 'unsafe') return 'linear-gradient(to top, rgba(241, 65, 108, 0.15), var(--danger))';
       if (status === 'not_found') return 'linear-gradient(to top, rgba(241, 188, 25, 0.15), var(--warning))';
@@ -424,7 +365,6 @@ export default {
 
     const clearHistory = () => {
       chrome.storage.local.set({ navHistory: [], topVisitedSites: {} }, () => {
-        historyList.value = [];
         topSitesData.value = {};
         showToast(t('stats.toast_clear_success') || 'Đã xóa lịch sử thành công!');
       });
@@ -459,17 +399,12 @@ export default {
       t,
       fbSeconds,
       stats,
-      historyList,
       sortedTopSites,
       maxVisitCount,
       chartData,
       ringOffset,
       ringColor,
       formatTime,
-      formatTimestamp,
-      getStatusClass,
-      getStatusLabel,
-      getStatusColor,
       getStatusBarGradient,
       handleFaviconError,
       clearHistory
@@ -547,10 +482,10 @@ export default {
 }
 
 .time-formatted {
-  font-family: 'Outfit', 'Poppins', sans-serif;
+  font-family: 'Outfit', 'Inter', sans-serif;
   font-size: 26px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-title);
   line-height: 1.2;
   margin-top: 2px;
   letter-spacing: -0.5px;
@@ -605,7 +540,7 @@ export default {
   font-family: 'Outfit', sans-serif;
   font-size: 14px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-title);
 }
 
 /* Visual Bar Chart Card */
@@ -685,7 +620,7 @@ export default {
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%) translateY(-6px);
-  background-color: rgba(20, 20, 35, 0.96);
+  background-color: var(--bg-card);
   border: 1px solid var(--border-light);
   padding: 5px 8px;
   border-radius: 6px;
@@ -697,7 +632,7 @@ export default {
   transition: opacity 0.15s ease-in-out, transform 0.15s ease-in-out;
   white-space: nowrap;
   z-index: 100;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
 }
@@ -715,14 +650,14 @@ export default {
   transform: translateX(-50%);
   border-width: 4px;
   border-style: solid;
-  border-color: rgba(20, 20, 35, 0.96) transparent transparent transparent;
+  border-color: var(--bg-card) transparent transparent transparent;
 }
 
 .tooltip-value {
   font-family: 'Outfit', sans-serif;
   font-size: 13px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-title);
   line-height: 1.1;
 }
 
@@ -841,7 +776,7 @@ export default {
   font-family: 'Outfit', sans-serif;
   font-size: 18px;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-title);
   line-height: 1.1;
 }
 
@@ -849,107 +784,6 @@ export default {
   font-size: 9.5px;
   color: var(--text-desc);
   font-weight: 600;
-}
-
-/* History logs */
-.history-section {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-  border: 1px solid var(--border-light);
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.01);
-  overflow: hidden;
-  flex-shrink: 0;
-}
-
-.history-header {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border-light);
-  background-color: rgba(255, 255, 255, 0.02);
-  font-size: 10px;
-  font-weight: 800;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  letter-spacing: 0.5px;
-}
-
-.history-list {
-  overflow-y: auto;
-  max-height: 120px;
-}
-
-.history-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 8px 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-  transition: background-color 0.15s;
-}
-
-.history-item:last-child {
-  border-bottom: none;
-}
-
-.history-item:hover {
-  background-color: rgba(255, 255, 255, 0.03);
-}
-
-.history-left {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow: hidden;
-  text-align: left;
-  flex-grow: 1;
-  padding-right: 8px;
-}
-
-.history-domain {
-  font-size: 11px;
-  font-weight: 700;
-  color: #ffffff;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.history-time {
-  font-size: 9px;
-  color: var(--text-muted);
-  font-family: monospace;
-}
-
-.badge-status {
-  font-size: 8px;
-  font-weight: 800;
-  padding: 2.5px 6px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  flex-shrink: 0;
-}
-
-.status-safe {
-  background-color: rgba(80, 205, 137, 0.08);
-  color: var(--accent-teal);
-  border: 1px solid rgba(80, 205, 137, 0.2);
-}
-
-.status-warning {
-  background-color: rgba(241, 188, 25, 0.08);
-  color: var(--warning);
-  border: 1px solid rgba(241, 188, 25, 0.2);
-}
-
-.status-danger {
-  background-color: rgba(241, 65, 108, 0.08);
-  color: var(--danger);
-  border: 1px solid rgba(241, 65, 108, 0.2);
 }
 
 .empty-state {

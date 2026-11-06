@@ -168,6 +168,25 @@ export const reportService = {
     }
   },
 
+  // GET /api/v1/admin/reports/moderator-stats
+  async getAdminModeratorStats(token) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/reports/moderator-stats`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể lấy thống kê hiệu suất kiểm duyệt viên!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('getAdminModeratorStats failed:', e);
+      throw e;
+    }
+  },
+
   // GET /api/v1/admin/reports/:id
   async getAdminReportDetail(token, id) {
     try {
@@ -404,6 +423,88 @@ export const reportService = {
       return await response.json();
     } catch (e) {
       console.error('deleteAdminAllowlist failed:', e);
+      throw e;
+    }
+  },
+
+  // PUT /api/v1/admin/allowlist/:id
+  async updateAdminAllowlist(token, id, payload) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/allowlist/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật tên miền Whitelist trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('updateAdminAllowlist failed:', e);
+      throw e;
+    }
+  },
+
+  // PUT /api/v1/admin/urls/:id
+  async updateAdminScamURL(token, id, payload) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/urls/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật thông tin URL độc hại trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('updateAdminScamURL failed:', e);
+      throw e;
+    }
+  },
+
+  // GET /api/v1/admin/scammers/:id
+  async getAdminScammerDetail(token, id) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/scammers/${id}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể lấy chi tiết đối tượng lừa đảo!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('getAdminScammerDetail failed:', e);
+      throw e;
+    }
+  },
+
+  // PUT /api/v1/admin/scammers/:id
+  async updateAdminScammer(token, id, payload) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/scammers/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật thông tin đối tượng lừa đảo!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('updateAdminScammer failed:', e);
       throw e;
     }
   }

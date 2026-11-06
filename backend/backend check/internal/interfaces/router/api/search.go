@@ -19,6 +19,4 @@ func LoadSearchRouter(apiGroup *gin.RouterGroup, db *database.DB) {
 	apiGroup.GET("/check", middleware.RateLimitMiddleware(10.0, 30.0), searchHandler.Check)
 	apiGroup.POST("/check", middleware.RateLimitMiddleware(10.0, 30.0), searchHandler.Check)
 
-	// WHOIS query route (Rate Limit: 5.0, burst 10.0)
-	apiGroup.GET("/urls/whois", middleware.RateLimitMiddleware(5.0, 10.0), searchHandler.GetWhois)
 }

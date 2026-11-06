@@ -1,0 +1,14 @@
+{
+  "appName": {
+    "message": "KiGuard Detector",
+    "description": "Privacy protection extension name"
+  },
+  "appShortName": {
+    "message": "KiGuard",
+    "description": "Extension short name"
+  },
+  "appDesc": {
+    "message": "Protect yourself from phishing websites, scam links, ad trackers, and data leaks.",
+    "description": "Extension description"
+  }
+}

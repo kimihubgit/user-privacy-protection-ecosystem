@@ -23,12 +23,14 @@ type Service interface {
 	NormalizeURL(rawURL string) (string, string, error)
 	CheckURL(ctx context.Context, rawURL string, ipAddress, userAgent string) (*response.CheckURLResponse, error)
 	AddScamURL(ctx context.Context, scamURL *models.ScamURL) error
+	UpdateScamURL(ctx context.Context, id string, scamURL *models.ScamURL) error
 	ListURLs(ctx context.Context, page, limit int64, status string) ([]models.ScamURL, int64, error)
 	DeleteURL(ctx context.Context, id string) error
 	GetStats(ctx context.Context) (*response.StatsResponse, error)
 
 	// Allowlist methods
 	AddAllowURL(ctx context.Context, allowURL *models.AllowURL) error
+	UpdateAllowURL(ctx context.Context, id string, allowURL *models.AllowURL) error
 	DeleteAllowURL(ctx context.Context, id string) error
 	ListAllowURLs(ctx context.Context, page, limit int64) ([]models.AllowURL, int64, error)
 }
@@ -413,4 +415,105 @@ func (s *service) ListAllowURLs(ctx context.Context, page, limit int64) ([]model
 		limit = 20
 	}
 	return s.repo.ListAllowURLs(ctx, page, limit)
+}
+
+func (s *service) UpdateScamURL(ctx context.Context, id string, scamURL *models.ScamURL) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("invalid ObjectID format")
+	}
+
+	oldEntry, err := s.repo.GetURLByID(ctx, objID)
+	if err != nil {
+		return err
+	}
+	if oldEntry == nil {
+		return errors.New("Scam URL not found")
+	}
+
+	normalized, domain, err := s.NormalizeURL(scamURL.URL)
+	if err != nil {
+		return fmt.Errorf("invalid URL structure: %w", err)
+	}
+
+	scamURL.URL = normalized
+	scamURL.Domain = domain
+
+	// Remove old entry from Cuckoo filter
+	if cuckoo.URLFilter != nil {
+		if oldEntry.URL != "" {
+			_ = cuckoo.URLFilter.Delete([]byte("u:" + oldEntry.URL))
+		}
+		if oldEntry.Domain != "" {
+			_ = cuckoo.URLFilter.Delete([]byte("d:" + oldEntry.Domain))
+		}
+	}
+
+	_ = s.cache.Clear(ctx)
+
+	err = s.repo.UpdateURL(ctx, objID, scamURL)
+	if err != nil {
+		return err
+	}
+
+	// Add updated entry to Cuckoo filter if malicious/suspicious
+	if cuckoo.URLFilter != nil && (scamURL.Status == models.StatusMalicious || scamURL.Status == models.StatusSuspicious) {
+		if scamURL.URL != "" {
+			_ = cuckoo.URLFilter.Add([]byte("u:" + scamURL.URL))
+		}
+		if scamURL.Domain != "" {
+			_ = cuckoo.URLFilter.Add([]byte("d:" + scamURL.Domain))
+		}
+	}
+
+	return nil
+}
+
+func (s *service) UpdateAllowURL(ctx context.Context, id string, allowURL *models.AllowURL) error {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errors.New("invalid ObjectID format")
+	}
+
+	oldEntry, err := s.repo.GetAllowURLByID(ctx, objID)
+	if err != nil {
+		return err
+	}
+	if oldEntry == nil {
+		return errors.New("Allowlist URL not found")
+	}
+
+	normalized, domain, err := s.NormalizeURL(allowURL.URL)
+	if err != nil {
+		return fmt.Errorf("invalid URL structure: %w", err)
+	}
+	allowURL.URL = normalized
+	allowURL.Domain = domain
+
+	// Remove old entry from Cuckoo Allowlist
+	if cuckoo.URLAllowlist != nil {
+		if oldEntry.URL != "" {
+			cuckoo.URLAllowlist.Delete("u:" + oldEntry.URL)
+		}
+		if oldEntry.Domain != "" {
+			cuckoo.URLAllowlist.Delete("d:" + oldEntry.Domain)
+		}
+	}
+
+	err = s.repo.UpdateAllowURL(ctx, objID, allowURL)
+	if err != nil {
+		return err
+	}
+
+	// Add updated entry to Cuckoo Allowlist
+	if cuckoo.URLAllowlist != nil {
+		if allowURL.URL != "" {
+			cuckoo.URLAllowlist.Add("u:" + allowURL.URL)
+		}
+		if allowURL.Domain != "" {
+			cuckoo.URLAllowlist.Add("d:" + allowURL.Domain)
+		}
+	}
+
+	return nil
 }

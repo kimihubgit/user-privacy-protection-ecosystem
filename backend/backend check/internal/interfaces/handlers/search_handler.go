@@ -14,8 +14,6 @@ import (
 	"protect-user-backend/internal/models"
 
 	"github.com/gin-gonic/gin"
-	"github.com/likexian/whois"
-	whoisparser "github.com/likexian/whois-parser"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -456,93 +454,3 @@ func (h *SearchHandler) Check(c *gin.Context) {
 	c.JSON(http.StatusOK, response)
 }
 
-// GetWhois performs a WHOIS query on the target URL or domain and returns structured domain registration details.
-func (h *SearchHandler) GetWhois(c *gin.Context) {
-	target := strings.TrimSpace(c.Query("url"))
-	if target == "" {
-		target = strings.TrimSpace(c.Query("q"))
-	}
-	if target == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "URL/domain query parameter 'url' or 'q' is required"})
-		return
-	}
-
-	domainName := strings.ToLower(target)
-	domainName = strings.TrimPrefix(domainName, "https://")
-	domainName = strings.TrimPrefix(domainName, "http://")
-	domainName = strings.TrimPrefix(domainName, "www.")
-	if idx := strings.Index(domainName, "/"); idx != -1 {
-		domainName = domainName[:idx]
-	}
-	if idx := strings.Index(domainName, ":"); idx != -1 {
-		domainName = domainName[:idx]
-	}
-
-	// 1. Query raw WHOIS info
-	var raw string
-	var err error
-	if strings.HasSuffix(domainName, ".vn") {
-		raw, err = whois.Whois(domainName, "whois.vnnic.vn")
-	} else {
-		raw, err = whois.Whois(domainName)
-	}
-	if err != nil {
-		c.JSON(http.StatusBadGateway, gin.H{"error": fmt.Sprintf("failed to fetch WHOIS info: %v", err)})
-		return
-	}
-
-	// 2. Parse raw WHOIS info
-	result, err := whoisparser.Parse(raw)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": fmt.Sprintf("failed to parse WHOIS data: %v", err)})
-		return
-	}
-
-	// 3. Construct the response structure matching the requested format
-	type DomainInfo struct {
-		DomainChecked    string     `json:"domain_checked"`
-		Registrar        string     `json:"registrar"`
-		Owner            *string    `json:"owner"`
-		RegistrationDate *time.Time `json:"registration_date"`
-		ExpirationDate   *time.Time `json:"expiration_date"`
-		UpdatedDate      *time.Time `json:"updated_date"`
-		Status           []string   `json:"status"`
-		NameServers      []string   `json:"nameservers"`
-	}
-
-	info := DomainInfo{
-		DomainChecked: result.Domain.Domain,
-		Registrar:     result.Registrar.Name,
-		Status:        result.Domain.Status,
-		NameServers:   result.Domain.NameServers,
-	}
-
-	if result.Registrant.Name != "" {
-		info.Owner = &result.Registrant.Name
-	}
-
-	parseTime := func(timeStr string) *time.Time {
-		if timeStr == "" {
-			return nil
-		}
-		formats := []string{
-			time.RFC3339,
-			"2006-01-02T15:04:05Z",
-			"2006-01-02 15:04:05",
-			"2006-01-02T15:04:05.00Z",
-			"2006-01-02T15:04:05",
-		}
-		for _, f := range formats {
-			if t, err := time.Parse(f, timeStr); err == nil {
-				return &t
-			}
-		}
-		return nil
-	}
-
-	info.RegistrationDate = parseTime(result.Domain.CreatedDate)
-	info.ExpirationDate = parseTime(result.Domain.ExpirationDate)
-	info.UpdatedDate = parseTime(result.Domain.UpdatedDate)
-
-	c.JSON(http.StatusOK, info)
-}

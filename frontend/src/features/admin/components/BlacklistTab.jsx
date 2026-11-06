@@ -204,6 +204,101 @@ export default function BlacklistTab({ token, blacklist: initialBlacklist, saveB
     setShowAddModal(false);
   };
 
+  // Edit Blacklist Modal States
+  const [editingItem, setEditingItem] = useState(null);
+  const [editType, setEditType] = useState('url');
+  const [editTarget, setEditTarget] = useState('');
+  const [editCategory, setEditCategory] = useState('phishing');
+  const [editSeverity, setEditSeverity] = useState('danger');
+  const [editDescription, setEditDescription] = useState('');
+  const [editBankName, setEditBankName] = useState('');
+
+  const handleOpenEdit = (item) => {
+    setEditingItem(item);
+    setEditType(item.type || 'url');
+    setEditTarget(item.target || '');
+    setEditCategory(item.category || 'phishing');
+    setEditSeverity(item.severity || 'danger');
+    setEditDescription(item.description || '');
+    setEditBankName(item.bankName || '');
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    if (!editTarget.trim()) {
+      if (addToast) addToast('Vui lòng nhập đối tượng chặn!', 'warning');
+      return;
+    }
+
+    try {
+      if (editType === 'url') {
+        const payloadObj = {
+          url: editTarget.trim(),
+          category: editCategory,
+          description: editDescription.trim(),
+          severity: editSeverity
+        };
+        await api.updateAdminScamURL(token, editingItem.id, payloadObj);
+      } else {
+        const payloadObj = {
+          target: editTarget.trim(),
+          type: editType,
+          category: editCategory,
+          bank_name: editType === 'bank_account' ? editBankName.trim() : undefined,
+          description: editDescription.trim()
+        };
+        await api.updateAdminScammer(token, editingItem.id, payloadObj);
+      }
+
+      addAuditLog('Cập nhật Blacklist', editTarget.trim(), `Sửa thông tin đối tượng chặn. Thể loại: ${editCategory}`);
+      if (addToast) addToast(`Đã cập nhật "${editTarget.trim()}" thành công!`, 'success');
+      fetchBlacklist();
+    } catch (err) {
+      console.error("Failed to update blacklist database, using local fallback.", err);
+      const updated = blacklist.map(i => i.id === editingItem.id ? {
+        ...i,
+        target: editTarget.trim(),
+        type: editType,
+        category: editCategory,
+        severity: editSeverity,
+        description: editDescription.trim(),
+        bankName: editType === 'bank_account' ? editBankName.trim() : undefined
+      } : i);
+      setLocalBlacklist(updated);
+      saveBlacklist(updated);
+      addAuditLog('Cập nhật Blacklist (Offline)', editTarget.trim(), `Sửa thông tin đối tượng chặn (Offline).`);
+      if (addToast) addToast(`Đã cập nhật "${editTarget.trim()}" thành công (Offline)!`, 'success');
+    }
+
+    setEditingItem(null);
+  };
+
+  // Open Detail (fetches fresh detail if scammer)
+  const handleOpenDetail = async (item) => {
+    if (item.type !== 'url') {
+      try {
+        const res = await api.getAdminScammerDetail(token, item.id);
+        if (res && res.data) {
+          const detail = res.data;
+          setSelectedItem({
+            id: detail._id || detail.id || item.id,
+            target: detail.target || item.target,
+            type: detail.type || item.type,
+            category: detail.category || item.category,
+            severity: item.severity,
+            description: detail.description || item.description,
+            bankName: detail.bank_name || item.bankName,
+            date: detail.created_at || item.date
+          });
+          return;
+        }
+      } catch (err) {
+        console.warn("Failed to fetch scammer detail from backend API, using row item.", err);
+      }
+    }
+    setSelectedItem(item);
+  };
+
   // Handle Delete Item
   const handleDeleteItem = async (item) => {
     if (window.confirm(`Bạn có chắc muốn gỡ bỏ "${item.target}" khỏi danh sách đen?`)) {
@@ -376,9 +471,16 @@ export default function BlacklistTab({ token, blacklist: initialBlacklist, saveB
                           <button
                             type="button"
                             className="btn btn-light btn-active-light-primary btn-sm"
-                            onClick={() => setSelectedItem(item)}
+                            onClick={() => handleOpenDetail(item)}
                           >
                             Chi tiết
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-light btn-active-light-primary btn-sm"
+                            onClick={() => handleOpenEdit(item)}
+                          >
+                            Chỉnh sửa
                           </button>
                           <button
                             type="button"
@@ -690,6 +792,138 @@ export default function BlacklistTab({ token, blacklist: initialBlacklist, saveB
               </button>
             </div>
           </div>
+        </div>
+      )}
+      {/* ======================================================== */}
+      {/* EDIT BLACKLIST MODAL */}
+      {/* ======================================================== */}
+      {editingItem && (
+        <div className="signature-modal-overlay">
+          <form className="signature-modal" style={{ maxWidth: '500px', textAlign: 'left' }} onSubmit={handleEditSubmit}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #f1f3f9', paddingBottom: '1rem', marginBottom: '1.5rem' }}>
+              <h3 className="signature-modal-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Plus size={20} color="var(--primary)" />
+                Sửa Thông Tin Blacklist
+              </h3>
+              <button type="button" onClick={() => setEditingItem(null)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: '#a1a5b7' }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+              <div className="profile-field-group">
+                <label className="profile-field-label">Loại đối tượng</label>
+                <div style={{ display: 'flex', gap: '0.5rem', width: '100%' }}>
+                  {['url', 'bank_account', 'phone'].map(t => (
+                    <button
+                      key={t}
+                      type="button"
+                      className="profile-avatar-btn"
+                      onClick={() => setEditType(t)}
+                      style={{
+                        flex: 1,
+                        background: editType === t ? '#f1f8ff' : 'transparent',
+                        color: editType === t ? '#009ef7' : '#5e6278',
+                        borderColor: editType === t ? '#009ef7' : '#eff2f5',
+                        height: '38px',
+                        fontSize: '0.8rem',
+                        fontWeight: 600
+                      }}
+                    >
+                      {t === 'url' ? 'Tên miền' : t === 'bank_account' ? 'Số tài khoản' : 'Số điện thoại'}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="profile-field-group">
+                <label className="profile-field-label">
+                  {editType === 'url' ? 'Địa chỉ tên miền / URL' : editType === 'bank_account' ? 'Số tài khoản ngân hàng' : 'Số điện thoại'}
+                </label>
+                <input
+                  type="text"
+                  className="profile-field-input"
+                  placeholder={editType === 'url' ? 'vietcombank-login.xyz' : editType === 'bank_account' ? '97042293849102' : '0912345678'}
+                  value={editTarget}
+                  onChange={(e) => setEditTarget(e.target.value)}
+                  required
+                />
+              </div>
+
+              {editType === 'bank_account' && (
+                <div className="profile-field-group">
+                  <label className="profile-field-label">Tên Ngân Hàng</label>
+                  <input
+                    type="text"
+                    className="profile-field-input"
+                    placeholder="MB Bank, Techcombank, Vietinbank..."
+                    value={editBankName}
+                    onChange={(e) => setEditBankName(e.target.value)}
+                    required
+                  />
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="profile-field-group">
+                  <label className="profile-field-label">Thể loại vi phạm</label>
+                  <select
+                    className="profile-field-input"
+                    value={editCategory}
+                    onChange={(e) => setEditCategory(e.target.value)}
+                    style={{ background: '#f5f8fa', cursor: 'pointer' }}
+                  >
+                    <option value="phishing">Giả mạo (Phishing)</option>
+                    <option value="malware">Mã độc (Malware)</option>
+                    <option value="financial">Tài chính / Đa cấp</option>
+                    <option value="scam">Lừa đảo (Scam)</option>
+                    <option value="romance">Tình cảm / Mạng XH</option>
+                    <option value="other">Khác</option>
+                  </select>
+                </div>
+
+                <div className="profile-field-group">
+                  <label className="profile-field-label">Mức độ cảnh báo</label>
+                  <select
+                    className="profile-field-input"
+                    value={editSeverity}
+                    onChange={(e) => setEditSeverity(e.target.value)}
+                    style={{ background: '#f5f8fa', cursor: 'pointer' }}
+                  >
+                    <option value="danger">Nguy hiểm (Critical)</option>
+                    <option value="warning">Cảnh báo (Heuristic)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="profile-field-group">
+                <label className="profile-field-label">Mô tả hành vi chi tiết</label>
+                <textarea
+                  className="report-textarea"
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  placeholder="Ghi chú chứng cứ hoặc hành vi vi phạm..."
+                  style={{ height: '90px' }}
+                />
+              </div>
+            </div>
+
+            <div className="signature-actions" style={{ borderTop: '1px solid #f1f3f9', paddingTop: '1.25rem', marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setEditingItem(null)}
+              >
+                Hủy bỏ
+              </button>
+              <button
+                type="submit"
+                className="btn btn-primary"
+              >
+                Lưu Thay Đổi
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

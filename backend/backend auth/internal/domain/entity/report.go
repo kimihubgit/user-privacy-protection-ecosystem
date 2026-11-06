@@ -44,13 +44,15 @@ type RawData struct {
 }
 
 type Report struct {
-	ID          primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
-	Status      string             `json:"status" bson:"status"`
-	Type        int                `json:"type" bson:"type"` // 0: Scammer, 1: URL độc hại
-	Reporter    Reporter           `json:"reporter" bson:"reporter"`
-	Raw         RawData            `json:"raw" bson:"raw"`
-	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
-	ProcessedAt *time.Time         `json:"processed_at,omitempty" bson:"processed_at,omitempty"`
+	ID              primitive.ObjectID `json:"id,omitempty" bson:"_id,omitempty"`
+	Status          string             `json:"status" bson:"status"`
+	Type            int                `json:"type" bson:"type"` // 0: Scammer, 1: URL độc hại
+	Reporter        Reporter           `json:"reporter" bson:"reporter"`
+	Raw             RawData            `json:"raw" bson:"raw"`
+	CreatedAt       time.Time          `json:"created_at" bson:"created_at"`
+	ProcessedAt     *time.Time         `json:"processed_at,omitempty" bson:"processed_at,omitempty"`
+	ReviewedByEmail string             `json:"reviewed_by_email,omitempty" bson:"reviewed_by_email,omitempty"`
+	ReviewedByName  string             `json:"reviewed_by_name,omitempty" bson:"reviewed_by_name,omitempty"`
 }
 
 // Report type constants

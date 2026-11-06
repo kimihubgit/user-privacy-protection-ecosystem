@@ -98,7 +98,7 @@ export default function AdminDashboard({ addToast, onLogout }) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
     return [
-      { id: 'wl1', domain: 'chongluadao.vn', addedBy: 'Hệ thống', date: '2026-06-01T00:00:00Z', notes: 'Trang web chính thức dự án.' },
+      { id: 'wl1', domain: 'shield.vn', addedBy: 'Hệ thống', date: '2026-06-01T00:00:00Z', notes: 'Trang web chính thức dự án.' },
       { id: 'wl2', domain: 'vietcombank.com.vn', addedBy: 'Hệ thống', date: '2026-06-01T00:00:00Z', notes: 'Trang web chính thức ngân hàng Vietcombank.' }
     ];
   });
@@ -125,8 +125,8 @@ export default function AdminDashboard({ addToast, onLogout }) {
       try { return JSON.parse(saved); } catch (e) { console.error(e); }
     }
     return [
-      { id: 'log1', action: 'Phê duyệt Blacklist', target: 'vietcombank-reward-cld.xyz', operator: 'admin@chongluadao.vn', date: '2026-07-08T15:20:00Z', details: 'Duyệt URL lừa đảo trúng thưởng của Vietcombank.' },
-      { id: 'log2', action: 'Thêm Whitelist', target: 'bidv.com.vn', operator: 'admin@chongluadao.vn', date: '2026-07-08T10:45:00Z', details: 'Thêm tên miền ngân hàng chính thống.' }
+      { id: 'log1', action: 'Phê duyệt Blacklist', target: 'vietcombank-reward-cld.xyz', operator: 'admin@shield.vn', date: '2026-07-08T15:20:00Z', details: 'Duyệt URL lừa đảo trúng thưởng của Vietcombank.' },
+      { id: 'log2', action: 'Thêm Whitelist', target: 'bidv.com.vn', operator: 'admin@shield.vn', date: '2026-07-08T10:45:00Z', details: 'Thêm tên miền ngân hàng chính thống.' }
     ];
   });
 
@@ -142,7 +142,7 @@ export default function AdminDashboard({ addToast, onLogout }) {
       id: generateId('log'),
       action,
       target,
-      operator: user.email || 'admin@chongluadao.vn',
+      operator: user.email || 'admin@shield.vn',
       date: new Date().toISOString(),
       details
     };
@@ -510,11 +510,11 @@ export default function AdminDashboard({ addToast, onLogout }) {
       {/* 2. MAIN AREA */}
       <div className="cyber-main-container">
 
-               {/* Tab views layout router logic */}
+        {/* Tab views layout router logic */}
         <Routes>
           <Route path="overview" element={
             <div className="cyber-overview-scroll">
-              <AdminOverviewTab reportsStats={reportsStats} dashboardStats={dashboardStats} />
+              <AdminOverviewTab token={token} reportsStats={reportsStats} dashboardStats={dashboardStats} />
             </div>
           } />
           <Route path="users" element={

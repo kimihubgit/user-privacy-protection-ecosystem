@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"errors"
 	"regexp"
 	"time"
 
@@ -34,6 +35,9 @@ type Service interface {
 	FindUserByID(ctx context.Context, id primitive.ObjectID) (*entity.User, error)
 	ListUsers(ctx context.Context, page, limit int64, search string) ([]entity.User, int64, error)
 	GetStats(ctx context.Context) (total int64, newToday int64, err error)
+	UpdateUserStatus(ctx context.Context, id primitive.ObjectID, status string) error
+	UpdateUserRole(ctx context.Context, id primitive.ObjectID, role string) error
+	DeleteUser(ctx context.Context, id primitive.ObjectID) error
 }
 
 type service struct {
@@ -115,6 +119,34 @@ func (s *service) ListUsers(ctx context.Context, page, limit int64, search strin
 
 func (s *service) GetStats(ctx context.Context) (total int64, newToday int64, err error) {
 	return s.userRepo.GetStats(ctx)
+}
+
+func (s *service) UpdateUserStatus(ctx context.Context, id primitive.ObjectID, status string) error {
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+	user.Status = status
+	return s.userRepo.Update(ctx, user)
+}
+
+func (s *service) UpdateUserRole(ctx context.Context, id primitive.ObjectID, role string) error {
+	user, err := s.userRepo.FindByID(ctx, id)
+	if err != nil {
+		return err
+	}
+	if user == nil {
+		return errors.New("user not found")
+	}
+	user.Role = role
+	return s.userRepo.Update(ctx, user)
+}
+
+func (s *service) DeleteUser(ctx context.Context, id primitive.ObjectID) error {
+	return s.userRepo.Delete(ctx, id)
 }
 
 

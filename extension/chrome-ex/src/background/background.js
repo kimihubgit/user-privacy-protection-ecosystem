@@ -5,13 +5,23 @@ import { NavigationShield } from './services/NavigationShield.js';
 import { TrackingParamsService } from './services/TrackingParamsService.js';
 import { ProxyAuthService } from './services/ProxyAuthService.js';
 import { ProxyAdvancedService } from './services/ProxyAdvancedService.js';
-import { TranslateService } from './services/TranslateService.js';
+import { CookieAutoDeleteService } from './services/CookieAutoDeleteService.js';
+import { WebRtcShieldService } from './services/WebRtcShieldService.js';
+import { ReportService } from './services/ReportService.js';
 import { CONFIG } from '../config.js';
 
 const apiSync = new ApiSync(CONFIG.DEFAULT_API_URL, 60);
 
+// Set uninstall URL to homepage
+if (chrome.runtime.setUninstallURL) {
+    chrome.runtime.setUninstallURL(CONFIG.HOMEPAGE_URL);
+}
+
 // Initialize managers
 chrome.runtime.onInstalled.addListener((details) => {
+    if (chrome.runtime.setUninstallURL) {
+        chrome.runtime.setUninstallURL(CONFIG.HOMEPAGE_URL);
+    }
     apiSync.fetchScamList();
     apiSync.initAlarm();
     chrome.storage.local.set({ tempWhitelist: [] });
@@ -92,6 +102,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 
+    if (request.action === "getActualProxyState") {
+        ProxyAuthService.getActualProxyState()
+            .then(result => sendResponse(result))
+            .catch(err => sendResponse({ enabled: false, mode: 'direct' }));
+        return true;
+    }
+
     if (request.action === "testProxy") {
         console.log("[Background] Received testProxy request:", request.proxyDetails?.host);
         ProxyAuthService.testProxy(request.proxyDetails)
@@ -109,10 +126,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     }
 
     if (request.action === "checkDomain") {
-        NavigationShield.checkDomain(request.domain).then(status => {
+        NavigationShield.checkDomain(request.domain).then(result => {
+            const status = typeof result === 'object' ? result.status : result;
+            const isScam = status === 'unsafe' || status === 'unsafe_homograph';
             sendResponse({ 
                 status, 
-                isScam: status === 'unsafe' 
+                isScam,
+                homograph: (typeof result === 'object' && result.homograph) ? result.homograph : null
             });
         });
         return true;
@@ -121,6 +141,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (request.action === "forceUpdate") {
         apiSync.fetchScamList().then(() => {
             sendResponse({ success: true });
+        });
+        return true;
+    }
+
+    if (request.action === "logPopupBlocked") {
+        chrome.storage.local.get(["stats_popups_blocked", "stats_total_ads_blocked"], (res) => {
+            const count = (res.stats_popups_blocked || 0) + 1;
+            const adsBlocked = (res.stats_total_ads_blocked || 0) + 1;
+            chrome.storage.local.set({ 
+                stats_popups_blocked: count,
+                stats_total_ads_blocked: adsBlocked
+            }, () => {
+                sendResponse({ success: true, count });
+            });
+        });
+        return true;
+    }
+
+    if (request.action === "logClipboardHijackBlocked") {
+        chrome.storage.local.get(["stats_clipboard_hijacks_blocked", "stats_total_scam_blocked"], (res) => {
+            const count = (res.stats_clipboard_hijacks_blocked || 0) + 1;
+            const scamBlocked = (res.stats_total_scam_blocked || 0) + 1;
+            chrome.storage.local.set({ 
+                stats_clipboard_hijacks_blocked: count,
+                stats_total_scam_blocked: scamBlocked
+            }, () => {
+                sendResponse({ success: true, count });
+            });
         });
         return true;
     }
@@ -141,18 +189,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return true;
     }
 
-    if (request && (request.type === "TRANSLATE" || request.action === "translate")) {
-        const payload = request.payload || request;
-        TranslateService.translate(payload)
-            .then(result => {
-                sendResponse({ ok: true, ...result });
-            })
-            .catch(err => {
-                sendResponse({ ok: false, error: err.message });
-            });
+    if (request && request.action === "cad_cleanCurrentSite") {
+        CookieAutoDeleteService.deleteCookiesForDomain(request.domain, "manual")
+            .then(count => sendResponse({ success: true, count }))
+            .catch(err => sendResponse({ success: false, error: err.message }));
+        return true;
+    }
+
+    if (request && request.action === "cad_cleanAllNonWhitelisted") {
+        CookieAutoDeleteService.cleanAllNonWhitelisted("manual")
+            .then(count => sendResponse({ success: true, count }))
+            .catch(err => sendResponse({ success: false, error: err.message }));
+        return true;
+    }
+
+    if (request && request.action === "cad_setupAlarms") {
+        CookieAutoDeleteService.setupAlarms()
+            .then(() => sendResponse({ success: true }))
+            .catch(err => sendResponse({ success: false, error: err.message }));
         return true;
     }
 });
+
+
+// Initialize CookieAutoDeleteService
+CookieAutoDeleteService.init();
 
 // Update icon helper
 function updateExtensionIcon(isEnabled) {
@@ -167,9 +228,28 @@ function updateExtensionIcon(isEnabled) {
     });
 }
 
+function updateRulesForGlobalPower(isEnabled) {
+    updateExtensionIcon(isEnabled);
+    if (chrome.declarativeNetRequest && chrome.declarativeNetRequest.updateEnabledRulesets) {
+        if (!isEnabled) {
+            chrome.declarativeNetRequest.updateEnabledRulesets({
+                disableRulesetIds: ["rules"]
+            }).catch(() => {});
+        } else {
+            chrome.storage.local.get(['adActive'], (res) => {
+                if (res.adActive !== false) {
+                    chrome.declarativeNetRequest.updateEnabledRulesets({
+                        enableRulesetIds: ["rules"]
+                    }).catch(() => {});
+                }
+            });
+        }
+    }
+}
+
 chrome.storage.onChanged.addListener((changes, namespace) => {
     if (changes.globalEnabled) {
-        updateExtensionIcon(changes.globalEnabled.newValue !== false);
+        updateRulesForGlobalPower(changes.globalEnabled.newValue !== false);
     }
     if (changes.gpcEnabled) {
         GpcService.updateScript();
@@ -183,8 +263,9 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 // Sync initial icon, script & rules
-chrome.storage.local.get("globalEnabled", (result) => {
-    updateExtensionIcon(result.globalEnabled !== false);
+chrome.storage.local.get(["globalEnabled", "adActive"], (result) => {
+    const isGlobal = result.globalEnabled !== false;
+    updateRulesForGlobalPower(isGlobal);
     GpcService.updateScript();
     TrackingParamsService.updateRules();
 });
@@ -194,6 +275,12 @@ ProxyAuthService.init();
 
 // Initialize Proxy Advanced Service (Anti-detect, WebRTC, GPS, Timezone)
 ProxyAdvancedService.init();
+
+// Initialize WebRTC IP Leak Protection Service
+WebRtcShieldService.init();
+
+// Initialize Crowdsourced Report Service (Context Menu & API Submissions)
+ReportService.init();
 
 // Lắng nghe sự kiện truyền cookie từ trang web chia sẻ (externally_connectable)
 chrome.runtime.onMessageExternal.addListener((request, sender, sendResponse) => {

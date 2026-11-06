@@ -49,7 +49,7 @@ export default function ProtectBanner({ addToast }) {
       </div>
       <div className="protect-right">
         <p className="protect-desc">
-          ChongLuaDao hoạt động hoàn toàn miễn phí vì cộng đồng. Tiện ích tự động cảnh báo và bảo vệ bạn an toàn trước các cuộc tấn công giả mạo và website lừa đảo.
+          shield hoạt động hoàn toàn miễn phí vì cộng đồng. Tiện ích tự động cảnh báo và bảo vệ bạn an toàn trước các cuộc tấn công giả mạo và website lừa đảo.
         </p>
         <div className="protect-buttons-grid">
           <button
@@ -74,7 +74,7 @@ export default function ProtectBanner({ addToast }) {
             Firefox Extension
           </button>
           <button
-            onClick={() => handleInstallClick('Safari & Khác', 'https://chongluadao.vn')}
+            onClick={() => handleInstallClick('Safari & Khác', 'https://shield.vn')}
             className="grid-btn btn-safari"
           >
             <SafariIcon />

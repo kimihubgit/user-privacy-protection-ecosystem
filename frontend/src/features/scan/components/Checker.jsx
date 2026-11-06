@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link2, Globe, Phone, Mail, Shield, Lock, Key, CheckCircle, Fingerprint, Terminal, ShieldAlert, Cpu, Database, File, Unlock, Bug, Server, Search, Clipboard, X } from 'lucide-react';
+import { Link2, Globe, Phone, Mail, Shield, Lock, Key, CheckCircle, Fingerprint, Terminal, ShieldAlert, Cpu, Database, File, Unlock, Bug, Server, Search, Clipboard, X, Loader2 } from 'lucide-react';
 import './Checker.css';
 import { api } from '../../../lib/api';
 
@@ -39,7 +39,7 @@ const ROTATING_PHRASES = [
 ];
 
 const SAMPLES = {
-  website: ['chongluadao.vn', 'vietcombank-otp-verify.com', 'shopee-khuyenmai-hot.top'],
+  website: ['shield.vn', 'vietcombank-otp-verify.com', 'shopee-khuyenmai-hot.top'],
   ip: ['8.8.8.8', '103.200.23.4', '1.1.1.1'],
   phone: ['0901234567', '0398765432', '+84912345678'],
   email: ['nhanqua-shopee@gmail.com', 'vietcombank-support@hotmail.com']
@@ -101,13 +101,17 @@ export default function Checker({ addToast }) {
     return () => clearTimeout(delayDebounce);
   }, [inputValue]);
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const handleSelectItem = (item) => {
+    setIsSubmitting(true);
     navigate(`/detail/${encodeURIComponent(item.target)}`, { state: { autoScan: true } });
   };
 
   const handleSearchSubmit = (e) => {
     if (e) e.preventDefault();
     if (!inputValue.trim()) return;
+    setIsSubmitting(true);
     navigate(`/detail/${encodeURIComponent(inputValue.trim())}`, { state: { autoScan: true } });
   };
 
@@ -214,7 +218,7 @@ export default function Checker({ addToast }) {
           transform: 'translateY(-50%) rotate(-90deg) translateX(0px)'
         }}
       >
-        • CHONGLUADAO VIETNAM • CYBER SECURITY WARNING • AN TOAN TREN KHONG GIAN MẠNG • CANH BAO SCAM NGUY HIEM • STAY SAFE ONLINE • DONG HANH CUNG CONG DONG • CHONGLUADAO VIETNAM • CYBER SECURITY WARNING • AN TOAN TREN KHONG GIAN MẠNG • CANH BAO SCAM NGUY HIEM • STAY SAFE ONLINE
+        • shield VIETNAM • CYBER SECURITY WARNING • AN TOAN TREN KHONG GIAN MẠNG • CANH BAO SCAM NGUY HIEM • STAY SAFE ONLINE • DONG HANH CUNG CONG DONG • shield VIETNAM • CYBER SECURITY WARNING • AN TOAN TREN KHONG GIAN MẠNG • CANH BAO SCAM NGUY HIEM • STAY SAFE ONLINE
       </div>
       {/* Decorative Cyber Background Waves & Grids */}
       <div className="cyber-bg-decorations">
@@ -364,8 +368,15 @@ export default function Checker({ addToast }) {
                   <Clipboard size={16} />
                 </button>
               )}
-              <button type="submit" className="search-submit-btn">
-                PHÂN TÍCH
+              <button type="submit" className="search-submit-btn" disabled={isSubmitting}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 size={16} className="btn-icon-spin" />
+                    <span>ĐANG XỬ LÝ...</span>
+                  </>
+                ) : (
+                  'PHÂN TÍCH'
+                )}
               </button>
             </form>
 

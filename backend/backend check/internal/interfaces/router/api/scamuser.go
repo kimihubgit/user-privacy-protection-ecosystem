@@ -22,6 +22,8 @@ func LoadScamUserRouter(apiGroup *gin.RouterGroup, adminGroup *gin.RouterGroup, 
 	// Ingestion/Sync API
 	adminGroup.POST("/scammers", scamUserHandler.AddScamUser)
 	adminGroup.GET("/scammers", scamUserHandler.ListScamUsers)
+	adminGroup.GET("/scammers/:id", scamUserHandler.GetScamUser)
+	adminGroup.PUT("/scammers/:id", scamUserHandler.UpdateScamUser)
 	adminGroup.DELETE("/scammers/:id", scamUserHandler.DeleteScamUser)
 
 	return scamUserVal

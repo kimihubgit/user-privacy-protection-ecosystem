@@ -3,9 +3,9 @@
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
       <h2 class="title" data-i18n="settings.title" style="margin-bottom: 0;">{{ t('settings.title') }}</h2>
       
-      <!-- Theme Accent Selector next to Title -->
-      <div style="display: flex; align-items: center; gap: 8px;">
-        <div style="display: flex; gap: 6px;">
+      <!-- Theme Accent Selector, Dark Mode & Language Selector next to Title -->
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="display: flex; gap: 6px; align-items: center;">
           <button 
             v-for="color in ['blue', 'indigo', 'teal', 'danger']" 
             :key="color"
@@ -16,13 +16,52 @@
             @click="setAccentColor(color)"
           ></button>
         </div>
+
+        <div style="width: 1px; height: 14px; background-color: var(--border-light); opacity: 0.6;"></div>
+
+        <!-- Dark Mode Toggle Button -->
+        <button 
+          @click="toggleDarkMode"
+          class="theme-toggle-btn"
+          :title="isDarkMode ? (t('settings.dark_mode_title') || 'Chế độ tối') : 'Chế độ sáng'"
+        >
+          <!-- Moon Icon (Dark Mode) -->
+          <svg v-if="isDarkMode" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="12" height="12">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <!-- Sun Icon (Light Mode) -->
+          <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" width="12" height="12" style="color: #f59e0b;">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+        </button>
+
+        <div style="width: 1px; height: 14px; background-color: var(--border-light); opacity: 0.6;"></div>
+
+        <!-- Language Selector -->
+        <select 
+          v-model="currentLang" 
+          @change="changeLanguage"
+          class="lang-select-header"
+          :title="t('settings.language_label')"
+        >
+          <option value="vi">VI</option>
+          <option value="en">EN</option>
+        </select>
       </div>
     </div>
     
     <!-- Sub Navigation -->
     <div class="sub-nav" id="settings-sub-nav" style="margin-bottom: 14px;">
       <button 
-        v-for="tab in ['security', 'social', 'others']" 
+        v-for="tab in ['security', 'social', 'autoclean', 'others']" 
         :key="tab"
         :class="['sub-nav-item', { active: activeSettingsTab === tab }]" 
         @click="setSettingsTab(tab)"
@@ -35,17 +74,6 @@
       <!-- Settings Panel: Security -->
       <div v-show="activeSettingsTab === 'security'" class="settings-sub-panel active" id="settings-panel-security">
         <div class="settings-form">
-          <!-- Real-Time Protection -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.realtime_title') }}</span>
-              <span class="card-desc">{{ t('settings.realtime_desc') }}</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.webShieldActive" @change="onToggleChange('webShieldActive', 'realtime', true)">
-              <span class="slider round"></span>
-            </label>
-          </div>
 
           <!-- Anti-Clickjacking -->
           <div class="card card-toggle">
@@ -59,17 +87,54 @@
             </label>
           </div>
 
-          <!-- Unlock Right-Click & Copy -->
+          <!-- IDN Homograph Protection -->
           <div class="card card-toggle">
             <div class="card-info">
-              <span class="card-title">{{ t('settings.rightclick_title') }}</span>
-              <span class="card-desc">{{ t('settings.rightclick_desc') }}</span>
+              <span class="card-title">{{ t('settings.homograph_shield_title') }}</span>
+              <span class="card-desc">{{ t('settings.homograph_shield_desc') }}</span>
             </div>
             <label class="switch">
-              <input type="checkbox" v-model="settings.enable_right_click" @change="onToggleChange('enable_right_click', 'enable_right_click', false)">
+              <input type="checkbox" v-model="settings.homographShieldActive" @change="onToggleChange('homographShieldActive', 'homographShieldActive', true)">
               <span class="slider round"></span>
             </label>
           </div>
+
+          <!-- Anti-Clipboard Hijacking -->
+          <div class="card card-toggle">
+            <div class="card-info">
+              <span class="card-title">{{ t('settings.anti_clipboard_hijack_title') }}</span>
+              <span class="card-desc">{{ t('settings.anti_clipboard_hijack_desc') }}</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" v-model="settings.antiClipboardHijack" @change="onToggleChange('antiClipboardHijack', 'antiClipboardHijack', true)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- Anti-Popup & Popunder -->
+          <div class="card card-toggle">
+            <div class="card-info">
+              <span class="card-title">{{ t('settings.popup_block_title') }}</span>
+              <span class="card-desc">{{ t('settings.popup_block_desc') }}</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" v-model="settings.popupBlockShieldActive" @change="onToggleChange('popupBlockShieldActive', 'popupBlockShieldActive', true)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- WebRTC IP Leak Protection -->
+          <div class="card card-toggle">
+            <div class="card-info">
+              <span class="card-title">{{ t('settings.webrtc_shield_title') }}</span>
+              <span class="card-desc">{{ t('settings.webrtc_shield_desc') }}</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" v-model="settings.webrtcShieldActive" @change="onToggleChange('webrtcShieldActive', 'webrtcShieldActive', true)">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
 
           <!-- Remove Tracking Parameters -->
           <div class="card card-toggle">
@@ -133,18 +198,6 @@
               </label>
             </div>
 
-            <!-- Block "Seen" in Stories -->
-            <div class="social-setting-row">
-              <div class="social-setting-info">
-                <span class="social-setting-title">{{ t('settings.fb_seen_story_title') }}</span>
-                <span class="social-setting-desc">{{ t('settings.fb_seen_story_desc') }}</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" v-model="settings.block_seen_story_facebook" @change="onToggleChange('block_seen_story_facebook', 'block_seen_story_facebook', false)">
-                <span class="slider round"></span>
-              </label>
-            </div>
-
             <!-- Block "Typing..." in Chat -->
             <div class="social-setting-row">
               <div class="social-setting-info">
@@ -156,128 +209,13 @@
                 <span class="slider round"></span>
               </label>
             </div>
-
-            <!-- Prevent Feed Auto-Reload -->
-            <div class="social-setting-row">
-              <div class="social-setting-info">
-                <span class="social-setting-title">{{ t('settings.fb_prevent_reload_title') }}</span>
-                <span class="social-setting-desc">{{ t('settings.fb_prevent_reload_desc') }}</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" v-model="settings.prevent_facebook_feed_reload" @change="onToggleChange('prevent_facebook_feed_reload', 'prevent_facebook_feed_reload', false)">
-                <span class="slider round"></span>
-              </label>
-            </div>
-
-            <!-- Block Suggested Posts -->
-            <div class="social-setting-row">
-              <div class="social-setting-info">
-                <span class="social-setting-title">{{ t('settings.fb_suggested_posts_title') }}</span>
-                <span class="social-setting-desc">{{ t('settings.fb_suggested_posts_desc') }}</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" v-model="settings.block_suggested_posts" @change="onToggleChange('block_suggested_posts', 'block_suggested_posts', false)">
-                <span class="slider round"></span>
-              </label>
-            </div>
-
-            <!-- Facebook Time Counter -->
-            <div class="social-setting-row">
-              <div class="social-setting-info">
-                <span class="social-setting-title">{{ t('settings.fb_timer_title') }}</span>
-                <span class="social-setting-desc">{{ t('settings.fb_timer_desc') }}</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" v-model="settings.show_facebook_time_counter" @change="onToggleChange('show_facebook_time_counter', 'show_facebook_time_counter', false)">
-                <span class="slider round"></span>
-              </label>
-            </div>
           </div>
         </div>
-
-        <!-- Collapsible Section: Instagram -->
-        <div class="social-collapse-group" :class="{ open: expandedSocial.instagram }">
-          <div class="social-collapse-header" @click="toggleSocialSection('instagram')">
-            <span class="social-platform-title">Instagram</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="social-collapse-chevron-svg">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </div>
-          <div v-show="expandedSocial.instagram" class="social-collapse-body">
-            <!-- Block "Seen" in Stories -->
-            <div class="social-setting-row">
-              <div class="social-setting-info">
-                <span class="social-setting-title">{{ t('settings.ig_seen_story_title') }}</span>
-                <span class="social-setting-desc">{{ t('settings.ig_seen_story_desc') }}</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" v-model="settings.block_seen_story_instagram" @change="onToggleChange('block_seen_story_instagram', 'block_seen_story_instagram', false)">
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
-        <!-- Collapsible Section: Zalo -->
-        <div class="social-collapse-group" :class="{ open: expandedSocial.zalo }">
-          <div class="social-collapse-header" @click="toggleSocialSection('zalo')">
-            <span class="social-platform-title">Zalo</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="social-collapse-chevron-svg">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </div>
-          <div v-show="expandedSocial.zalo" class="social-collapse-body">
-            <!-- Block "Seen" in Chat -->
-            <div class="social-setting-row">
-              <div class="social-setting-info">
-                <span class="social-setting-title">{{ t('settings.zalo_seen_chat_title') }}</span>
-                <span class="social-setting-desc">{{ t('settings.zalo_seen_chat_desc') }}</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" v-model="settings.block_seen_zalo" @change="onToggleChange('block_seen_zalo', 'block_seen_zalo', false)">
-                <span class="slider round"></span>
-              </label>
-            </div>
-
-            <!-- Block "Typing..." -->
-            <div class="social-setting-row">
-              <div class="social-setting-info">
-                <span class="social-setting-title">{{ t('settings.zalo_typing_chat_title') }}</span>
-                <span class="social-setting-desc">{{ t('settings.zalo_typing_chat_desc') }}</span>
-              </div>
-              <label class="switch">
-                <input type="checkbox" v-model="settings.block_typing_zalo" @change="onToggleChange('block_typing_zalo', 'block_typing_zalo', false)">
-                <span class="slider round"></span>
-              </label>
-            </div>
-          </div>
-        </div>
-
       </div>
 
       <!-- Settings Panel: Others -->
       <div v-show="activeSettingsTab === 'others'" class="settings-sub-panel active" id="settings-panel-others">
         <div class="settings-form">
-          <!-- Language Selection -->
-          <div class="form-group">
-            <label class="form-label">{{ t('settings.language_label') }}</label>
-            <select class="form-control" v-model="currentLang" @change="changeLanguage">
-              <option value="vi">Tiếng Việt</option>
-              <option value="en">English</option>
-            </select>
-          </div>
-
-          <!-- Auto Translate -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.auto_translate_title') }}</span>
-              <span class="card-desc">{{ t('settings.auto_translate_desc') }}</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" v-model="settings.autoTranslateActive" @change="onToggleChange('autoTranslateActive', null, false)">
-              <span class="slider round"></span>
-            </label>
-          </div>
 
           <!-- Share Usage Data -->
           <div class="card card-toggle">
@@ -291,20 +229,12 @@
             </label>
           </div>
 
-          <!-- Dark Mode -->
-          <div class="card card-toggle">
-            <div class="card-info">
-              <span class="card-title">{{ t('settings.dark_mode_title') }}</span>
-              <span class="card-desc">{{ t('settings.dark_mode_desc') }}</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox" v-model="isDarkMode" @change="toggleDarkMode">
-              <span class="slider round"></span>
-            </label>
-          </div>
-
-
         </div>
+      </div>
+
+      <!-- Settings Panel: Auto-Delete Cookie -->
+      <div v-show="activeSettingsTab === 'autoclean'" class="settings-sub-panel active" id="settings-panel-autoclean" style="flex: 1; min-height: 0; overflow-y: auto; padding-right: 4px;">
+        <CookieCleanerTab />
       </div>
     </div>
 
@@ -353,9 +283,13 @@
 import { ref, reactive, onMounted, computed } from 'vue';
 import { useI18n } from '../composables/useI18n.js';
 import { CONFIG } from '../../config.js';
+import CookieCleanerTab from './CookieCleanerTab.vue';
 
 export default {
   name: 'SettingsTab',
+  components: {
+    CookieCleanerTab
+  },
   emits: ['recheck-domain', 'update-tracker-ui', 'update-ad-ui', 'show-feedback'],
   setup(props, { emit }) {
     const { t, currentLang, setLanguage } = useI18n();
@@ -364,11 +298,7 @@ export default {
     const activeAccentColor = ref('blue');
     const lastSyncTime = ref(null);
 
-    const expandedSocial = reactive({
-      facebook: true,
-      instagram: false,
-      zalo: false
-    });
+    const expandedSocial = reactive({ facebook: true });
 
     const toggleSocialSection = (platform) => {
       expandedSocial[platform] = !expandedSocial[platform];
@@ -377,20 +307,16 @@ export default {
     const settings = reactive({
       webShieldActive: true,
       anti_clickjacking: true,
-      enable_right_click: false,
+      homographShieldActive: true,
+      antiClipboardHijack: true,
+      popupBlockShieldActive: true,
+      webrtcShieldActive: true,
+
       removeTrackingParams: false,
       gpcEnabled: true,
       canvasFingerprintActive: false,
       block_seen_chat: false,
-      block_seen_story_facebook: false,
       block_typing_chat: false,
-      prevent_facebook_feed_reload: false,
-      block_suggested_posts: false,
-      show_facebook_time_counter: false,
-      block_seen_story_instagram: false,
-      block_seen_zalo: false,
-      block_typing_zalo: false,
-      autoTranslateActive: false,
       shareUsageData: true,
     });
 
@@ -415,7 +341,7 @@ export default {
         keys.forEach(key => {
           // Default checks matching ToggleRegistry
           const defaultsOn = [
-            'webShieldActive', 'anti_clickjacking', 'gpcEnabled', 
+            'webShieldActive', 'anti_clickjacking', 'homographShieldActive', 'antiClipboardHijack', 'popupBlockShieldActive', 'webrtcShieldActive', 'gpcEnabled', 
             'canvasFingerprintActive', 'shareUsageData'
           ];
           if (defaultsOn.includes(key)) {
@@ -463,10 +389,8 @@ export default {
       }
 
       // Handle callbacks / side effects
-      if (storageKey === 'webShieldActive') {
+      if (storageKey === 'webShieldActive' || storageKey === 'homographShieldActive') {
         emit('recheck-domain');
-      } else if (storageKey === 'trackerActive') {
-        emit('update-tracker-ui');
       } else if (storageKey === 'adActive') {
         emit('update-ad-ui');
       }
@@ -482,9 +406,9 @@ export default {
     };
 
     const toggleDarkMode = () => {
-      const dark = isDarkMode.value;
-      applyDarkModeUI(dark);
-      chrome.storage.local.set({ themeMode: dark ? 'dark' : 'light' });
+      isDarkMode.value = !isDarkMode.value;
+      applyDarkModeUI(isDarkMode.value);
+      chrome.storage.local.set({ themeMode: isDarkMode.value ? 'dark' : 'light' });
     };
 
     // Accent Colors

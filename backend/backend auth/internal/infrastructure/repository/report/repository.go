@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"time"
 
 	"protect-user-auth/internal/domain/entity"
@@ -110,7 +111,7 @@ func (r *mongoRepository) List(ctx context.Context, page, limit int64, status st
 	return reports, total, nil
 }
 
-func (r *mongoRepository) UpdateStatus(ctx context.Context, id string, status string) error {
+func (r *mongoRepository) UpdateStatus(ctx context.Context, id string, status string, reviewerEmail string, reviewerName string) error {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return fmt.Errorf("invalid ObjectID format: %w", err)
@@ -118,8 +119,10 @@ func (r *mongoRepository) UpdateStatus(ctx context.Context, id string, status st
 	filter := bson.M{"_id": objID}
 	update := bson.M{
 		"$set": bson.M{
-			"status":       status,
-			"processed_at": time.Now(),
+			"status":            status,
+			"processed_at":      time.Now(),
+			"reviewed_by_email": reviewerEmail,
+			"reviewed_by_name":  reviewerName,
 		},
 	}
 	res, err := r.collection.UpdateOne(ctx, filter, update)
@@ -318,4 +321,86 @@ func (r *mongoRepository) GetWeeklyStats(ctx context.Context) (dailyCounts map[s
 	}
 
 	return dailyCounts, total, nil
+}
+
+func (r *mongoRepository) GetModeratorStats(ctx context.Context) ([]domainRepo.ModeratorStat, int64, error) {
+	pipeline := []bson.M{
+		{
+			"$match": bson.M{
+				"status":            bson.M{"$in": []string{entity.ReportStatusApproved, entity.ReportStatusRejected}},
+				"reviewed_by_email": bson.M{"$ne": ""},
+			},
+		},
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"email": "$reviewed_by_email",
+					"name":  "$reviewed_by_name",
+				},
+				"approved": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.A{bson.M{"$eq": []string{"$status", entity.ReportStatusApproved}}, 1, 0},
+					},
+				},
+				"rejected": bson.M{
+					"$sum": bson.M{
+						"$cond": bson.A{bson.M{"$eq": []string{"$status", entity.ReportStatusRejected}}, 1, 0},
+					},
+				},
+				"total": bson.M{"$sum": 1},
+			},
+		},
+		{
+			"$sort": bson.D{{Key: "total", Value: -1}},
+		},
+	}
+
+	cursor, err := r.collection.Aggregate(ctx, pipeline)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var rawResults []struct {
+		ID struct {
+			Email string `bson:"email"`
+			Name  string `bson:"name"`
+		} `bson:"_id"`
+		Approved int64 `bson:"approved"`
+		Rejected int64 `bson:"rejected"`
+		Total    int64 `bson:"total"`
+	}
+
+	if err := cursor.All(ctx, &rawResults); err != nil {
+		return nil, 0, err
+	}
+
+	var globalTotal int64 = 0
+	for _, item := range rawResults {
+		globalTotal += item.Total
+	}
+
+	stats := []domainRepo.ModeratorStat{}
+	for _, item := range rawResults {
+		var contrib float64 = 0
+		if globalTotal > 0 {
+			contrib = math.Round((float64(item.Total)/float64(globalTotal)*100.0)*100) / 100
+		}
+
+		name := item.ID.Name
+		if name == "" {
+			name = item.ID.Email
+		}
+
+		stats = append(stats, domainRepo.ModeratorStat{
+			Name:                   name,
+			Email:                  item.ID.Email,
+			ApprovedCount:          item.Approved,
+			RejectedCount:          item.Rejected,
+			TotalProcessed:         item.Total,
+			ContributionPercentage: contrib,
+		})
+	}
+
+	return stats, globalTotal, nil
 }

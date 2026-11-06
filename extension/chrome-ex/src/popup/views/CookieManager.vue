@@ -193,31 +193,31 @@
         </div>
         <div class="cookie-form-scroll" style="font-size: 11px; line-height: 1.6; color: var(--text-desc); gap: 12px; padding-right: 4px;">
           <div>
-            <strong style="color: #ffffff; font-size: 11.5px;">{{ t('cookie.info_name_val_title') }}</strong>
+            <strong style="color: var(--text-title); font-size: 11.5px;">{{ t('cookie.info_name_val_title') }}</strong>
             <p style="margin: 2px 0 0 0; font-size: 10.5px;">{{ t('cookie.info_name_val_desc') }}</p>
           </div>
           <div>
-            <strong style="color: #ffffff; font-size: 11.5px;">{{ t('cookie.info_domain_path_title') }}</strong>
+            <strong style="color: var(--text-title); font-size: 11.5px;">{{ t('cookie.info_domain_path_title') }}</strong>
             <p style="margin: 2px 0 0 0; font-size: 10.5px;">{{ t('cookie.info_domain_path_desc') }}</p>
           </div>
           <div>
-            <strong style="color: #ffffff; font-size: 11.5px;">{{ t('cookie.info_expiry_title') }}</strong>
+            <strong style="color: var(--text-title); font-size: 11.5px;">{{ t('cookie.info_expiry_title') }}</strong>
             <p style="margin: 2px 0 0 0; font-size: 10.5px;">{{ t('cookie.info_expiry_desc') }}</p>
           </div>
           <div>
-            <strong style="color: #ffffff; font-size: 11.5px;">{{ t('cookie.info_samesite_title') }}</strong>
+            <strong style="color: var(--text-title); font-size: 11.5px;">{{ t('cookie.info_samesite_title') }}</strong>
             <p style="margin: 2px 0 0 0; font-size: 10.5px;" v-html="t('cookie.info_samesite_desc')"></p>
           </div>
           <div>
-            <strong style="color: #ffffff; font-size: 11.5px;">{{ t('cookie.info_secure_title') }}</strong>
+            <strong style="color: var(--text-title); font-size: 11.5px;">{{ t('cookie.info_secure_title') }}</strong>
             <p style="margin: 2px 0 0 0; font-size: 10.5px;">{{ t('cookie.info_secure_desc') }}</p>
           </div>
           <div>
-            <strong style="color: #ffffff; font-size: 11.5px;">{{ t('cookie.info_httponly_title') }}</strong>
+            <strong style="color: var(--text-title); font-size: 11.5px;">{{ t('cookie.info_httponly_title') }}</strong>
             <p style="margin: 2px 0 0 0; font-size: 10.5px;">{{ t('cookie.info_httponly_desc') }}</p>
           </div>
           <div>
-            <strong style="color: #ffffff; font-size: 11.5px;">{{ t('cookie.info_session_title') }}</strong>
+            <strong style="color: var(--text-title); font-size: 11.5px;">{{ t('cookie.info_session_title') }}</strong>
             <p style="margin: 2px 0 0 0; font-size: 10.5px;">{{ t('cookie.info_session_desc') }}</p>
           </div>
         </div>
@@ -315,7 +315,7 @@
         </div>
         <div class="cookie-form-scroll" style="font-size: 11px; line-height: 1.5; color: var(--text-desc); gap: 10px;">
           <div>
-            <strong style="color: #ffffff; display: block; margin-bottom: 2px; font-size: 11.5px;">{{ t('cookie.format_json_title') }}</strong>
+            <strong style="color: var(--text-title); display: block; margin-bottom: 2px; font-size: 11.5px;">{{ t('cookie.format_json_title') }}</strong>
             <p style="margin: 0 0 4px 0; font-size: 10.5px;">{{ t('cookie.format_json_desc') }}</p>
             <pre style="background: var(--bg-input); padding: 4px 6px; border-radius: 4px; font-size: 9px; margin: 0; overflow-x: auto; color: var(--text-muted); font-family: monospace;">[
   {
@@ -329,12 +329,12 @@
 ]</pre>
           </div>
           <div>
-            <strong style="color: #ffffff; display: block; margin-bottom: 2px; font-size: 11.5px;">{{ t('cookie.format_header_title') }}</strong>
+            <strong style="color: var(--text-title); display: block; margin-bottom: 2px; font-size: 11.5px;">{{ t('cookie.format_header_title') }}</strong>
             <p style="margin: 0 0 4px 0; font-size: 10.5px;">{{ t('cookie.format_header_desc') }}</p>
             <pre style="background: var(--bg-input); padding: 4px 6px; border-radius: 4px; font-size: 9px; margin: 0; overflow-x: auto; color: var(--text-muted); font-family: monospace;">c_user=100000000000000; xs=12345:abcde:2:1600000000;</pre>
           </div>
           <div>
-            <strong style="color: #ffffff; display: block; margin-bottom: 2px; font-size: 11.5px;">{{ t('cookie.format_netscape_title') }}</strong>
+            <strong style="color: var(--text-title); display: block; margin-bottom: 2px; font-size: 11.5px;">{{ t('cookie.format_netscape_title') }}</strong>
             <p style="margin: 0 0 4px 0; font-size: 10.5px;">{{ t('cookie.format_netscape_desc') }}</p>
             <pre style="background: var(--bg-input); padding: 4px 6px; border-radius: 4px; font-size: 9px; margin: 0; overflow-x: auto; color: var(--text-muted); font-family: monospace;">.facebook.com   TRUE    /   TRUE    0   c_user  10000000000</pre>
           </div>
@@ -506,7 +506,7 @@
                 :type="showSharePassword ? 'text' : 'password'" 
                 v-model="sharePassword" 
                 placeholder="Nhập mật khẩu truy cập"
-                style="height: 26px; font-size: 10px; padding: 4px 24px 4px 6px; box-sizing: border-box; width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-light); border-radius: 4px; color: white; outline: none;"
+                style="height: 26px; font-size: 10px; padding: 4px 24px 4px 6px; box-sizing: border-box; width: 100%; background-color: var(--bg-input); border: 1px solid var(--border-light); border-radius: 4px; color: var(--text-title); outline: none;"
               >
               <button type="button" @click="showSharePassword = !showSharePassword" style="position: absolute; right: 6px; background: none; border: none; padding: 2px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; justify-content: center; outline: none;">
                 <svg v-if="!showSharePassword" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="10" height="10">

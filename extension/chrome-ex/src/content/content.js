@@ -1,10 +1,22 @@
 // Khởi chạy các lá chắn bảo vệ của KiGuard (Scam và Clickjacking)
+if (typeof PopupBlockShield !== 'undefined') {
+    PopupBlockShield.init();
+}
+
+if (typeof ClipboardShield !== 'undefined') {
+    ClipboardShield.init();
+}
+
 if (typeof ScamShield !== 'undefined') {
     ScamShield.init();
 }
 
 if (typeof ClickjackingShield !== 'undefined') {
     ClickjackingShield.init();
+}
+
+if (typeof SearchResultShield !== 'undefined') {
+    SearchResultShield.init();
 }
 
 // --- CANVAS FINGERPRINT BLOCKER ---
@@ -159,11 +171,6 @@ chrome.storage.local.get(['canvasFingerprintActive'], (result) => {
 // --- FACEBOOK INTEGRATIONS BRIDGE ---
 const isFacebook = window.location.hostname.endsWith('facebook.com') || window.location.hostname.endsWith('messenger.com');
 if (isFacebook) {
-    // 1. Bridge for FbNoReload
-    chrome.storage.local.get(['prevent_facebook_feed_reload'], (result) => {
-        const enabled = result.prevent_facebook_feed_reload === true;
-        document.dispatchEvent(new CustomEvent('__KIGUARD_FB_NO_RELOAD__', { detail: { enabled } }));
-    });
 
     // 2. Bridge for FbWsHook
     const syncFbSettings = () => {
@@ -180,10 +187,6 @@ if (isFacebook) {
 
     // 3. Listen for changes to update MAIN world contexts dynamically
     chrome.storage.onChanged.addListener((changes) => {
-        if (changes.prevent_facebook_feed_reload) {
-            const enabled = changes.prevent_facebook_feed_reload.newValue === true;
-            document.dispatchEvent(new CustomEvent('__KIGUARD_FB_NO_RELOAD__', { detail: { enabled } }));
-        }
         if (changes.block_seen_chat || changes.block_typing_chat) {
             syncFbSettings();
         }
@@ -251,35 +254,33 @@ chrome.storage.local.get(['proxyAdvancedSettings', 'proxyConfig'], (result) => {
                 try {
                     const targetLat = ${lat};
                     const targetLng = ${lng};
-                    navigator.geolocation.getCurrentPosition = function(success, error, options) {
-                        success({
-                            coords: {
-                                latitude: targetLat,
-                                longitude: targetLng,
-                                accuracy: 10,
-                                altitude: null,
-                                altitudeAccuracy: null,
-                                heading: null,
-                                speed: null
-                            },
-                            timestamp: Date.now()
-                        });
+                    const mockCoords = {
+                        latitude: targetLat,
+                        longitude: targetLng,
+                        accuracy: 10,
+                        altitude: null,
+                        altitudeAccuracy: null,
+                        heading: null,
+                        speed: null
                     };
-                    navigator.geolocation.watchPosition = function(success, error, options) {
-                        success({
-                            coords: {
-                                latitude: targetLat,
-                                longitude: targetLng,
-                                accuracy: 10,
-                                altitude: null,
-                                altitudeAccuracy: null,
-                                heading: null,
-                                speed: null
-                            },
-                            timestamp: Date.now()
-                        });
-                        return 1;
+                    const mockPos = {
+                        coords: mockCoords,
+                        timestamp: Date.now()
                     };
+
+                    if (navigator && navigator.geolocation) {
+                        navigator.geolocation.getCurrentPosition = function(success, error, options) {
+                            if (typeof success === 'function') {
+                                setTimeout(function() { success(mockPos); }, 5);
+                            }
+                        };
+                        navigator.geolocation.watchPosition = function(success, error, options) {
+                            if (typeof success === 'function') {
+                                setTimeout(function() { success(mockPos); }, 5);
+                            }
+                            return 12345;
+                        };
+                    }
                 } catch (e) { console.error("[KiGuard Geolocation Spoof] Error:", e); }
             `;
         }
@@ -307,10 +308,23 @@ chrome.storage.local.get(['proxyAdvancedSettings', 'proxyConfig'], (result) => {
         }
         
         if (injectCode) {
-            const script = document.createElement('script');
-            script.textContent = `(function() { ${injectCode} })();`;
-            (document.head || document.documentElement).appendChild(script);
-            script.remove();
+            const doInject = () => {
+                try {
+                    const script = document.createElement('script');
+                    script.textContent = `(function() { ${injectCode} })();`;
+                    const parent = document.head || document.documentElement || document.body;
+                    if (parent) {
+                        parent.appendChild(script);
+                        script.remove();
+                    }
+                } catch (e) {}
+            };
+
+            if (document.head || document.documentElement || document.body) {
+                doInject();
+            } else {
+                document.addEventListener('DOMContentLoaded', doInject, { once: true });
+            }
         }
-    }
 });
+

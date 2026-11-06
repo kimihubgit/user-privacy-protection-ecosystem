@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KiGuard - Trang Kiểm Thử Tính Năng Bảo Mật</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card-bg: #1e293b;
+            --border: #334155;
+            --text-main: #f8fafc;
+            --text-sub: #94a3b8;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+            --warning: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text-main);
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            max-width: 860px;
+            width: 100%;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+
+        p.desc {
+            color: var(--text-sub);
+            font-size: 15px;
+            line-height: 1.5;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 14px;
+        }
+
+        .card-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+
+        .card-icon.pop {
+            background: rgba(239, 68, 68, 0.15);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .card-icon.clip {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .card-icon.webrtc {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .card-icon.report {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .grid-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 14px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            background: #334155;
+            color: #fff;
+            border: 1px solid #475569;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .btn:hover {
+            background: #475569;
+            border-color: #64748b;
+            transform: translateY(-1px);
+        }
+
+        .btn.danger {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #fca5a5;
+        }
+
+        .btn.danger:hover {
+            background: rgba(239, 68, 68, 0.25);
+            border-color: #f87171;
+        }
+
+        .btn.safe {
+            background: rgba(16, 185, 129, 0.15);
+            border-color: rgba(16, 185, 129, 0.4);
+            color: #6ee7b7;
+        }
+
+        .btn.safe:hover {
+            background: rgba(16, 185, 129, 0.25);
+            border-color: #34d399;
+        }
+
+        .btn.primary {
+            background: rgba(59, 130, 246, 0.15);
+            border-color: rgba(59, 130, 246, 0.4);
+            color: #93c5fd;
+        }
+
+        .btn.primary:hover {
+            background: rgba(59, 130, 246, 0.25);
+            border-color: #60a5fa;
+        }
+
+        .btn-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .btn-desc {
+            font-size: 12px;
+            opacity: 0.8;
+            font-weight: 400;
+        }
+
+        .test-box {
+            background: #0f172a;
+            border: 1px dashed var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+
+        .test-box label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-sub);
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .copy-target {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #1e293b;
+            border: 1px solid #334155;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+        }
+
+        .copy-text {
+            font-family: monospace;
+            font-size: 15px;
+            color: #38bdf8;
+            user-select: all;
+        }
+
+        .action-btn {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--primary-hover);
+        }
+
+        .paste-box {
+            width: 100%;
+            height: 48px;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 6px;
+            color: #fff;
+            padding: 10px 14px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .paste-box:focus {
+            border-color: var(--primary);
+        }
+
+        .status-log {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-sub);
+            min-height: 20px;
+        }
+
+        .status-log.success {
+            color: #34d399;
+        }
+
+        .status-log.warn {
+            color: #fbbf24;
+        }
+
+        .status-log.danger {
+            color: #f87171;
+        }
+
+        .link-sample {
+            color: #38bdf8;
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 4px 8px;
+            background: rgba(56, 189, 248, 0.1);
+            border-radius: 4px;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="badge">KiGuard Security Lab</div>
+        <h1>Kiểm thử Tính Năng Bảo Mật KiGuard</h1>
+        <p class="desc">Trang kiểm thử giả lập các hành vi độc hại thực tế trên web: Pop-up cờ bạc, tráo đổi dữ liệu clipboard, rò rỉ IP qua WebRTC và tính năng báo cáo lừa đảo 1-Click.</p>
+    </header>
+
+    <!-- PHẦN 1: POP-UP SHIELD -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon pop">🛡️</div>
+            <div>
+                <div class="card-title">1. Lá chắn Chống Pop-up & Popunder Độc hại</div>
+                <div class="card-subtitle">Chặn tab mở ngầm, quảng cáo rác, web cá cược và bẫy click chuột vô hình</div>
+            </div>
+        </div>
+
+        <div class="grid-buttons">
+            <button class="btn danger" onclick="testGamblingPopup()">
+                <span class="btn-title">🚫 Mở tab Cờ bạc (Kubet)</span>
+                <span class="btn-desc">Gọi window.open('https://kubet888.vip')</span>
+            </button>
+
+            <button class="btn danger" onclick="testAdNetworkPopup()">
+                <span class="btn-title">🚫 Mở Mạng PopAds rác</span>
+                <span class="btn-desc">Gọi window.open('https://popads.net/serve')</span>
+            </button>
+
+            <button class="btn safe" onclick="testAllowedOAuth()">
+                <span class="btn-title">✅ Đăng nhập Google (OAuth Hợp pháp)</span>
+                <span class="btn-desc">Mở accounts.google.com -> Không bị chặn</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- PHẦN 2: CLIPBOARD SHIELD -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon clip">📋</div>
+            <div>
+                <div class="card-title">2. Lá chắn Chống Tráo đổi Clipboard (Anti-Clipboard Hijacking)</div>
+                <div class="card-subtitle">Bảo vệ số tài khoản ngân hàng và ví crypto khi người dùng sao chép</div>
+            </div>
+        </div>
+
+        <div class="test-box">
+            <label>Thử nghiệm: Bấm "Sao chép STK" (Trang web sẽ cố gắng đổi thành STK hacker 99999999999999):</label>
+            <div class="copy-target">
+                <span class="copy-text" id="bank-target">19036578491012</span>
+                <button class="action-btn" onclick="copyBankWithHijack()">Sao chép STK này</button>
+            </div>
+
+            <label>Dán vào đây để kiểm tra kết quả thực tế (Ctrl + V):</label>
+            <input type="text" class="paste-box" placeholder="Dán (Ctrl + V) vào đây để kiểm tra..." oninput="checkPastedValue(this.value)">
+            <div class="status-log" id="status-log"></div>
+        </div>
+    </div>
+
+    <!-- PHẦN 3: WEBRTC IP LEAK SHIELD -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon webrtc">🌐</div>
+            <div>
+                <div class="card-title">3. Chống rò rỉ IP qua WebRTC (WebRTC IP Leak Protection)</div>
+                <div class="card-subtitle">Ngăn chặn website đọc địa chỉ IP nội bộ (LAN 192.168.x.x) và IP thật qua STN/ICE candidates</div>
+            </div>
+        </div>
+
+        <p style="font-size: 14px; color: var(--text-sub); line-height: 1.5; margin-bottom: 12px;">
+            Nhiều website độc hại và trình theo dõi ngầm khởi tạo kết nối RTCPeerConnection để âm thầm lấy địa chỉ IP của máy tính người dùng. Bấm nút dưới đây để kiểm tra KiGuard có che giấu thành công hay không:
+        </p>
+
+        <button class="btn primary" onclick="testWebRTCLeak()" style="width: 100%;">
+            <span class="btn-title">🔍 Chạy thử nghiệm dò tìm IP qua WebRTC</span>
+            <span class="btn-desc">Tạo STUN request và lắng nghe onicecandidate</span>
+        </button>
+
+        <div class="status-log" id="webrtc-log" style="margin-top: 14px; background: #0f172a; padding: 12px; border-radius: 6px; border: 1px solid #334155; font-family: monospace;">
+            Chưa chạy kiểm tra. Bấm nút phía trên để bắt đầu dò IP...
+        </div>
+    </div>
+
+    <!-- PHẦN 4: CROWDSOURCED REPORTING -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-icon report">🚩</div>
+            <div>
+                <div class="card-title">4. Tính năng Báo cáo lừa đảo 1-Click (Crowdsourced Reporting)</div>
+                <div class="card-subtitle">Báo cáo website nghi vấn trực tiếp từ Menu chuột phải (Context Menu) hoặc Popup</div>
+            </div>
+        </div>
+
+        <p style="font-size: 14px; color: var(--text-sub); line-height: 1.5; margin-bottom: 14px;">
+            Bạn có thể thử nghiệm 2 cách báo cáo trang lừa đảo:
+        </p>
+
+        <ul style="font-size: 13.5px; color: var(--text-sub); margin-left: 20px; line-height: 1.8;">
+            <li><strong>Cách 1 (Từ Context Menu):</strong> Nhấp chuột phải vào liên kết giả lập bên dưới: 
+                <span class="link-sample" id="sample-scam-link" title="Nhấp chuột phải vào đây">https://shopee-nhan-qua-tri-an-2026.xyz</span>
+                và chọn <strong>"🚩 Báo cáo trang này là lừa đảo (KiGuard)"</strong>. Extension sẽ gửi báo cáo về hệ thống và hiển thị thông báo Chrome tức thì.
+            </li>
+            <li><strong>Cách 2 (Từ Popup Extension):</strong> Mở biểu tượng tiện ích KiGuard trên thanh trình duyệt, tại phần tên miền bấm nút <strong>"🚩 Báo cáo"</strong> để gửi nhanh phản ánh cho cộng đồng.</li>
+        </ul>
+    </div>
+</div>
+
+<script>
+    // POP-UP TESTS
+    function testGamblingPopup() {
+        window.open('https://kubet888.vip/register', '_blank');
+    }
+
+    function testAdNetworkPopup() {
+        window.open('https://popads.net/serve?aff=test1234', '_blank');
+    }
+
+    function testAllowedOAuth() {
+        window.open('https://accounts.google.com/o/oauth2/v2/auth?scope=email', '_blank', 'width=500,height=600');
+    }
+
+    // CLIPBOARD HIJACK TEST
+    const HACKER_BANK = '99999999999999';
+
+    document.addEventListener('copy', function(e) {
+        const sel = window.getSelection().toString();
+        if (sel && sel.includes('19036578491012')) {
+            e.clipboardData.setData('text/plain', HACKER_BANK);
+            e.preventDefault();
+        }
+    });
+
+    function copyBankWithHijack() {
+        const el = document.getElementById('bank-target');
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(HACKER_BANK).catch(() => {
+                document.execCommand('copy');
+            });
+        } else {
+            document.execCommand('copy');
+        }
+        updateLog('Đã kích hoạt sao chép STK. Hãy dán (Ctrl+V) vào ô dưới để xem kết quả!');
+    }
+
+    function updateLog(msg, type = 'warn') {
+        const log = document.getElementById('status-log');
+        log.textContent = msg;
+        log.className = 'status-log ' + type;
+    }
+
+    function checkPastedValue(val) {
+        if (!val) return;
+        if (val === '19036578491012') {
+            updateLog('🎉 XUẤT SẮC: KiGuard đã giữ lại đúng STK gốc của bạn! Hacker thất bại.', 'success');
+        } else if (val === HACKER_BANK) {
+            updateLog('⚠️ Dữ liệu bị tráo! Hãy chắc chắn bạn đã bấm Reload extension trên chrome://extensions.', 'warn');
+        }
+    }
+
+    // WEBRTC LEAK TEST
+    function testWebRTCLeak() {
+        const log = document.getElementById('webrtc-log');
+        log.innerHTML = '⏳ Đang khởi tạo kết nối RTCPeerConnection và thu thập ICE candidates...';
+
+        try {
+            const pc = new RTCPeerConnection({
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+            });
+
+            let leakedIPs = [];
+            let finished = false;
+
+            pc.createDataChannel('test');
+            pc.createOffer().then(offer => pc.setLocalDescription(offer));
+
+            pc.onicecandidate = (e) => {
+                if (e && e.candidate && e.candidate.candidate) {
+                    const c = e.candidate.candidate;
+                    // Check if private LAN IP or host IP is present
+                    const ipMatch = c.match(/([0-9]{1,3}(\.[0-9]{1,3}){3})/);
+                    if (ipMatch && (c.includes('typ host') || ipMatch[1].startsWith('192.168.') || ipMatch[1].startsWith('10.'))) {
+                        leakedIPs.push(ipMatch[1]);
+                    }
+                }
+            };
+
+            setTimeout(() => {
+                if (finished) return;
+                finished = true;
+                pc.close();
+
+                if (leakedIPs.length === 0) {
+                    log.innerHTML = '🛡️ <strong style="color: #34d399;">AN TOÀN TUYỆT ĐỐI!</strong> KiGuard đã lọc sạch toàn bộ các ứng viên WebRTC host LAN. Website độc hại không thể đọc được IP nội bộ của bạn!';
+                } else {
+                    log.innerHTML = `⚠️ <strong style="color: #f87171;">Phát hiện IP:</strong> ${leakedIPs.join(', ')}. (Hãy kiểm tra xem nút 'Chống rò rỉ IP qua WebRTC' trong Settings KiGuard đã được bật chưa).`;
+                }
+            }, 1800);
+        } catch (err) {
+            log.innerHTML = '🛡️ <strong style="color: #34d399;">AN TOÀN!</strong> Trình duyệt đã chặn hoàn toàn khởi tạo WebRTC.';
+        }
+    }
+</script>
+
+</body>
+</html>

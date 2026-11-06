@@ -13,6 +13,11 @@ export class ProxyAuthService {
         ProxyAuthService._loadCache();
         ProxyAuthService._listenChanges();
         ProxyAuthService._interceptAuth();
+        if (chrome.proxy && chrome.proxy.onProxyError) {
+            chrome.proxy.onProxyError.addListener((details) => {
+                console.warn("[ProxyAuthService] Chrome Proxy Error:", details);
+            });
+        }
     }
 
     static _loadCache() {
@@ -77,110 +82,201 @@ export class ProxyAuthService {
     }
 
     /**
-     * Build a PAC (Proxy Auto-Config) script string
+     * Gets actual real-time proxy state directly from Chrome's proxy engine API
      */
-    static buildPacScript(scheme, host, port, bypassList = []) {
-        const pacDirectiveMap = {
-            "http": "PROXY",
-            "https": "HTTPS",
-            "socks4": "SOCKS",
-            "socks5": "SOCKS5",
-            "quic": "PROXY",
-            "privoxy": "PROXY",
-            "psiphon": "PROXY",
-            "shadowsocks": "SOCKS5",
-            "tor": "SOCKS5",
-            "nekoray": "SOCKS5",
-            "v2ray": "SOCKS5"
-        };
-        const directive = pacDirectiveMap[scheme] || "PROXY";
-        const proxyString = directive + ' ' + host + ':' + port;
-
-        let bypassChecks = '';
-        for (const pattern of bypassList) {
-            const p = pattern.trim();
-            if (!p) continue;
-            if (p === '<local>') {
-                bypassChecks += '    if (isPlainHostName(host)) return "DIRECT";\n';
-            } else if (p.includes('*')) {
-                bypassChecks += '    if (shExpMatch(host, "' + p + '")) return "DIRECT";\n';
-            } else {
-                bypassChecks += '    if (dnsDomainIs(host, "' + p + '") || host === "' + p + '") return "DIRECT";\n';
+    static getActualProxyState() {
+        return new Promise((resolve) => {
+            if (!chrome.proxy || !chrome.proxy.settings) {
+                resolve({ enabled: false, mode: 'direct' });
+                return;
             }
-        }
+            chrome.proxy.settings.get({ incognito: false }, (details) => {
+                if (chrome.runtime.lastError || !details || !details.value) {
+                    resolve({ enabled: false, mode: 'direct' });
+                    return;
+                }
+                const mode = details.value.mode;
+                const isEnabled = (mode === 'fixed_servers' || mode === 'pac_script');
+                
+                let host = '';
+                let port = 0;
+                let scheme = 'http';
 
-        return 'function FindProxyForURL(url, host) {\n' + bypassChecks + '    return "' + proxyString + '";\n}';
+                if (mode === 'fixed_servers' && details.value.rules && details.value.rules.singleProxy) {
+                    host = details.value.rules.singleProxy.host || '';
+                    port = details.value.rules.singleProxy.port || 0;
+                    scheme = details.value.rules.singleProxy.scheme || 'http';
+                }
+
+                resolve({
+                    enabled: isEnabled,
+                    mode,
+                    host,
+                    port,
+                    scheme,
+                    levelOfControl: details.levelOfControl
+                });
+            });
+        });
     }
 
     /**
-     * Connects to a proxy. Sets credentials in memory synchronously BEFORE settings take effect,
-     * resolving race conditions that prompt the user for password.
+     * Multi-endpoint resilient fetchIp helper
+     */
+    static async fetchIp() {
+        const endpoints = [
+            { url: 'https://api.ipify.org?format=json', parse: async (r) => (await r.json()).ip },
+            { url: 'https://ipinfo.io/json', parse: async (r) => (await r.json()).ip },
+            { url: 'https://api.my-ip.io/v2/ip.json', parse: async (r) => (await r.json()).ip },
+            { url: 'https://icanhazip.com', parse: async (r) => (await r.text()).trim() }
+        ];
+
+        for (const ep of endpoints) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const response = await fetch(ep.url, {
+                    signal: controller.signal,
+                    cache: 'no-store'
+                });
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    const ip = await ep.parse(response);
+                    if (ip && typeof ip === 'string' && ip.trim().length >= 7) {
+                        return ip.trim();
+                    }
+                }
+            } catch (e) {
+                // Try next IP endpoint
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Resilient multi-endpoint GeoIP details fetcher (latitude, longitude, timezone, ip)
+     */
+    static async fetchGeoDetails() {
+        const endpoints = [
+            {
+                url: 'https://ipapi.co/json/',
+                parse: async (r) => {
+                    const d = await r.json();
+                    if (d && d.latitude && d.longitude) {
+                        return { latitude: d.latitude, longitude: d.longitude, timezone: d.timezone, liveIp: d.ip };
+                    }
+                    return null;
+                }
+            },
+            {
+                url: 'http://ip-api.com/json/',
+                parse: async (r) => {
+                    const d = await r.json();
+                    if (d && d.lat && d.lon) {
+                        return { latitude: d.lat, longitude: d.lon, timezone: d.timezone, liveIp: d.query };
+                    }
+                    return null;
+                }
+            },
+            {
+                url: 'https://ipinfo.io/json',
+                parse: async (r) => {
+                    const d = await r.json();
+                    if (d && d.loc) {
+                        const [lat, lon] = d.loc.split(',');
+                        return { latitude: parseFloat(lat), longitude: parseFloat(lon), timezone: d.timezone, liveIp: d.ip };
+                    }
+                    return null;
+                }
+            }
+        ];
+
+        for (const ep of endpoints) {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const response = await fetch(ep.url, { signal: controller.signal, cache: 'no-store' });
+                clearTimeout(timeoutId);
+                if (response.ok) {
+                    const geo = await ep.parse(response);
+                    if (geo) return geo;
+                }
+            } catch (e) {}
+        }
+        return null;
+    }
+
+    /**
+     * Connects to a proxy.
      */
     static async connectProxy(proxyDetails) {
         try {
             if (!chrome.proxy || !chrome.proxy.settings) {
-                throw new Error("Proxy API is not available.");
+                throw new Error("Proxy API không khả dụng trên trình duyệt.");
             }
 
-            // 1. Set credentials in memory synchronously
-            if (proxyDetails.useAuth && proxyDetails.username) {
-                ProxyAuthService.currentAuth = {
-                    username: proxyDetails.username,
-                    password: proxyDetails.password || ''
-                };
-            } else {
-                ProxyAuthService.currentAuth = null;
+            if (!proxyDetails) {
+                throw new Error("Dữ liệu Proxy không hợp lệ!");
             }
 
-            // 2. Prepare configurations
             let chromeConfig;
             let proxyConfig;
 
             if (proxyDetails.scheme === 'pac') {
+                if (!proxyDetails.pacUrl) {
+                    throw new Error("Đường dẫn PAC URL không được để trống!");
+                }
                 proxyConfig = {
                     enabled: true,
                     scheme: 'pac',
                     pacUrl: proxyDetails.pacUrl,
-                    name: proxyDetails.name || ''
+                    name: proxyDetails.name || 'PAC Proxy'
                 };
                 chromeConfig = {
                     mode: "pac_script",
                     pacScript: { url: proxyDetails.pacUrl }
                 };
             } else {
-                const bypassList = (proxyDetails.bypass || '').split('\n').map(d => d.trim()).filter(Boolean);
-                const portInt = parseInt(proxyDetails.port);
-                if (isNaN(portInt)) {
-                    throw new Error("Port proxy không hợp lệ!");
+                const cleanedHost = String(proxyDetails.host || '').trim();
+                const portInt = parseInt(proxyDetails.port, 10);
+                if (!cleanedHost || isNaN(portInt) || portInt <= 0 || portInt > 65535) {
+                    throw new Error("Thông tin Host hoặc Port proxy không hợp lệ (1 - 65535)!");
                 }
+
+                const bypassList = (proxyDetails.bypass || '').split('\n').map(d => d.trim()).filter(Boolean);
 
                 proxyConfig = {
                     enabled: true,
-                    scheme: proxyDetails.scheme,
-                    host: proxyDetails.host,
+                    scheme: proxyDetails.scheme || 'http',
+                    host: cleanedHost,
                     port: portInt,
                     useAuth: !!proxyDetails.useAuth,
                     username: proxyDetails.username || '',
                     password: proxyDetails.password || '',
                     bypass: proxyDetails.bypass || '',
-                    name: proxyDetails.name || ''
+                    name: proxyDetails.name || `${cleanedHost}:${portInt}`
                 };
 
-                chromeConfig = {
-                    mode: "pac_script",
-                    pacScript: {
-                        data: ProxyAuthService.buildPacScript(proxyDetails.scheme, proxyDetails.host, portInt, bypassList),
-                        mandatory: true
+                const validScheme = ['http', 'https', 'socks4', 'socks5'].includes(proxyDetails.scheme) ? proxyDetails.scheme : 'http';
+
+                const rulesObj = {
+                    singleProxy: {
+                        scheme: validScheme,
+                        host: cleanedHost,
+                        port: portInt
                     }
+                };
+                if (bypassList.length > 0) {
+                    rulesObj.bypassList = bypassList;
+                }
+
+                chromeConfig = {
+                    mode: "fixed_servers",
+                    rules: rulesObj
                 };
             }
 
-            // 3. Save to storage
-            await new Promise(r => {
-                chrome.storage.local.set({ proxyConfig, activeProxyId: proxyDetails.id }, r);
-            });
-
-            // 4. Apply proxy settings
+            // 3. Apply proxy settings in Chrome FIRST
             await new Promise((resolve, reject) => {
                 chrome.proxy.settings.set({ value: chromeConfig, scope: 'regular' }, () => {
                     if (chrome.runtime.lastError) {
@@ -191,10 +287,28 @@ export class ProxyAuthService {
                 });
             });
 
+            // 4. Save to storage IMMEDIATELY
+            await new Promise(r => {
+                chrome.storage.local.set({ proxyConfig, activeProxyId: proxyDetails.id, proxyActive: true }, r);
+            });
+
+            // 5. Asynchronously fetch GeoIP details (lat, lng, timezone, liveIp)
+            ProxyAuthService.fetchGeoDetails().then(geo => {
+                if (geo) {
+                    chrome.storage.local.get(['proxyConfig'], (res) => {
+                        if (res.proxyConfig && res.proxyConfig.enabled) {
+                            chrome.storage.local.set({ proxyConfig: { ...res.proxyConfig, ...geo } });
+                        }
+                    });
+                }
+            }).catch(() => {});
+
             return { success: true, proxyConfig };
         } catch (e) {
             console.error("[Proxy Service] connectProxy error:", e);
             ProxyAuthService.currentAuth = null;
+            chrome.proxy.settings.clear({ scope: 'regular' }, () => {});
+            chrome.storage.local.set({ proxyConfig: { enabled: false }, activeProxyId: null, proxyActive: false }, () => {});
             return { success: false, error: e.message };
         }
     }
@@ -204,66 +318,50 @@ export class ProxyAuthService {
      */
     static async disableProxy() {
         try {
-            if (!chrome.proxy || !chrome.proxy.settings) {
-                throw new Error("Proxy API is not available.");
-            }
-
             ProxyAuthService.currentAuth = null;
 
             await new Promise(r => {
-                chrome.storage.local.set({ proxyConfig: { enabled: false }, activeProxyId: null }, r);
+                chrome.storage.local.set({ proxyConfig: { enabled: false }, activeProxyId: null, proxyActive: false }, r);
             });
 
-            await new Promise((resolve, reject) => {
-                chrome.proxy.settings.clear({ scope: 'regular' }, () => {
-                    if (chrome.runtime.lastError) {
-                        reject(new Error(chrome.runtime.lastError.message));
-                    } else {
+            if (chrome.proxy && chrome.proxy.settings) {
+                await new Promise((resolve) => {
+                    chrome.proxy.settings.clear({ scope: 'regular' }, () => {
+                        const err = chrome.runtime.lastError;
+                        if (err) console.warn("[Proxy Service] clear warning:", err.message);
                         resolve();
-                    }
+                    });
                 });
-            });
+            }
 
             return { success: true };
         } catch (e) {
             console.error("[Proxy Service] disableProxy error:", e);
-            return { success: false, error: e.message };
-        }
-    }
-
-    static async fetchIp() {
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 4000);
-            const response = await fetch('https://api.ipify.org?format=json', {
-                signal: controller.signal,
-                cache: 'no-store'
-            });
-            clearTimeout(timeoutId);
-            if (response.ok) {
-                const data = await response.json();
-                return data.ip;
-            }
-            return null;
-        } catch (e) {
-            console.error("[Proxy Test Service] fetchIp error:", e);
-            return null;
+            chrome.storage.local.set({ proxyConfig: { enabled: false }, activeProxyId: null, proxyActive: false }, () => {});
+            return { success: true };
         }
     }
 
     /**
-     * Performs direct-vs-proxy IP testing completely in background.
+     * Performs proxy connectivity test by temporarily configuring Chrome's proxy engine.
      */
     static async testProxy(proxyDetails) {
-        const originalAuth = ProxyAuthService.currentAuth;
+        if (!proxyDetails || !proxyDetails.host) {
+            return { success: false, error: "Thông tin Host và Port không được để trống!" };
+        }
 
-        // Retrieve original config synchronously by awaiting it
+        const cleanedHost = String(proxyDetails.host).trim();
+        const portInt = parseInt(proxyDetails.port, 10);
+        if (isNaN(portInt) || portInt <= 0 || portInt > 65535) {
+            return { success: false, error: "Cổng Port Proxy không hợp lệ (1 - 65535)!" };
+        }
+
+        const originalAuth = ProxyAuthService.currentAuth;
         const result = await new Promise(resolve => {
             chrome.storage.local.get(['proxyConfig'], resolve);
         });
         const originalConfig = result.proxyConfig;
 
-        // Temporarily set credentials in memory for the test proxy
         if (proxyDetails.useAuth && proxyDetails.username) {
             ProxyAuthService.currentAuth = {
                 username: proxyDetails.username,
@@ -276,34 +374,24 @@ export class ProxyAuthService {
         const restoreSettings = () => {
             ProxyAuthService.currentAuth = originalAuth;
             if (originalConfig && originalConfig.enabled) {
-                let restoreChromeConfig;
-                if (originalConfig.scheme === 'pac') {
-                    restoreChromeConfig = {
-                        mode: "pac_script",
-                        pacScript: {
-                            url: originalConfig.pacUrl
-                        }
-                    };
-                } else {
-                    const restoreBypassList = (originalConfig.bypass || '').split('\n').map(d => d.trim()).filter(Boolean);
-                    restoreChromeConfig = {
-                        mode: "pac_script",
-                        pacScript: {
-                            data: ProxyAuthService.buildPacScript(originalConfig.scheme, originalConfig.host, originalConfig.port, restoreBypassList),
-                            mandatory: true
-                        }
-                    };
-                }
-                chrome.proxy.settings.set({ value: restoreChromeConfig, scope: 'regular' }, () => {
-                    if (originalConfig.useAuth && originalConfig.username) {
-                        ProxyAuthService.currentAuth = {
-                            username: originalConfig.username,
-                            password: originalConfig.password || ''
-                        };
-                    } else {
-                        ProxyAuthService.currentAuth = null;
+                const restorePortInt = parseInt(originalConfig.port, 10) || 80;
+                const validScheme = ['http', 'https', 'socks4', 'socks5'].includes(originalConfig.scheme) ? originalConfig.scheme : 'http';
+                const restoreRules = {
+                    singleProxy: {
+                        scheme: validScheme,
+                        host: String(originalConfig.host).trim(),
+                        port: restorePortInt
                     }
-                });
+                };
+                const restoreBypassList = (originalConfig.bypass || '').split('\n').map(d => d.trim()).filter(Boolean);
+                if (restoreBypassList.length > 0) {
+                    restoreRules.bypassList = restoreBypassList;
+                }
+                const restoreChromeConfig = {
+                    mode: "fixed_servers",
+                    rules: restoreRules
+                };
+                chrome.proxy.settings.set({ value: restoreChromeConfig, scope: 'regular' }, () => {});
             } else {
                 chrome.proxy.settings.clear({ scope: 'regular' }, () => {
                     ProxyAuthService.currentAuth = null;
@@ -313,37 +401,36 @@ export class ProxyAuthService {
 
         try {
             if (!chrome.proxy || !chrome.proxy.settings) {
-                throw new Error("Proxy API is not available in extension context.");
+                throw new Error("Proxy API không khả dụng.");
             }
 
-            // Clear proxy settings to measure the base direct IP
-            await new Promise(r => chrome.proxy.settings.clear({ scope: 'regular' }, r));
-            await new Promise(r => setTimeout(r, 200));
-            const baseIp = await ProxyAuthService.fetchIp();
-
-            // Apply test proxy settings
-            let testChromeConfig;
-            if (proxyDetails.scheme === 'pac') {
-                testChromeConfig = {
-                    mode: "pac_script",
-                    pacScript: {
-                        url: proxyDetails.pacUrl
-                    }
-                };
-            } else {
-                const bypassList = (proxyDetails.bypass || '').split('\n').map(d => d.trim()).filter(Boolean);
-                const portInt = parseInt(proxyDetails.port);
-                testChromeConfig = {
-                    mode: "pac_script",
-                    pacScript: {
-                        data: ProxyAuthService.buildPacScript(proxyDetails.scheme, proxyDetails.host, portInt, bypassList),
-                        mandatory: true
-                    }
-                };
+            const validScheme = ['http', 'https', 'socks4', 'socks5'].includes(proxyDetails.scheme) ? proxyDetails.scheme : 'http';
+            const rulesObj = {
+                singleProxy: {
+                    scheme: validScheme,
+                    host: cleanedHost,
+                    port: portInt
+                }
+            };
+            const bypassList = (proxyDetails.bypass || '').split('\n').map(d => d.trim()).filter(Boolean);
+            if (bypassList.length > 0) {
+                rulesObj.bypassList = bypassList;
             }
 
-            await new Promise(r => chrome.proxy.settings.set({ value: testChromeConfig, scope: 'regular' }, r));
-            await new Promise(r => setTimeout(r, 200));
+            const testChromeConfig = {
+                mode: "fixed_servers",
+                rules: rulesObj
+            };
+
+            await new Promise((resolve, reject) => {
+                chrome.proxy.settings.set({ value: testChromeConfig, scope: 'regular' }, () => {
+                    if (chrome.runtime.lastError) {
+                        reject(new Error(chrome.runtime.lastError.message));
+                    } else {
+                        resolve();
+                    }
+                });
+            });
 
             const startTime = performance.now();
             const returnedIp = await ProxyAuthService.fetchIp();
@@ -352,12 +439,9 @@ export class ProxyAuthService {
             restoreSettings();
 
             if (!returnedIp) {
-                return { success: false, error: "Không thể lấy IP qua Proxy (Kết nối lỗi hoặc sai thông tin xác thực)." };
-            } else if (baseIp && returnedIp === baseIp) {
-                // Returned IP matches base IP, meaning it fell back to DIRECT (auth failed)
-                return { success: false, error: "Proxy bị lỗi hoặc không thể xác thực (bị fallback về IP thật)." };
+                return { success: false, error: "Máy chủ Proxy không phản hồi hoặc bị Offline (Cổng hoặc IP không kết nối được)." };
             } else {
-                return { success: true, latency };
+                return { success: true, latency, ip: returnedIp };
             }
         } catch (e) {
             console.error("[Proxy Test Service] Error:", e);

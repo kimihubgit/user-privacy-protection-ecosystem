@@ -10,7 +10,7 @@ export default function CommunitySection() {
           <div className="community-intro">
             <div className="community-badge">
               <Users size={14} />
-              <span>Cộng Đồng Phòng Chống Lừa Đảo</span>
+              <span>Cộng Đồng Phòng S.H.I.E.L.D</span>
             </div>
             <h2 className="community-title">
               Chung tay vì một<br />
@@ -19,13 +19,13 @@ export default function CommunitySection() {
             <p className="community-description">
               Hơn 50,000+ thành viên trong liên minh đang hoạt động tích cực để phát hiện, báo cáo và đẩy lùi các chiến dịch lừa đảo trực tuyến tinh vi tại Việt Nam. Tham gia cùng chúng tôi ngay hôm nay để bảo vệ bản thân và những người xung quanh.
             </p>
-            
+
             <div className="community-cta-buttons">
-              <a href="https://t.me/chongluadao" target="_blank" rel="noreferrer" className="community-btn btn-telegram">
+              <a href="https://t.me/shield" target="_blank" rel="noreferrer" className="community-btn btn-telegram">
                 <Send size={18} />
                 <span>Kênh Cảnh Báo Telegram</span>
               </a>
-              <a href="https://facebook.com/groups/chongluadao" target="_blank" rel="noreferrer" className="community-btn btn-facebook">
+              <a href="https://facebook.com/groups/shield" target="_blank" rel="noreferrer" className="community-btn btn-facebook">
                 <Users size={18} />
                 <span>Nhóm Facebook hỗ trợ</span>
               </a>

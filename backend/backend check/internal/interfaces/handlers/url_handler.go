@@ -213,3 +213,73 @@ func (h *URLHandler) DeleteScamURL(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{"message": "Scam URL successfully deleted"})
 }
+
+// UpdateScamURL modifies an existing scam URL entry
+func (h *URLHandler) UpdateScamURL(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID parameter is required"})
+		return
+	}
+
+	var input request.AddScamURLInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationError(err)})
+		return
+	}
+
+	req := models.ScamURL{
+		URL:         input.URL,
+		Category:    input.Category,
+		Status:      input.Status,
+		Description: input.Description,
+	}
+	if req.Status == "" {
+		req.Status = models.StatusMalicious
+	}
+
+	err := h.service.UpdateScamURL(c.Request.Context(), id, &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Scam URL successfully updated",
+		"data":    req,
+	})
+}
+
+// UpdateAllowURL modifies an existing allowlisted URL entry
+func (h *URLHandler) UpdateAllowURL(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID parameter is required"})
+		return
+	}
+
+	var input struct {
+		URL         string `json:"url" binding:"required"`
+		Description string `json:"description"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": utils.FormatValidationError(err)})
+		return
+	}
+
+	req := models.AllowURL{
+		URL:         input.URL,
+		Description: input.Description,
+	}
+
+	err := h.service.UpdateAllowURL(c.Request.Context(), id, &req)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Allowlist URL successfully updated",
+		"data":    req,
+	})
+}

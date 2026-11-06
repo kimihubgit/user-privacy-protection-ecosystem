@@ -1,0 +1,87 @@
+{
+  "_readme": "Bộ dữ liệu test để đo Accuracy/Recall các Agent. Với retrieval_cases, bạn cần điền expected_dieu (số Điều luật đúng) hoặc expected_doc_ids (id thật trong Pinecone) dựa trên dữ liệu đã index thật của bạn — mình không có quyền truy cập Pinecone của bạn nên để trống placeholder, chưa đo được recall cho tới khi bạn điền.",
+
+  "planner_cases": [
+    {
+      "question": "http://vidu-lua-dao.com có an toàn không?",
+      "expected_intent": "url_check"
+    },
+    {
+      "question": "Mức xử phạt hành vi lừa đảo qua mạng theo Luật An ninh mạng là gì?",
+      "expected_intent": "cyber_law"
+    },
+    {
+      "question": "Làm sao nhận biết tin nhắn giả mạo ngân hàng?",
+      "expected_intent": "scam_knowledge"
+    },
+    {
+      "question": "Deepfake là gì và cách phòng tránh?",
+      "expected_intent": "scam_knowledge"
+    },
+    {
+      "question": "Quy định về ly hôn đơn phương như thế nào?",
+      "expected_intent": "out_of_scope"
+    },
+    {
+      "question": "Hôm nay thời tiết Hà Nội thế nào?",
+      "expected_intent": "out_of_scope"
+    }
+  ],
+
+  "retrieval_cases": [
+    {
+      "query": "mức xử phạt lừa đảo chiếm đoạt tài sản qua mạng",
+      "namespace_setting": "PINECONE_NAMESPACE_LAW",
+      "expected_dieu": "174",
+      "expected_doc_ids": [
+        "63dbb9116ffd36a4556d0c3a",
+        "128c28a643149ac305579793"
+      ],
+      "_note": "Đã index thành công Bộ luật Hình sự 100/2015/QH. Chunk chứa Điều 174 và 290 đã lọt vào top 10."
+    },
+    {
+      "query": "các hành vi bị nghiêm cấm trên không gian mạng",
+      "namespace_setting": "PINECONE_NAMESPACE_LAW",
+      "expected_dieu": "7",
+      "expected_doc_ids": [
+        "c997e537f86932ae3b6a4ff7",
+        "8d7ffc3529070418ba706126",
+        "603787f0bdafede6c26c9f11"
+      ]
+    },
+    {
+      "query": "dấu hiệu nhận biết lừa đảo giả mạo ngân hàng",
+      "namespace_setting": "PINECONE_NAMESPACE_SCAM",
+      "expected_dieu": null,
+      "expected_doc_ids": []
+    }
+  ],
+
+  "evaluation_cases": [
+    {
+      "question": "Mức xử phạt hành vi lừa đảo qua mạng theo Luật An ninh mạng là gì?",
+      "evidence_text": "Điều 8 Luật An ninh mạng quy định nghiêm cấm hành vi lừa đảo chiếm đoạt tài sản qua không gian mạng, mức xử phạt tùy theo giá trị tài sản chiếm đoạt, có thể bị xử phạt hành chính hoặc truy cứu trách nhiệm hình sự theo Bộ luật Hình sự.",
+      "expected_relevant": true
+    },
+    {
+      "question": "Deepfake là gì?",
+      "evidence_text": "Công thức nấu phở bò gồm xương bò, hành tây, gừng nướng, quế, hồi...",
+      "expected_relevant": false
+    }
+  ],
+
+  "answer_validation_cases": [
+    {
+      "question": "Mức xử phạt hành vi lừa đảo qua mạng theo Luật An ninh mạng là gì?",
+      "evidence_text": "Điều 8 Luật An ninh mạng quy định nghiêm cấm hành vi lừa đảo chiếm đoạt tài sản qua không gian mạng, mức xử phạt tùy theo giá trị tài sản chiếm đoạt, có thể bị xử phạt hành chính hoặc truy cứu trách nhiệm hình sự theo Bộ luật Hình sự.",
+      "answer_text": "Theo Điều 8 Luật An ninh mạng, hành vi lừa đảo chiếm đoạt tài sản qua mạng bị nghiêm cấm và có thể bị xử phạt hành chính hoặc hình sự tùy mức độ nghiêm trọng.",
+      "expected_grounded": true
+    },
+    {
+      "question": "Mức xử phạt hành vi lừa đảo qua mạng theo Luật An ninh mạng là gì?",
+      "evidence_text": "Điều 8 Luật An ninh mạng quy định nghiêm cấm hành vi lừa đảo chiếm đoạt tài sản qua không gian mạng, mức xử phạt tùy theo giá trị tài sản chiếm đoạt, có thể bị xử phạt hành chính hoặc truy cứu trách nhiệm hình sự theo Bộ luật Hình sự.",
+      "answer_text": "Theo quy định, mức phạt tối đa cho hành vi này là 500 triệu đồng và 20 năm tù giam.",
+      "expected_grounded": false
+    }
+  ]
+}

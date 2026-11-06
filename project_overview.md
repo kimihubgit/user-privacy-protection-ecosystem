@@ -17,7 +17,7 @@ graph TD
     classDef tools fill:#eceff1,stroke:#37474f,stroke-width:2px;
 
     %% Client Layer
-    subgraph Clients ["Lớp Client & Tương tác Người dùng"]
+    subgraph Clients ["Lớp Client và Tương tác Người dùng"]
         FE["Frontend - React/Vite - Port 5173"]:::client
         EXT["Browser Extensions - Vue/Tailwind"]:::client
         TG["Telegram Bot - Python"]:::client
@@ -30,22 +30,22 @@ graph TD
     end
 
     %% AI Services Layer
-    subgraph AIServices ["Lớp AI & Phân tích Độc hại"]
+    subgraph AIServices ["Lớp AI và Phân tích Độc hại"]
         AI_ANM["AI ANM Security Chatbot - FastAPI - Port 8003"]:::ai
         AI_PHISH["AI Phishing Detector - FastAPI - Port 8000"]:::ai
         CHAT_V3["Chatbot RAG Backend Express - Port 8003"]:::ai
     end
 
     %% Databases & External Services
-    subgraph DataServices ["Lớp Dữ liệu & Dịch vụ ngoài"]
-        MONGO[("MongoDB Database - Port 27017")]:::db
+    subgraph DataServices ["Lớp Dữ liệu và Dịch vụ ngoài"]
+        MONGO["MongoDB Database - Port 27017"]:::db
         VECTOR_DB["Vector Database - FAISS / Pinecone"]:::db
         EXT_APIS["External APIs - Gemini, WHOIS, DNS"]:::db
     end
 
     %% Tool & Pipeline
     subgraph CrawlPipelines ["Lớp Cào Dữ liệu (Crawler)"]
-        CRAWLER["Crawler Scripts - Chongluadao & Gov"]:::tools
+        CRAWLER["Crawler Scripts - Chongluadao và Gov"]:::tools
     end
 
     %% Relationships
@@ -58,7 +58,7 @@ graph TD
     TG -->|Kiểm tra URL nhanh| BE_CHECK
 
     BE_AUTH -->|Đọc / Ghi tài khoản| MONGO
-    BE_CHECK -->|Đọc / Ghi blocklist & report| MONGO
+    BE_CHECK -->|Đọc / Ghi blocklist và report| MONGO
     BE_CHECK -->|Gửi URL phân tích chuyên sâu| AI_PHISH
 
     AI_ANM -->|Truy hồi dữ liệu ngữ cảnh| VECTOR_DB
@@ -116,9 +116,9 @@ sequenceDiagram
 | **Backend Auth** | [backend/backend auth](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/backend/backend%20auth) | Go, Gin, JWT, WebAuthn | `8081` | Hệ thống quản lý người dùng, đăng ký, đăng nhập và tích hợp công nghệ xác thực không mật khẩu Passkey (WebAuthn). |
 | **Backend Check** | [backend/backend check](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/backend/backend%20check) | Go, Gin | `8082` | Xử lý kiểm tra danh sách đen/danh sách trắng của các URL, chuẩn hóa đường dẫn, nhận diện Heuristic, ghi nhận báo cáo từ người dùng. |
 | **AI Phishing** | [Ai](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/Ai) / [Aia/Ai](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/Aia/Ai) | Python, FastAPI, Gemini API | `8000` | Dịch vụ phân tích tự động URL lừa đảo (phishing) sử dụng AI kết hợp kiểm tra thông tin DNS/WHOIS của tên miền. |
-| **AI ANM** | [ai_ANM](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/ai_ANM) | Python, FastAPI, LangChain, FAISS | `8003` | Chatbot tư vấn về an toàn thông tin & an ninh mạng xây dựng trên mô hình RAG (FAISS) để trả lời dựa trên tài liệu bảo mật. |
+| **AI ANM** | [ai_ANM](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/ai_ANM) | Python, FastAPI, Gemini 2.5 Flash, Pinecone Vector DB, Multilingual E5 | `8000` / `8003` | Hệ thống Agentic RAG tư vấn An ninh mạng & Pháp luật An toàn thông tin, tích hợp Pinecone Cloud Vector DB (namespaces `law` & `scam`) và Google Gemini API. |
 | **Chatbot v3** | [chatbot v3](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/chatbot%20v3) | Node.js, Express, Pinecone, Gemini | `8003` *(hoặc thay thế)* | Dịch vụ backend chatbot RAG đa trợ lý (multi-agent) hỗ trợ các "persona" khác nhau với kho dữ liệu lớn lưu trên Pinecone Vector DB. |
-| **Extensions** | [extension](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension) | Vue.js, TailwindCSS | *Trình duyệt* | Tiện ích cài đặt trên trình duyệt (Chrome, Firefox, Safari) giúp chặn và cảnh báo người dùng ngay khi chuẩn bị truy cập web xấu. |
+| **Extensions** | [extension](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension) | Vue.js, TailwindCSS | *Trình duyệt* | Tiện ích bảo vệ đa năng tích hợp 11 tab/view chức năng: Tự động chặn tên miền độc hại, chặn quảng cáo & theo dõi (Adblock/Tracking), trợ lý chat Advisor trực tiếp, Cookie Manager chống cướp phiên, VPN/Proxy Router ẩn danh IP, làm mờ dữ liệu nhạy cảm (DataBlurShield), clickjacking shield, và lá chắn WebSocket chuyên biệt Facebook (FbWsHook). |
 | **Telegram Bot** | [bot](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/bot) | Python | *Polling / Webhook* | Hỗ trợ người dùng kiểm tra nhanh các URL độc hại ngay trong chat room Telegram. |
 | **Crawler** | [crawl chongluadao](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/crawl%20chongluadao) | Python | *CLI* | Script tự động cào dữ liệu từ cổng ChongLuaDao và Cổng thông tin chính phủ để bổ sung dữ liệu cơ sở dữ liệu. |
 

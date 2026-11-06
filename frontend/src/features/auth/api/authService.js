@@ -243,5 +243,66 @@ export const authService = {
       console.error('getAdminUserDetail failed:', e);
       throw e;
     }
+  },
+
+  // PUT /api/v1/admin/users/:id/status
+  async updateAdminUserStatus(token, id, status) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/users/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ status })
+      });
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật trạng thái người dùng trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('updateAdminUserStatus failed:', e);
+      throw e;
+    }
+  },
+
+  // PUT /api/v1/admin/users/:id/role
+  async updateAdminUserRole(token, id, role) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/users/${id}/role`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ role })
+      });
+      if (!response.ok) {
+        throw new Error('Không thể cập nhật quyền hạn người dùng trên máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('updateAdminUserRole failed:', e);
+      throw e;
+    }
+  },
+
+  // DELETE /api/v1/admin/users/:id
+  async deleteAdminUser(token, id) {
+    try {
+      const response = await fetch(`${API_AUTH_URL}/api/v1/admin/users/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (!response.ok) {
+        throw new Error('Không thể xóa tài khoản người dùng khỏi máy chủ!');
+      }
+      return await response.json();
+    } catch (e) {
+      console.error('deleteAdminUser failed:', e);
+      throw e;
+    }
   }
 };

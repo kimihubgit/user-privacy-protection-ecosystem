@@ -349,6 +349,10 @@ func (h *AdminHandler) GetDashboardStats(c *gin.Context) {
 	})
 }
 
+func (h *AdminHandler) UpdateScamURL(c *gin.Context) {
+	h.forwardRequest(c, "PUT", "/api/admin/urls/"+c.Param("id"))
+}
+
 func (h *AdminHandler) AddAllowURL(c *gin.Context) {
 	h.forwardRequest(c, "POST", "/api/admin/allowlist")
 }
@@ -357,6 +361,91 @@ func (h *AdminHandler) ListAllowURLs(c *gin.Context) {
 	h.forwardRequest(c, "GET", "/api/admin/allowlist")
 }
 
+func (h *AdminHandler) UpdateAllowURL(c *gin.Context) {
+	h.forwardRequest(c, "PUT", "/api/admin/allowlist/"+c.Param("id"))
+}
+
 func (h *AdminHandler) DeleteAllowURL(c *gin.Context) {
 	h.forwardRequest(c, "DELETE", "/api/admin/allowlist/"+c.Param("id"))
+}
+
+func (h *AdminHandler) GetScammer(c *gin.Context) {
+	h.forwardRequest(c, "GET", "/api/admin/scammers/"+c.Param("id"))
+}
+
+func (h *AdminHandler) UpdateScammer(c *gin.Context) {
+	h.forwardRequest(c, "PUT", "/api/admin/scammers/"+c.Param("id"))
+}
+
+func (h *AdminHandler) UpdateUserStatus(c *gin.Context) {
+	userIDStr := c.Param("id")
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		response.SendError(c, http.StatusBadRequest, "INVALID_ID", "invalid user ID format")
+		return
+	}
+
+	var req struct {
+		Status string `json:"status" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.SendError(c, http.StatusBadRequest, "INVALID_PAYLOAD", err.Error())
+		return
+	}
+
+	if err := h.authService.UpdateUserStatus(c.Request.Context(), userID, req.Status); err != nil {
+		response.SendError(c, http.StatusInternalServerError, "DATABASE_ERROR", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "User status updated successfully",
+	})
+}
+
+func (h *AdminHandler) UpdateUserRole(c *gin.Context) {
+	userIDStr := c.Param("id")
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		response.SendError(c, http.StatusBadRequest, "INVALID_ID", "invalid user ID format")
+		return
+	}
+
+	var req struct {
+		Role string `json:"role" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		response.SendError(c, http.StatusBadRequest, "INVALID_PAYLOAD", err.Error())
+		return
+	}
+
+	if err := h.authService.UpdateUserRole(c.Request.Context(), userID, req.Role); err != nil {
+		response.SendError(c, http.StatusInternalServerError, "DATABASE_ERROR", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "User role updated successfully",
+	})
+}
+
+func (h *AdminHandler) DeleteUser(c *gin.Context) {
+	userIDStr := c.Param("id")
+	userID, err := primitive.ObjectIDFromHex(userIDStr)
+	if err != nil {
+		response.SendError(c, http.StatusBadRequest, "INVALID_ID", "invalid user ID format")
+		return
+	}
+
+	if err := h.authService.DeleteUser(c.Request.Context(), userID); err != nil {
+		response.SendError(c, http.StatusInternalServerError, "DATABASE_ERROR", err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "User deleted successfully",
+	})
 }

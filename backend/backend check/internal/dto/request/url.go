@@ -4,6 +4,7 @@ package request
 type AddScamURLInput struct {
 	URL            string `json:"url" binding:"required"`
 	Category       string `json:"category" binding:"required,oneof=phishing scam malware gambling fake_news none"`
+	Status         string `json:"status"`
 	Description    string `json:"description"`
 	SourceReportID string `json:"source_report_id"`
 }

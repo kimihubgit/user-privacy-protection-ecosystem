@@ -19,6 +19,7 @@ type Repository interface {
 	InitIndexes(ctx context.Context) error
 	InsertScammer(ctx context.Context, scammer *models.Scammer) error
 	UpdateScammer(ctx context.Context, scammer *models.Scammer) error
+	GetScammerByID(ctx context.Context, id primitive.ObjectID) (*models.Scammer, error)
 	FindScammerByTarget(ctx context.Context, target string) (*models.Scammer, error)
 	ListScammers(ctx context.Context, page, limit int64, targetType string) ([]models.Scammer, int64, error)
 	DeleteScammer(ctx context.Context, id primitive.ObjectID) error
@@ -158,4 +159,16 @@ func (r *mongoRepository) DeleteScammer(ctx context.Context, id primitive.Object
 		return mongo.ErrNoDocuments
 	}
 	return nil
+}
+
+func (r *mongoRepository) GetScammerByID(ctx context.Context, id primitive.ObjectID) (*models.Scammer, error) {
+	var scammer models.Scammer
+	err := r.collection().FindOne(ctx, bson.M{"_id": id}).Decode(&scammer)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &scammer, nil
 }

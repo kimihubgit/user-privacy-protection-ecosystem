@@ -63,7 +63,6 @@ The background directory contains the background service worker which executes i
     *   **[ProxyAuthService.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/background/services/ProxyAuthService.js)**: Configures proxy connections, handles authentication, and performs proxy health/speed tests.
     *   **[ProxyAdvancedService.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/background/services/ProxyAdvancedService.js)**: Applies anti-fingerprinting details (customizing WebRTC, spoofing timezone/GPS).
     *   **[TrackingParamsService.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/background/services/TrackingParamsService.js)**: Cleanses query parameter tracking parameters (e.g., Google click tracking IDs).
-    *   **[TranslateService.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/background/services/TranslateService.js)**: External request processor for on-page text translation.
 
 ---
 
@@ -82,9 +81,6 @@ Content scripts are injected directly into targeted browser tabs to modify site 
     *   **[ClickjackingShield.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/content/modules/ClickjackingShield.js)**: Scans for transparent iframe overlays and warns users.
     *   **[DataBlurShield.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/content/modules/DataBlurShield.js)**: Obfuscates passwords, credit cards, or text fields from snooping and unauthorized screen capturing.
     *   **[FbWsHook.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/content/modules/FbWsHook.js)**: Intercepts WebSocket communication on Facebook (e.g. keylogger blocking, chat details).
-    *   **[FbNoReload.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/content/modules/FbNoReload.js)** & **[FbHideSuggested.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/content/modules/FbHideSuggested.js)** & **[FbTimer.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/content/modules/FbTimer.js)**:
-        *   Modules specialized in optimizing privacy on Facebook by removing trackers, blocking suggested ads/posts, and tracking browsing time.
-    *   **[TranslateShield.js](file:///c:/Users/vkhai/OneDrive/Desktop/user%20privacy%20protection%20ecosystem/extension/chrome-ex/src/content/modules/TranslateShield.js)**: Page translation panel overlays.
 
 ---
 

@@ -1,10 +1,11 @@
 {
   "update_url": "https://clients2.google.com/service/update2/crx",
   "manifest_version": 3,
+  "default_locale": "vi",
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAzcsxNe0BRgnsJGqiDNcJBCymnUr3wzFrr7mPVpqYDFQTUD6sgP97srvsuM4nMVfll2X8qT6bowHVlfbYQvgdklCtpOAI4xI2UOpri9QHVzNxSp3N8XnI+3Fcso0/tc8VBUbLCXS0S6zhxkkMorK5U9nAZY/sR5pz4gf7ygZi4ib8Y6LSMNog/Vs27mINq0h1oG7kH389DgGSe4F2uG3MOBEoCrW8iguBLRE4Su8ULytH79RJuHk3Viw/j3G3rWpWrylaUzDfWd+3GrvpZ5KSytH6JRnjW3b4g2UaTBBsbNFuqK5FvAcB2y0KR4qTXjMSATj8a063ovqB9V71kZQMSQIDAQAB",
-  "name": "KiGuard Detector",
+  "name": "__MSG_appName__",
   "version": "1.0",
-  "short_name": "KiGuard",
+  "short_name": "__MSG_appShortName__",
   "author": "Kimidev",
   "homepage_url": "https://blog.kimidev.net",
   "minimum_chrome_version": "88",
@@ -18,7 +19,7 @@
     }
   },
   "incognito": "spanning",
-  "description": "Tiện ích Bảo vệ bạn khỏi các trang web lừa đảo hoặt có nguy cơ lừa đảo, giả mạo. Phát hiện và detect các thông tin có dấu hiệu lừa đảo, nội dung độc hại.",
+  "description": "__MSG_appDesc__",
   "permissions": [
     "proxy",
     "storage",
@@ -34,11 +35,10 @@
     "scripting",
     "declarativeNetRequest",
     "clipboardRead",
-    "privacy"
+    "privacy",
+    "activeTab",
+    "downloads"
   ],
-  "omnibox": {
-    "keyword": "hello"
-  },
   "host_permissions": [
     "*://*/*"
   ],
@@ -50,8 +50,7 @@
     "128": "assets/icons/ki128o.png"
   },
   "background": {
-    "service_worker": "/src/background/background.js",
-    "type": "module"
+    "service_worker": "src/background/background.js"
   },
   "commands": {
     "open_app": {
@@ -71,10 +70,22 @@
         "<all_urls>"
       ],
       "js": [
+        "src/content/injections/pageInterceptor.js"
+      ],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/content/modules/PopupBlockShield.js",
+        "src/content/modules/ClipboardShield.js",
         "src/content/modules/ScamShield.js",
         "src/content/modules/ClickjackingShield.js",
-        "src/content/modules/TranslateShield.js",
         "src/content/modules/DataBlurShield.js",
+        "src/content/modules/SearchResultShield.js",
         "src/content/content.js"
       ],
       "css": [
@@ -97,47 +108,10 @@
         "https://code.facebook.com/*"
       ],
       "js": [
-        "src/content/modules/FbWsHook.js",
-        "src/content/modules/FbNoReload.js"
+        "src/content/modules/FbWsHook.js"
       ],
       "run_at": "document_start",
       "world": "MAIN"
-    },
-    {
-      "matches": [
-        "https://*.facebook.com/*"
-      ],
-      "exclude_matches": [
-        "https://m.facebook.com/*",
-        "https://touch.facebook.com/*",
-        "https://mobile.facebook.com/*",
-        "https://mbasic.facebook.com/*",
-        "https://graph.facebook.com/*",
-        "https://developers.facebook.com/*",
-        "https://code.facebook.com/*"
-      ],
-      "js": [
-        "src/content/modules/FbHideSuggested.js"
-      ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://*.facebook.com/*"
-      ],
-      "exclude_matches": [
-        "https://m.facebook.com/*",
-        "https://touch.facebook.com/*",
-        "https://mobile.facebook.com/*",
-        "https://mbasic.facebook.com/*",
-        "https://graph.facebook.com/*",
-        "https://developers.facebook.com/*",
-        "https://code.facebook.com/*"
-      ],
-      "js": [
-        "src/content/modules/FbTimer.js"
-      ],
-      "run_at": "document_end"
     }
   ],
   "web_accessible_resources": [

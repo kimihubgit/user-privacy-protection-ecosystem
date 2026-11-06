@@ -19,10 +19,10 @@ export default function PrivacyPolicy() {
       content: (
         <>
           <p>
-            Chào mừng bạn đến với hệ thống <strong>Chống Lừa Đảo</strong>. Chúng tôi hiểu rằng quyền riêng tư và an toàn thông tin trực tuyến là mối quan tâm hàng đầu của người dùng Việt Nam. 
+            Chào mừng bạn đến với hệ thống <strong>shield</strong>. Chúng tôi hiểu rằng quyền riêng tư và an toàn thông tin trực tuyến là mối quan tâm hàng đầu của người dùng Việt Nam.
           </p>
           <p>
-            Chính sách bảo mật này giải thích cách chúng tôi xử lý thông tin khi bạn sử dụng trang web, tiện ích mở rộng (Extension), chatbot Zalo/Telegram/Discord, và các dịch vụ tích hợp API khác thuộc hệ sinh thái Chống Lừa Đảo.
+            Chính sách bảo mật này giải thích cách chúng tôi xử lý thông tin khi bạn sử dụng trang web, tiện ích mở rộng (Extension), chatbot Zalo/Telegram/Discord, và các dịch vụ tích hợp API khác thuộc hệ sinh thái S.H.I.E.L.D.
           </p>
           <div className="policy-highlight-box">
             <ShieldCheck className="highlight-icon" size={24} />
@@ -85,7 +85,7 @@ export default function PrivacyPolicy() {
       content: (
         <>
           <p>
-            Chống Lừa Đảo là một dự án xã hội phi lợi nhuận. Chúng tôi chỉ chia sẻ dữ liệu cảnh báo dưới dạng danh sách tên miền/số tài khoản đã xác minh độc hại với các bên liên quan sau:
+            S.H.I.E.L.D là một dự án xã hội phi lợi nhuận. Chúng tôi chỉ chia sẻ dữ liệu cảnh báo dưới dạng danh sách tên miền/số tài khoản đã xác minh độc hại với các bên liên quan sau:
           </p>
           <ul className="policy-list">
             <li>
@@ -130,8 +130,8 @@ export default function PrivacyPolicy() {
             Nếu bạn có bất kỳ câu hỏi nào về chính sách bảo mật này, hoặc muốn yêu cầu chỉnh sửa/gỡ bỏ thông tin liên quan đến các báo cáo hoặc dữ liệu của bạn trên hệ thống, xin vui lòng liên hệ:
           </p>
           <div className="contact-card-policy">
-            <h4>Doanh Nghiệp Xã Hội Chống Lừa Đảo</h4>
-            <p><strong>Email tiếp nhận:</strong> <a href="mailto:privacy@chongluadao.vn">privacy@chongluadao.vn</a> hoặc <a href="mailto:info@chongluadao.vn">info@chongluadao.vn</a></p>
+            <h4>Doanh Nghiệp Xã Hội S.H.I.E.L.D</h4>
+            <p><strong>Email tiếp nhận:</strong> <a href="mailto:privacy@shield.vn">privacy@shield.vn</a> hoặc <a href="mailto:info@shield.vn">info@shield.vn</a></p>
             <p><strong>Văn phòng:</strong> Tòa nhà bảo mật CLD, Quận 1, TP. Hồ Chí Minh, Việt Nam</p>
             <p><strong>Thời gian xử lý:</strong> Phản hồi yêu cầu trong vòng 24 - 48 giờ làm việc.</p>
           </div>
@@ -143,7 +143,7 @@ export default function PrivacyPolicy() {
   return (
     <div className="policy-page-container">
       <div className="container">
-        
+
         {/* Policy Header Banner */}
         <div className="policy-header-banner">
           <div className="policy-icon-badge">
@@ -157,7 +157,7 @@ export default function PrivacyPolicy() {
 
         {/* Policy Layout with Sidebar and Content */}
         <div className="policy-content-layout">
-          
+
           {/* Sidebar navigation */}
           <aside className="policy-sidebar">
             <div className="policy-sidebar-sticky">
@@ -220,7 +220,7 @@ export default function PrivacyPolicy() {
           <div>
             <h4>Bạn có thắc mắc về quyền riêng tư kỹ thuật?</h4>
             <p>
-              Mã nguồn của hệ sinh thái tiện ích mở rộng Chống Lừa Đảo hoàn toàn là mã nguồn mở. Bạn có thể kiểm tra mọi dòng code và cách thức dữ liệu được truyền tải trực tiếp trên kho lưu trữ Github của dự án.
+              Mã nguồn của hệ sinh thái tiện ích mở rộng S.H.I.E.L.D hoàn toàn là mã nguồn mở. Bạn có thể kiểm tra mọi dòng code và cách thức dữ liệu được truyền tải trực tiếp trên kho lưu trữ Github của dự án.
             </p>
           </div>
         </div>

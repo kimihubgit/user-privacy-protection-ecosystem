@@ -27,16 +27,7 @@
             <polyline points="9 22 9 12 15 12 15 22"></polyline>
           </svg>
         </button>
-        <button 
-          :class="['nav-item', { active: activeTab === 'tracking' }]" 
-          @click="setActiveTab('tracking')"
-          :title="t('nav.tracking')"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"></path>
-            <path d="M12 6v6l4 2"></path>
-          </svg>
-        </button>
+
         <button 
           :class="['nav-item', { active: activeTab === 'datashield' }]" 
           @click="setActiveTab('datashield')"
@@ -82,19 +73,9 @@
             <line x1="6" y1="6" x2="6" y2="6.01"></line>
             <line x1="6" y1="18" x2="6" y2="18.01"></line>
           </svg>
-          <span class="proxy-dot" :class="{ active: proxyActive }" style="display: none;"></span>
+          <span class="proxy-dot" :class="{ active: proxyActive && globalEnabled }"></span>
         </button>
-        <!-- 2FA Authenticator Button (Hidden for future development)
-        <button 
-          :class="['nav-item', { active: activeTab === 'authenticator' }]" 
-          @click="setActiveTab('authenticator')"
-          :title="t('nav.authenticator')"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 21 1.726-2.761a8 8 0 0 0 1.06-2.671l.059-.291a8.002 8.002 0 0 0 .155-1.57V12m-9 3.5c.5-1 1-2.043 1-3.5 0-1.74.556-3.352 1.5-4.665m0 11.165c2-2 2.5-5.237 2.5-6.5a4 4 0 0 1 7.954-.61M19.5 17.5c.5-2 .5-4 .5-5.5A8 8 0 0 0 8 5.07M15.954 15c-.174 1.393-.666 3.181-1.954 5.5"/>
-          </svg>
-        </button>
-        -->
+
         <button 
           :class="['nav-item', { active: activeTab === 'stats' }]" 
           @click="setActiveTab('stats')"
@@ -128,7 +109,7 @@
       <button 
         :class="{ active: globalEnabled }" 
         id="global-power-btn" 
-        @click="toggleGlobalPower" 
+        @click="togglePowerMenu" 
         :title="globalEnabled ? t('settings.power_btn_tooltip_on') : t('settings.power_btn_tooltip_off')"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="width: 18px; height: 18px;">
@@ -136,6 +117,16 @@
           <line x1="12" y1="2" x2="12" y2="12"></line>
         </svg>
       </button>
+
+      <!-- Power Control Menu Overlay -->
+      <PowerMenuOverlay 
+        v-if="showPowerMenu" 
+        :globalEnabled="globalEnabled" 
+        :adActive="adActive"
+        @close="showPowerMenu = false" 
+        @toggle-global="toggleGlobalPower" 
+        @refresh-states="checkActiveTabDomain" 
+      />
 
       <!-- Tab Pane: Dashboard -->
       <div :class="['tab-pane', { active: activeTab === 'dashboard' }]" id="tab-dashboard" style="height: 100%;">
@@ -145,12 +136,8 @@
           :displayDomainText="displayDomainText"
           :reputationBadgeColor="reputationBadgeColor"
           :reputationBadgeText="reputationBadgeText"
+          :homographData="homographData"
         />
-      </div>
-
-      <!-- Tab Pane: Anti-Tracking -->
-      <div :class="['tab-pane', { active: activeTab === 'tracking' }]" id="tab-tracking" style="height: 100%;">
-        <TrackingTab :currentDomain="currentDomain" :domainReputation="domainReputation" />
       </div>
 
       <!-- Tab Pane: Data Shield -->
@@ -173,12 +160,6 @@
         <ProxyTab />
       </div>
 
-      <!-- Tab Pane: Authenticator (Hidden for future development)
-      <div :class="['tab-pane', { active: activeTab === 'authenticator' }]" id="tab-authenticator" style="height: 100%;">
-        <AuthenticatorTab />
-      </div>
-      -->
-
       <!-- Tab Pane: Stats -->
       <div :class="['tab-pane', { active: activeTab === 'stats' }]" id="tab-stats" style="height: 100%;">
         <StatsTab />
@@ -197,15 +178,6 @@
     <TermsOverlay v-if="isLoaded && !termsAccepted" @accept="acceptTerms" />
     <FeedbackOverlay v-else-if="showFeedbackOverlay" @close="showFeedbackOverlay = false" />
     <AboutOverlay v-else-if="showAboutOverlay" @close="showAboutOverlay = false" />
-    <CwsOverlay 
-      v-else-if="isLoaded && isCwsPage" 
-      :cwsDownloading="cwsDownloading"
-      :cwsDownloadingZip="cwsDownloadingZip"
-      :cwsDownloadingCrx="cwsDownloadingCrx"
-      @view-source="triggerViewSource"
-      @download-zip="triggerDownloadZip"
-      @download-crx="triggerDownloadCrx"
-    />
   </div>
 </template>
 
@@ -214,39 +186,36 @@
 
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18nProvider } from './composables/useI18n.js';
-import { cwsViewSource, cwsDownloadZip, cwsDownloadCrx } from './utils/cwsHelper.js';
 
 // Import child components
 import DashboardTab from './views/DashboardTab.vue';
-import TrackingTab from './views/TrackingTab.vue';
 import DataShieldTab from './views/DataShieldTab.vue';
 import AdblockTab from './views/AdblockTab.vue';
 import AdvisorTab from './views/AdvisorTab.vue';
 import ProxyTab from './views/ProxyTab.vue';
-import AuthenticatorTab from './views/AuthenticatorTab.vue';
+
 import StatsTab from './views/StatsTab.vue';
 import SettingsTab from './views/SettingsTab.vue';
 import TermsOverlay from './components/TermsOverlay.vue';
 import FeedbackOverlay from './components/FeedbackOverlay.vue';
 import AboutOverlay from './components/AboutOverlay.vue';
-import CwsOverlay from './components/CwsOverlay.vue';
+import PowerMenuOverlay from './components/PowerMenuOverlay.vue';
 
 export default {
   name: 'App',
   components: {
     DashboardTab,
-    TrackingTab,
     DataShieldTab,
     AdblockTab,
     AdvisorTab,
     ProxyTab,
-    AuthenticatorTab,
+
     StatsTab,
     SettingsTab,
     TermsOverlay,
     FeedbackOverlay,
     AboutOverlay,
-    CwsOverlay
+    PowerMenuOverlay
   },
   setup() {
     // Init i18n
@@ -256,15 +225,16 @@ export default {
     // States
     const activeTab = ref('dashboard');
     const globalEnabled = ref(true);
+    const showPowerMenu = ref(false);
     const showFeedbackOverlay = ref(false);
     const showAboutOverlay = ref(false);
-    const trackerActive = ref(true);
     const adActive = ref(true);
 
     const currentUrl = ref('');
     const currentDomain = ref('');
     const isSystemPage = ref(false);
-    const domainReputation = ref('safe'); // 'safe', 'danger', 'system'
+    const domainReputation = ref('checking'); // 'checking', 'safe', 'danger', 'not_found', 'system', 'disabled', 'homograph'
+    const homographData = ref(null);
 
     const trackersCount = ref(0);
     const adsCount = ref(0);
@@ -272,20 +242,17 @@ export default {
 
     // Overlays state
     const termsAccepted = ref(true);
-    const isCwsPage = ref(false);
-    const cwsExtId = ref('');
-    const cwsDownloadingZip = ref(false);
-    const cwsDownloadingCrx = ref(false);
-    const cwsDownloading = computed(() => cwsDownloadingZip.value || cwsDownloadingCrx.value);
 
     // Load active tab domain, check CWS details & scam status
     const checkActiveTabDomain = () => {
       if (!globalEnabled.value) {
-        domainReputation.value = 'safe';
+        domainReputation.value = 'disabled';
         trackersCount.value = 0;
         adsCount.value = 0;
         return;
       }
+
+      domainReputation.value = 'checking';
 
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (!tabs || tabs.length === 0) {
@@ -303,19 +270,6 @@ export default {
           const domain = urlObj.hostname;
           currentDomain.value = domain;
 
-          // Check Chrome Web Store details page
-          const isCwsHost = domain.includes('chromewebstore.google.com') || domain.includes('chrome.google.com');
-          const isDetailPath = urlObj.pathname.includes('/detail/') || urlObj.pathname.match(/\/([a-p]{32})(?:\/|\?|$)/);
-          
-          if (isCwsHost && isDetailPath) {
-            isCwsPage.value = true;
-            const idMatch = urlObj.pathname.match(/\/detail\/.*?\/([a-p]{32})/) || urlObj.pathname.match(/\/([a-p]{32})(?:\/|\?|$)/);
-            cwsExtId.value = idMatch ? idMatch[1] : '';
-          } else {
-            isCwsPage.value = false;
-            cwsExtId.value = '';
-          }
-
           // Check system page
           if (urlObj.protocol === 'chrome:' || urlObj.protocol === 'chrome-extension:') {
             isSystemPage.value = true;
@@ -326,26 +280,41 @@ export default {
           }
 
           isSystemPage.value = false;
+          domainReputation.value = 'checking';
 
-          // Check blacklisted domains
+          // Check blacklisted domains and homograph attacks
           chrome.runtime.sendMessage({ action: "checkDomain", domain }, (response) => {
-            const status = response ? response.status : 'safe';
+            const status = (response && response.status) ? response.status : 'checking';
+            const homograph = (response && response.homograph) ? response.homograph : null;
             chrome.storage.local.get('webShieldActive', (resShield) => {
               const isShieldActive = resShield.webShieldActive !== false;
               if (isShieldActive) {
-                if (status === 'unsafe') {
+                if (status === 'unsafe_homograph') {
+                  domainReputation.value = 'homograph';
+                  homographData.value = homograph;
+                  trackersCount.value = 0;
+                  adsCount.value = 0;
+                } else if (status === 'unsafe') {
                   domainReputation.value = 'danger';
+                  homographData.value = null;
                   trackersCount.value = 0;
                   adsCount.value = 0;
                 } else if (status === 'not_found') {
                   domainReputation.value = 'not_found';
+                  homographData.value = null;
+                  calculateTrackersAndAds(domain);
+                } else if (status === 'safe') {
+                  domainReputation.value = 'safe';
+                  homographData.value = null;
                   calculateTrackersAndAds(domain);
                 } else {
-                  domainReputation.value = 'safe';
+                  domainReputation.value = 'checking';
+                  homographData.value = null;
                   calculateTrackersAndAds(domain);
                 }
               } else {
-                domainReputation.value = 'safe';
+                domainReputation.value = 'disabled';
+                homographData.value = null;
                 calculateTrackersAndAds(domain);
               }
             });
@@ -354,8 +323,6 @@ export default {
         } catch (e) {
           isSystemPage.value = true;
           domainReputation.value = 'safe';
-          trackersCount.value = 0;
-          adsCount.value = 0;
         }
       });
     };
@@ -364,18 +331,6 @@ export default {
       chrome.storage.local.set({ termsAccepted: true }, () => {
         termsAccepted.value = true;
       });
-    };
-
-    const triggerViewSource = () => {
-      cwsViewSource(cwsExtId.value);
-    };
-
-    const triggerDownloadZip = () => {
-      cwsDownloadZip(cwsExtId.value, cwsDownloadingZip, cwsDownloading.value);
-    };
-
-    const triggerDownloadCrx = () => {
-      cwsDownloadCrx(cwsExtId.value, cwsDownloadingCrx, cwsDownloading.value);
     };
 
     // Tracker & ads calculator
@@ -399,9 +354,9 @@ export default {
         trCount = 3;
       }
 
-      trackersCount.value = trackerActive.value ? trCount : 0;
+      trackersCount.value = trCount;
 
-      if (adActive.value && trackerActive.value && trCount > 0) {
+      if (adActive.value && trCount > 0) {
         adsCount.value = (domain.length % 15) + trCount * 2;
       } else {
         adsCount.value = 0;
@@ -439,7 +394,7 @@ export default {
     };
 
     // Watchers for reactive settings
-    watch([trackerActive, adActive], () => {
+    watch([adActive], () => {
       if (currentDomain.value) {
         calculateTrackersAndAds(currentDomain.value);
       }
@@ -452,9 +407,6 @@ export default {
           globalEnabled.value = changes.globalEnabled.newValue !== false;
           updateBadgeIcon(globalEnabled.value);
           checkActiveTabDomain();
-        }
-        if (changes.trackerActive) {
-          trackerActive.value = changes.trackerActive.newValue !== false;
         }
         if (changes.adActive) {
           adActive.value = changes.adActive.newValue !== false;
@@ -481,16 +433,18 @@ export default {
       chrome.storage.local.get([
         'activeTab', 
         'globalEnabled', 
-        'trackerActive', 
         'adActive', 
         'termsAccepted',
         'proxyActive'
       ], (res) => {
         termsAccepted.value = res.termsAccepted === true;
 
-        if (res.activeTab) activeTab.value = res.activeTab;
+        if (res.activeTab === 'tracking' || res.activeTab === 'antibot') {
+          activeTab.value = 'dashboard';
+        } else if (res.activeTab) {
+          activeTab.value = res.activeTab;
+        }
         globalEnabled.value = res.globalEnabled !== false;
-        trackerActive.value = res.trackerActive !== false;
         adActive.value = res.adActive !== false;
         proxyActive.value = res.proxyActive === true;
 
@@ -524,6 +478,11 @@ export default {
     const reputationBadgeText = computed(() => {
       if (!globalEnabled.value) return t('dashboard.reputation_disabled');
       if (isSystemPage.value) return t('dashboard.reputation_system');
+      if (domainReputation.value === 'checking' || domainReputation.value === 'error' || domainReputation.value === 'offline') {
+        return t('dashboard.reputation_checking') || 'Đang kiểm tra...';
+      }
+      if (domainReputation.value === 'disabled') return t('dashboard.reputation_disabled');
+      if (domainReputation.value === 'homograph') return t('dashboard.reputation_homograph') || 'Mạo danh (IDN)';
       if (domainReputation.value === 'danger') return t('dashboard.reputation_danger');
       if (domainReputation.value === 'not_found') return t('dashboard.reputation_not_found') || 'Chưa đánh giá';
       return t('dashboard.reputation_safe');
@@ -532,23 +491,34 @@ export default {
     const reputationBadgeColor = computed(() => {
       if (!globalEnabled.value) return 'var(--danger)';
       if (isSystemPage.value) return 'var(--accent-indigo)';
+      if (domainReputation.value === 'checking' || domainReputation.value === 'error' || domainReputation.value === 'offline') {
+        return 'var(--warning)';
+      }
+      if (domainReputation.value === 'disabled') return 'var(--text-muted)';
+      if (domainReputation.value === 'homograph') return 'var(--danger)';
       if (domainReputation.value === 'danger') return 'var(--danger)';
       if (domainReputation.value === 'not_found') return 'var(--warning)';
       return 'var(--accent-teal)';
     });
+
+    const togglePowerMenu = () => {
+      showPowerMenu.value = !showPowerMenu.value;
+    };
 
     return {
       t,
       isLoaded,
       activeTab,
       globalEnabled,
-      trackerActive,
+      showPowerMenu,
+      togglePowerMenu,
       adActive,
 
       currentDomain,
       currentUrl,
       isSystemPage,
       domainReputation,
+      homographData,
       trackersCount,
       adsCount,
       proxyActive,
@@ -562,14 +532,7 @@ export default {
 
       // Overlay items
       termsAccepted,
-      isCwsPage,
-      cwsDownloadingZip,
-      cwsDownloadingCrx,
-      cwsDownloading,
       acceptTerms,
-      triggerViewSource,
-      triggerDownloadZip,
-      triggerDownloadCrx,
       showFeedbackOverlay,
       showAboutOverlay
     };

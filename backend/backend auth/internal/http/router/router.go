@@ -98,12 +98,14 @@ func SetupRouter(
 		{
 			adminGroup.GET("/reports", reportHandler.ListReports)
 			adminGroup.GET("/reports/stats", reportHandler.GetGlobalStats)
+			adminGroup.GET("/reports/moderator-stats", reportHandler.GetModeratorStats)
 			adminGroup.GET("/reports/:id", reportHandler.GetReportByID)
 			adminGroup.PUT("/reports/:id/status", reportHandler.UpdateReportStatus)
 
 			// URL Blocklist management (proxied to backend check)
 			adminGroup.POST("/urls", adminHandler.AddScamURL)
 			adminGroup.GET("/urls", adminHandler.ListScamURLs)
+			adminGroup.PUT("/urls/:id", adminHandler.UpdateScamURL)
 			adminGroup.DELETE("/urls/:id", adminHandler.DeleteScamURL)
 			adminGroup.GET("/stats", adminHandler.GetStats)
 			adminGroup.GET("/dashboard-stats", adminHandler.GetDashboardStats)
@@ -111,16 +113,22 @@ func SetupRouter(
 			// Allowlist management (proxied to backend check)
 			adminGroup.POST("/allowlist", adminHandler.AddAllowURL)
 			adminGroup.GET("/allowlist", adminHandler.ListAllowURLs)
+			adminGroup.PUT("/allowlist/:id", adminHandler.UpdateAllowURL)
 			adminGroup.DELETE("/allowlist/:id", adminHandler.DeleteAllowURL)
 
 			// Scammer registry management (proxied to backend check)
 			adminGroup.POST("/scammers", adminHandler.AddScammer)
 			adminGroup.GET("/scammers", adminHandler.ListScammers)
+			adminGroup.GET("/scammers/:id", adminHandler.GetScammer)
+			adminGroup.PUT("/scammers/:id", adminHandler.UpdateScammer)
 			adminGroup.DELETE("/scammers/:id", adminHandler.DeleteScammer)
 
 			// User management endpoints
 			adminGroup.GET("/users", adminHandler.ListUsers)
 			adminGroup.GET("/users/:id", adminHandler.GetUserDetails)
+			adminGroup.PUT("/users/:id/status", adminHandler.UpdateUserStatus)
+			adminGroup.PUT("/users/:id/role", adminHandler.UpdateUserRole)
+			adminGroup.DELETE("/users/:id", adminHandler.DeleteUser)
 		}
 	}
 

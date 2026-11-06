@@ -24,6 +24,7 @@ type Service interface {
 	InsertScammer(ctx context.Context, scammer *models.Scammer) error
 	UpdateScammer(ctx context.Context, scammer *models.Scammer) error
 	FindScammerByTarget(ctx context.Context, target string) (*models.Scammer, error)
+	GetScammerByID(ctx context.Context, id string) (*models.Scammer, error)
 }
 
 type service struct {
@@ -229,4 +230,12 @@ func (s *service) UpdateScammer(ctx context.Context, scammer *models.Scammer) er
 
 func (s *service) FindScammerByTarget(ctx context.Context, target string) (*models.Scammer, error) {
 	return s.repo.FindScammerByTarget(ctx, target)
+}
+
+func (s *service) GetScammerByID(ctx context.Context, id string) (*models.Scammer, error) {
+	objID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, errors.New("invalid ObjectID format")
+	}
+	return s.repo.GetScammerByID(ctx, objID)
 }

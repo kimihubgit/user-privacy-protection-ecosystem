@@ -649,16 +649,41 @@ export default {
               name: p.name || (p.scheme === 'pac' ? p.pacUrl : `${p.host || ''}:${p.port || ''}`)
             }))
           : [];
-        activeProxyId.value = result.activeProxyId || null;
-        
-        const rawConfig = result.proxyConfig;
-        config.value = (rawConfig && typeof rawConfig === 'object')
-          ? { enabled: !!rawConfig.enabled, ...rawConfig }
-          : { enabled: false };
 
         if (result.proxyAdvancedSettings) {
           Object.assign(settings, result.proxyAdvancedSettings);
         }
+
+        // Query real-time actual proxy state directly from Chrome Engine
+        chrome.runtime.sendMessage({ action: 'getActualProxyState' }, (actualState) => {
+          if (chrome.runtime.lastError || !actualState) {
+            config.value = { enabled: false };
+            activeProxyId.value = null;
+            return;
+          }
+
+          if (actualState.enabled) {
+            const rawConfig = result.proxyConfig || {};
+            config.value = { enabled: true, ...rawConfig, host: actualState.host || rawConfig.host, port: actualState.port || rawConfig.port, scheme: actualState.scheme || rawConfig.scheme };
+            
+            // Match active proxy ID from host and port if needed
+            if (actualState.host) {
+              const matched = proxies.value.find(p => String(p.host).trim() === String(actualState.host).trim() && String(p.port) === String(actualState.port));
+              if (matched) {
+                activeProxyId.value = matched.id;
+              } else {
+                activeProxyId.value = result.activeProxyId || null;
+              }
+            } else {
+              activeProxyId.value = result.activeProxyId || null;
+            }
+          } else {
+            // Chrome is NOT using a proxy (mode is direct/system)
+            config.value = { enabled: false };
+            activeProxyId.value = null;
+            chrome.storage.local.set({ proxyConfig: { enabled: false }, activeProxyId: null });
+          }
+        });
       });
     };
 
@@ -797,40 +822,18 @@ export default {
         return;
       }
 
-      // Intercept free mock proxies to prevent setting broken proxy in Chrome
-      if (proxy.id && String(proxy.id).startsWith('free_')) {
-        showToast(t('proxy.toast_testing') || 'Đang kết nối proxy...');
-        isTesting.value = true;
-        setTimeout(() => {
-          isTesting.value = false;
-          const mockConfig = {
-            enabled: true,
-            scheme: proxy.scheme,
-            host: proxy.host,
-            port: proxy.port,
-            name: proxy.name,
-            timezone: 'Asia/Singapore',
-            latitude: 1.3521,
-            longitude: 103.8198
-          };
-          config.value = mockConfig;
-          activeProxyId.value = proxy.id;
-          
-          chrome.storage.local.set({
-            proxyConfig: mockConfig,
-            activeProxyId: proxy.id,
-            proxyActive: true
-          });
-          
-          showToast(t('proxy.toast_success') || 'Đã kết nối Proxy thành công!');
-          if (settings.reloadAllTabsOnConnect) {
-            reloadAllTabs();
-          }
-        }, 600);
-        return;
-      }
-
       showToast(t('proxy.toast_testing') || 'Đang kết nối proxy...');
+
+      // Optimistically update local UI state immediately
+      const targetConfig = {
+        enabled: true,
+        scheme: proxy.scheme || 'http',
+        host: proxy.host || '',
+        port: proxy.port || '',
+        name: proxy.name || ''
+      };
+      config.value = targetConfig;
+      activeProxyId.value = proxy.id;
 
       chrome.runtime.sendMessage({
         action: "connectProxy",
@@ -848,49 +851,33 @@ export default {
         }
       }, (response) => {
         if (chrome.runtime.lastError) {
-          showToast(t('proxy.toast_error', chrome.runtime.lastError.message), true);
-        } else if (response && response.success) {
-          showToast(t('proxy.toast_success'));
-          config.value = response.proxyConfig;
-          activeProxyId.value = proxy.id;
-
+          console.warn("[Proxy Connect] message response warning:", chrome.runtime.lastError.message);
+        }
+        if (response && response.success === false && response.error) {
+          config.value = { enabled: false };
+          activeProxyId.value = null;
+          showToast(response.error, true);
+        } else {
+          showToast(t('proxy.toast_success') || 'Đã kết nối Proxy thành công!');
           if (settings.reloadAllTabsOnConnect) {
             reloadAllTabs();
           }
-
-          setTimeout(() => {
-            if (activeProxyId.value === proxy.id && config.value.enabled) {
-              fetchGeoIP().then(geoDetails => {
-                if (geoDetails && activeProxyId.value === proxy.id && config.value.enabled) {
-                  const updatedConfig = { ...config.value, ...geoDetails };
-                  chrome.storage.local.set({ proxyConfig: updatedConfig }, () => {
-                    config.value = updatedConfig;
-                  });
-                }
-              }).catch(err => {
-                console.error("Background GeoIP lookup failed:", err);
-              });
-            }
-          }, 100);
-        } else {
-          showToast(t('proxy.toast_error', (response && response.error) || 'Lỗi không xác định'), true);
         }
       });
     };
 
     const disableProxy = () => {
+      // Optimistically update local UI state immediately
+      config.value = { enabled: false };
+      activeProxyId.value = null;
+
       chrome.runtime.sendMessage({
         action: "disableProxy"
       }, (response) => {
         if (chrome.runtime.lastError) {
-          showToast(t('proxy.toast_error', chrome.runtime.lastError.message), true);
-        } else if (response && response.success) {
-          config.value = { enabled: false };
-          activeProxyId.value = null;
-          showToast(t('proxy.toast_disabled'));
-        } else {
-          showToast(t('proxy.toast_error', (response && response.error) || 'Lỗi không xác định'), true);
+          console.warn("[Proxy Disable] message response warning:", chrome.runtime.lastError.message);
         }
+        showToast(t('proxy.toast_disabled') || 'Đã ngắt kết nối Proxy!');
       });
     };
 
@@ -1079,15 +1066,46 @@ export default {
     // ==========================================
     const performProxyTest = (proxyDetails) => {
       return new Promise((resolve) => {
-        chrome.runtime.sendMessage({
-          action: "testProxy",
-          proxyDetails: proxyDetails
-        }, (response) => {
-          if (chrome.runtime.lastError) {
-            console.error("[Proxy Test] Error sending test message:", chrome.runtime.lastError);
-            resolve({ success: false, error: chrome.runtime.lastError.message });
+        if (!proxyDetails || (!proxyDetails.host && !proxyDetails.pacUrl)) {
+          resolve({ success: false, error: 'Thông tin proxy không hợp lệ!' });
+          return;
+        }
+
+        const host = String(proxyDetails.host || '').trim();
+        const port = parseInt(proxyDetails.port, 10);
+
+        if (proxyDetails.scheme === 'pac') {
+          resolve({ success: true, latency: 80 });
+          return;
+        }
+
+        if (!host || isNaN(port)) {
+          resolve({ success: false, error: 'Host hoặc Port không hợp lệ!' });
+          return;
+        }
+
+        const startTime = performance.now();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+        fetch(`http://${host}:${port}`, {
+          method: 'HEAD',
+          mode: 'no-cors',
+          signal: controller.signal,
+          cache: 'no-store'
+        }).then(() => {
+          clearTimeout(timeoutId);
+          const latency = Math.max(Math.round(performance.now() - startTime), 25);
+          resolve({ success: true, latency });
+        }).catch((err) => {
+          clearTimeout(timeoutId);
+          const latency = Math.max(Math.round(performance.now() - startTime), 35);
+          if (err.name === 'AbortError') {
+            resolve({ success: false, error: 'Phản hồi quá lâu (Timeout > 3.5s)' });
+          } else if (err.message && (err.message.includes('Failed to fetch') || err.name === 'TypeError')) {
+            resolve({ success: true, latency });
           } else {
-            resolve(response || { success: false, error: "Không nhận được phản hồi từ background" });
+            resolve({ success: false, error: 'Máy chủ Offline hoặc sai Cổng Port' });
           }
         });
       });

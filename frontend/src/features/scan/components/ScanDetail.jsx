@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ShieldCheck, ShieldAlert, ArrowLeft, Cpu, Globe, User, Radio, ChevronDown, RefreshCw, Terminal, Search, X, Clipboard, Calendar, Activity } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ArrowLeft, Cpu, Globe, User, Radio, ChevronDown, RefreshCw, Terminal, Search, X, Clipboard, Calendar, Activity, Loader2, CheckCircle2, Shield, Sparkles } from 'lucide-react';
 import { api } from '../../../lib/api';
 import './ScanDetail.css';
 
@@ -260,9 +260,29 @@ export default function ScanDetail({ addToast }) {
         setCleanType(mappedType);
 
         if (mappedType === 'website') {
-          const isSafe = data.is_safe !== false && data.is_scam !== true;
+          const isScam = data.is_scam === true || data.status === 'malicious' || data.status === 'danger';
+          const isExplicitWhitelist = data.is_whitelisted === true || data.source === 'whitelist' || data.category === 'safe_whitelist' || data.status === 'safe_whitelist';
+
+          // Check if message indicates "No direct threat detected" (which means Not Found / Unverified in DB, NOT explicitly whitelisted)
+          const msg = (data.message || data.detail?.description || '').toLowerCase();
+          const isNotFoundMsg = msg.includes('không phát hiện') || msg.includes('chưa nằm trong') || msg.includes('không tìm thấy');
+
+          let status = 'unverified';
+          let name = 'Chưa ghi nhận vi phạm trong CSDL';
+          let desc = data.message || 'Không phát hiện mối đe dọa trực tiếp cho URL này trong cơ sở dữ liệu. Quý khách nên cẩn trọng khi giao dịch.';
+
+          if (isScam) {
+            status = 'malicious';
+            name = 'Tên miền độc hại / Lừa đảo';
+            desc = data.detail?.description || data.message || 'Phát hiện mối đe dọa lừa đảo/giả mạo trong danh sách đen.';
+          } else if (isExplicitWhitelist || (data.is_safe === true && !isNotFoundMsg)) {
+            status = 'safe';
+            name = 'Tên miền an toàn';
+            desc = data.detail?.description || data.message || 'Tên miền này đã được xác minh an toàn!';
+          }
+
           const detail = data.detail || {};
-          
+
           let cleanDomain = searchTarget;
           try {
             const tempUrl = searchTarget.includes('://') ? searchTarget : 'http://' + searchTarget;
@@ -271,25 +291,20 @@ export default function ScanDetail({ addToast }) {
             // ignore
           }
 
-          let whoisData = null;
-          try {
-            whoisData = await api.getDomainWhois(cleanDomain);
-          } catch (e) {
-            console.warn('Cannot fetch WHOIS details from API:', e);
-          }
+          const whoisData = null;
 
           setResult({
             target: searchTarget,
-            name: isSafe ? 'Tên miền tin cậy' : 'Tên miền độc hại',
-            status: isSafe ? 'safe' : 'malicious',
-            desc: detail.description || data.message || 'Kết quả kiểm tra từ hệ thống.',
+            name: name,
+            status: status,
+            desc: desc,
             registrar: whoisData?.registrar || detail.registrar || 'Đang cập nhật',
             created: whoisData?.registration_date ? new Date(whoisData.registration_date).toLocaleDateString('vi-VN') : (detail.created || 'Vừa tạo mới'),
             expirationDate: whoisData?.expiration_date ? new Date(whoisData.expiration_date).toLocaleDateString('vi-VN') : 'Đang cập nhật',
             nameservers: whoisData?.nameservers ? whoisData.nameservers.join(', ') : 'Đang cập nhật',
             owner: whoisData?.owner || 'Ẩn danh (Privacy Protected)',
             ip: detail.ip || 'Đang cập nhật',
-            reports: isSafe ? 0 : 1,
+            reports: status === 'malicious' ? 1 : 0,
             host: 'N/A'
           });
         } else if (mappedType === 'phone') {
@@ -345,46 +360,28 @@ export default function ScanDetail({ addToast }) {
       return;
     }
 
+    const detectedType = detectCheckType(trimmedTarget);
+    setCleanType(detectedType);
+    setResult(prev => ({
+      ...prev,
+      target: trimmedTarget
+    }));
+
     setIsScanning(true);
-    setHasScanned(false);
-    setScanProgress(0);
-    setActiveStep(0);
+    setHasScanned(true);
 
     // Sync path parameter
     navigate(`/detail/${encodeURIComponent(trimmedTarget)}`, { replace: true });
 
-    let progress = 0;
-    let apiDone = false;
-
-    // Trigger API fetch and set apiDone when finished
+    const startTime = Date.now();
     fetchRealData(trimmedTarget).finally(() => {
-      apiDone = true;
+      const elapsed = Date.now() - startTime;
+      const minDelay = 600; // 600ms smooth shimmer display
+      const remaining = Math.max(0, minDelay - elapsed);
+      setTimeout(() => {
+        setIsScanning(false);
+      }, remaining);
     });
-
-    const interval = setInterval(() => {
-      if (!apiDone) {
-        // If API is still loading, progress runs up to 90% and pauses
-        if (progress < 90) {
-          progress += 5;
-        }
-      } else {
-        // Once API completes, quickly boost progress to 100%
-        progress += 10;
-      }
-
-      setScanProgress(Math.min(progress, 100));
-
-      if (progress >= 30 && progress < 70) setActiveStep(1);
-      if (progress >= 70 && progress < 100) setActiveStep(2);
-
-      if (progress >= 100) {
-        clearInterval(interval);
-        setTimeout(() => {
-          setIsScanning(false);
-          setHasScanned(true);
-        }, 300);
-      }
-    }, 40);
   };
 
   // Sync state if url param changes or location state autoScan flag is present
@@ -397,14 +394,15 @@ export default function ScanDetail({ addToast }) {
           navigate(location.pathname, { replace: true, state: {} });
           handleStartScan(decodedTarget);
           return;
+        } else {
+          handleStartScan(decodedTarget);
+          return;
         }
       } else {
         setInputValue('');
+        setHasScanned(false);
+        setIsScanning(false);
       }
-      setHasScanned(false);
-      setIsScanning(false);
-      setScanProgress(0);
-      setActiveStep(0);
       return () => clearTimeout(timer);
     }, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -434,23 +432,25 @@ export default function ScanDetail({ addToast }) {
   const getScanSteps = (cType) => {
     if (cType === 'phone' || cType === 'email') {
       return [
-        "Đang phân tích định danh và đơn vị quản lý...",
-        "Đang đối soát kho dữ liệu báo cáo lừa đảo...",
-        "Chạy phân tích AI nhận diện hành vi lừa đảo..."
+        "Phân tích định danh & nguồn gốc đối tượng",
+        "Đối soát cơ sở dữ liệu báo cáo lừa đảo & rò rỉ",
+        "Chẩn đoán Heuristics AI nhận diện rủi ro"
       ];
     }
     return [
-      "Đang phân tích cấu trúc DNS/Giao thức kết nối...",
-      "Đang đối soát kho dữ liệu ChongLuaDao đen...",
-      "Chạy chẩn đoán Heuristics AI chống giả mạo..."
+      "Phân tích chứng chỉ SSL & Cấu trúc DNS",
+      "Đối soát bộ lọc Cuckoo Filter & Danh sách chặn",
+      "Chẩn đoán Heuristics AI & Đánh giá an toàn"
     ];
   };
 
   const getStatusText = (status) => {
     switch (status) {
       case 'safe': return 'An toàn';
-      case 'suspicious': return 'Nghi ngờ';
-      default: return 'Nguy hiểm';
+      case 'unverified':
+      case 'not_found': return 'Chưa ghi nhận vi phạm';
+      case 'suspicious': return 'Nghi ngờ rủi ro';
+      default: return 'Nguy hiểm / Độc hại';
     }
   };
 
@@ -485,24 +485,38 @@ export default function ScanDetail({ addToast }) {
   let badgeBgColor;
   let badgeBorderColor;
 
-  if (result.status === 'safe') {
-    riskScore = '05';
-    riskProgress = 0.05;
-    riskLabel = 'ĐIỂM RỦI RO RẤT THẤP';
+  if (isScanning) {
+    riskScore = '--';
+    riskProgress = 0;
+    riskLabel = 'ĐANG ĐỐI SOÁT...';
+    gaugeColor = '#00b4d8';
+    badgeBgColor = 'rgba(0, 180, 216, 0.08)';
+    badgeBorderColor = 'rgba(0, 180, 216, 0.2)';
+  } else if (result.status === 'safe') {
+    riskScore = '00';
+    riskProgress = 0.02;
+    riskLabel = 'ĐÃ XÁC MINH AN TOÀN';
     gaugeColor = '#22C55E';
     badgeBgColor = 'rgba(34, 197, 94, 0.08)';
     badgeBorderColor = 'rgba(34, 197, 94, 0.2)';
+  } else if (result.status === 'unverified' || result.status === 'not_found') {
+    riskScore = '35';
+    riskProgress = 0.35;
+    riskLabel = 'CHƯA GHI NHẬN VI PHẠM';
+    gaugeColor = '#3B82F6';
+    badgeBgColor = 'rgba(59, 130, 246, 0.08)';
+    badgeBorderColor = 'rgba(59, 130, 246, 0.2)';
   } else if (result.status === 'suspicious') {
-    riskScore = '45';
-    riskProgress = 0.45;
-    riskLabel = 'ĐIỂM RỦI RO TRUNG BÌNH';
+    riskScore = '65';
+    riskProgress = 0.65;
+    riskLabel = 'ĐIỂM RỦI RO NGHI NGỜ';
     gaugeColor = '#F97316';
     badgeBgColor = 'rgba(249, 115, 22, 0.08)';
     badgeBorderColor = 'rgba(249, 115, 22, 0.2)';
   } else {
     riskScore = '99';
     riskProgress = 0.99;
-    riskLabel = 'ĐIỂM RỦI RO RẤT CAO';
+    riskLabel = 'ĐIỂM RỦI RO RẤT CAO (ĐỘC HẠI)';
     gaugeColor = '#EF4444';
     badgeBgColor = 'rgba(239, 68, 68, 0.08)';
     badgeBorderColor = 'rgba(239, 68, 68, 0.2)';
@@ -553,126 +567,41 @@ export default function ScanDetail({ addToast }) {
               </button>
             )}
             <button type="submit" className="dossier-search-submit-btn" disabled={isScanning}>
-              PHÂN TÍCH
+              {isScanning ? (
+                <>
+                  <Loader2 size={16} className="btn-icon-spin" />
+                  <span>ĐANG PHÂN TÍCH...</span>
+                </>
+              ) : (
+                'PHÂN TÍCH'
+              )}
             </button>
           </form>
         </div>
 
         {/* CONDITION STATE RENDERING AREA */}
-        {(!hasScanned || isScanning) ? (
-          /* STATE 1 & 2: IDLE & SCANNING STATE - UNIFIED CIRCULAR ORBITAL SCANNER HUB */
-          <div className={`orbital-scanner-container ${isScanning ? 'is-scanning' : ''}`} data-progress={scanProgress}>
-
-            {/* The Orbital System Grid */}
-            <div className="orbital-system-wrapper">
-
-              {/* Concentric Orbital Rings */}
-              <div className="orbital-ring ring-1"></div>
-              <div className="orbital-ring ring-2"></div>
-
-              {/* Connecting laser lines (from center to nodes) */}
-              <div className="orbital-laser-line line-left"></div>
-              <div className="orbital-laser-line line-right"></div>
-              <div className="orbital-laser-line line-bottom"></div>
-
-              {/* Data Aggregation Bubbles (Only visible when scanning with varied sizes) */}
-              {isScanning && (
-                <div className="aggregation-bubbles-container">
-                  <div className="agg-bubble b1 size-sm"><span>SSL Cert</span></div>
-                  <div className="agg-bubble b2 size-md"><span>DNS Rec</span></div>
-                  <div className="agg-bubble b3 size-lg"><span>Bank API</span></div>
-                  <div className="agg-bubble b4 size-sm"><span>Blacklist</span></div>
-                  <div className="agg-bubble b5 size-md"><span>Pwned DB</span></div>
-                  <div className="agg-bubble b6 size-lg"><span>Password</span></div>
-                  <div className="agg-bubble b7 size-sm"><span>IP Check</span></div>
-                  <div className="agg-bubble b8 size-md"><span>Domain Rep</span></div>
-                </div>
-              )}
-
-              {/* Central Core Node */}
-              <div className="orbital-core-node">
-                <div className="orbital-core-glow"></div>
-                <div className="orbital-core-shield">
-                  {isScanning ? (
-                    <Cpu size={32} className="text-secondary btn-icon-spin" />
-                  ) : (
-                    <ShieldCheck size={32} className="text-secondary" />
-                  )}
-                </div>
-                <span className="orbital-core-label font-mono">
-                  {isScanning ? 'PROCESSING' : 'SCAN ENGINE'}
-                </span>
+        {(!hasScanned && !decodedTarget && !inputValue) ? (
+          /* IDLE STATE: Clean & Inviting Ready-to-Scan Screen */
+          <div className="cyber-scanner-wrapper">
+            <div className="cyber-idle-card glass-card">
+              <div className="idle-shield-wrapper">
+                <Shield size={44} className="idle-shield-icon" />
               </div>
-
-              {/* Satellite Node 1: Web */}
-              <div className={`satellite-node node-web ${isScanning && activeStep === 0 ? 'active' : ''} ${isScanning && activeStep > 0 ? 'done' : ''}`}>
-                <div className="satellite-icon-circle blue">
-                  <Globe size={18} />
-                </div>
-                <span className="satellite-label">Website & DNS</span>
-                {isScanning && (
-                  <span className="satellite-status-pill">
-                    {activeStep === 0 ? 'SCANNING' : activeStep > 0 ? 'DONE' : 'STANDBY'}
-                  </span>
-                )}
-              </div>
-
-              {/* Satellite Node 2: Fraud DB */}
-              <div className={`satellite-node node-fraud ${isScanning && activeStep === 1 ? 'active' : ''} ${isScanning && activeStep > 1 ? 'done' : ''}`}>
-                <div className="satellite-icon-circle orange">
-                  <User size={18} />
-                </div>
-                <span className="satellite-label">Tố Cáo Tài Khoản</span>
-                {isScanning && (
-                  <span className="satellite-status-pill">
-                    {activeStep === 1 ? 'SCANNING' : activeStep > 1 ? 'DONE' : 'STANDBY'}
-                  </span>
-                )}
-              </div>
-
-              {/* Satellite Node 3: Leak DB */}
-              <div className={`satellite-node node-leak ${isScanning && activeStep === 2 ? 'active' : ''} ${isScanning && activeStep > 2 ? 'done' : ''}`}>
-                <div className="satellite-icon-circle green">
-                  <Radio size={18} />
-                </div>
-                <span className="satellite-label">Dữ Liệu Lộ Lọt</span>
-                {isScanning && (
-                  <span className="satellite-status-pill">
-                    {activeStep === 2 ? 'SCANNING' : activeStep > 2 ? 'DONE' : 'STANDBY'}
-                  </span>
-                )}
-              </div>
-
-            </div>
-
-            {/* Target Display and Trigger */}
-            <div className="orbital-control-panel">
-              {!isScanning ? (
-                <>
-                  <div className="orbital-target-pill">
-                    <span className="pill-status-dot"></span>
-                    <span className="target-text">MỤC TIÊU SẴN SÀNG: <strong>{inputValue || 'TRỐNG'}</strong></span>
-                  </div>
-
-                  <button className="orbital-btn-launch" onClick={() => handleStartScan(inputValue)}>
-                    <RefreshCw size={16} className="btn-icon-spin" />
-                    <span>KÍCH HOẠT HỆ THỐNG QUÉT</span>
-                  </button>
-                </>
-              ) : (
-                <div className="orbital-progress-board">
-                  <div className="cyber-steps-list">
-                    {getScanSteps(cleanType).map((step, idx) => (
-                      <div key={idx} className={`cyber-step-item ${idx < activeStep ? 'done' : idx === activeStep ? 'active' : ''}`}>
-                        <span className="step-num">0{idx + 1}.</span>
-                        <span className="step-text">{step}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <h3 className="idle-title">Trung Tâm Phân Tích & Giám Sát An Toàn</h3>
+              <p className="idle-desc">
+                Nhập địa chỉ trang web, số điện thoại, số tài khoản hoặc email cần kiểm tra an toàn vào thanh tìm kiếm phía trên.
+              </p>
+              {inputValue && (
+                <button 
+                  type="button" 
+                  className="idle-trigger-btn"
+                  onClick={() => handleStartScan(inputValue)}
+                >
+                  <RefreshCw size={16} />
+                  <span>Bắt đầu phân tích: <strong>{inputValue}</strong></span>
+                </button>
               )}
             </div>
-
           </div>
         ) : cleanType === 'email' ? (
           /* STATE 3: RESULT RECEIVED - EMAIL BREAK THEME */
@@ -684,13 +613,55 @@ export default function ScanDetail({ addToast }) {
               </button>
               <div className="databreach-header-info">
                 <span className="databreach-category">KIỂM TRA LỘ LỌT DỮ LIỆU CÁ NHÂN / DATA BREACH CENTRAL</span>
-                <h2 className="databreach-main-title">Kết Quả Kiểm Tra Email: <span className="highlight-email">{result.target}</span></h2>
+                <h2 className="databreach-main-title">Kết Quả Kiểm Tra Email: <span className="highlight-email">{result.target || inputValue || decodedTarget}</span></h2>
               </div>
             </div>
 
             {/* Forensic Diagnostic Hub */}
             <div className="forensic-layout-wrapper">
-              {result.status === 'safe' ? (
+              {isScanning ? (
+                <div className="cyber-timeline-layout">
+                  {/* Scanning Banner with Shimmer */}
+                  <div className="timeline-danger-banner glass-card" style={{ borderColor: 'rgba(0, 180, 216, 0.3)' }}>
+                    <div className="timeline-banner-badge" style={{ background: 'rgba(0, 180, 216, 0.1)', color: '#00b4d8' }}>
+                      <Loader2 size={36} className="btn-icon-spin" />
+                    </div>
+                    <div className="timeline-banner-text" style={{ flex: 1 }}>
+                      <h4>ĐANG ĐỐI SOÁT CƠ SỞ DỮ LIỆU RÒ RỈ TOÀN CẦU...</h4>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '8px' }}>
+                        <span className="skeleton-shimmer skeleton-line" style={{ width: '85%', height: '14px' }}></span>
+                        <span className="skeleton-shimmer skeleton-line" style={{ width: '55%', height: '14px' }}></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Skeleton Incidents Track */}
+                  <div className="timeline-track-container">
+                    {[1, 2].map((idx) => (
+                      <div key={idx} className="timeline-incident-item">
+                        <div className="timeline-node-col">
+                          <div className="timeline-connector-line"></div>
+                          <div className="timeline-node-circle skeleton-shimmer" style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none' }}></div>
+                        </div>
+                        <div className="timeline-card-col">
+                          <div className="timeline-incident-card glass-card" style={{ padding: '1.25rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                <span className="skeleton-shimmer" style={{ width: '38px', height: '38px', borderRadius: '8px' }}></span>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                  <span className="skeleton-shimmer skeleton-line" style={{ width: '160px', height: '16px' }}></span>
+                                  <span className="skeleton-shimmer skeleton-line" style={{ width: '100px', height: '12px' }}></span>
+                                </div>
+                              </div>
+                              <span className="skeleton-shimmer skeleton-pill" style={{ width: '120px', height: '24px' }}></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : result.status === 'safe' ? (
                 <div className="forensic-safe-card glass-card">
                   <div className="forensic-safe-header">
                     <div className="forensic-safe-badge">
@@ -788,32 +759,47 @@ export default function ScanDetail({ addToast }) {
                 <ArrowLeft size={18} />
                 <span>Quay lại</span>
               </button>
-              <div className="scan-topbar-meta">
-                <span className="scan-meta-tag font-mono">ID: {caseId}</span>
-                <span className="scan-meta-tag font-mono">{formattedDate}</span>
-              </div>
             </div>
 
             {/* Verdict Hero Card */}
-            <div className={`scan-verdict-card verdict-${result.status}`}>
+            <div className={`scan-verdict-card ${isScanning ? 'verdict-scanning' : `verdict-${result.status}`}`}>
               <div className="verdict-icon-circle">
-                {result.status === 'safe' ? (
+                {isScanning ? (
+                  <Loader2 size={32} className="btn-icon-spin" style={{ color: '#00b4d8' }} />
+                ) : result.status === 'safe' ? (
                   <ShieldCheck size={32} />
                 ) : (
                   <ShieldAlert size={32} />
                 )}
               </div>
               <div className="verdict-info">
-                <span className={`verdict-status-pill pill-${result.status}`}>
-                  {getStatusText(result.status).toUpperCase()}
-                </span>
-                <h2 className="verdict-target font-mono">{result.target}</h2>
-                <p className="verdict-desc">{result.desc}</p>
+                {isScanning ? (
+                  <span className="skeleton-shimmer skeleton-pill" style={{ width: '140px', height: '22px', marginBottom: '8px' }}></span>
+                ) : (
+                  <span className={`verdict-status-pill pill-${result.status}`}>
+                    {getStatusText(result.status).toUpperCase()}
+                  </span>
+                )}
+                <h2 className="verdict-target font-mono">{result.target || inputValue || decodedTarget}</h2>
+                {isScanning ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', marginTop: '6px' }}>
+                    <span className="skeleton-shimmer skeleton-line" style={{ width: '85%', height: '14px' }}></span>
+                    <span className="skeleton-shimmer skeleton-line" style={{ width: '55%', height: '14px' }}></span>
+                  </div>
+                ) : (
+                  <p className="verdict-desc">{result.desc}</p>
+                )}
               </div>
               <div className="verdict-score-block">
-                <div className="score-ring" style={{ '--ring-color': gaugeColor, '--ring-progress': riskProgress }}>
-                  <span className="score-number">{riskScore}</span>
-                </div>
+                {isScanning ? (
+                  <div className="score-ring skeleton-ring">
+                    <Loader2 size={24} className="btn-icon-spin" style={{ color: '#00b4d8' }} />
+                  </div>
+                ) : (
+                  <div className="score-ring" style={{ '--ring-color': gaugeColor, '--ring-progress': riskProgress }}>
+                    <span className="score-number">{riskScore}</span>
+                  </div>
+                )}
                 <span className="score-label" style={{ color: gaugeColor }}>{riskLabel}</span>
               </div>
             </div>
@@ -828,33 +814,43 @@ export default function ScanDetail({ addToast }) {
                 <div className="detail-rows">
                   <div className="detail-row">
                     <span className="detail-label">Nhà đăng ký (Registrar)</span>
-                    <span className="detail-val">{result.registrar || 'Chưa ghi nhận'}</span>
+                    <span className="detail-val">
+                      {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '130px', height: '14px' }}></span> : (result.registrar || 'Chưa ghi nhận')}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Địa chỉ IP máy chủ</span>
-                    <span className="detail-val font-mono">{result.ip || 'Chưa ghi nhận'}</span>
+                    <span className="detail-val font-mono">
+                      {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '110px', height: '14px' }}></span> : (result.ip || 'Chưa ghi nhận')}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Cloud Hosting</span>
-                    <span className="detail-val">{result.host || 'Chưa ghi nhận'}</span>
+                    <span className="detail-val">
+                      {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '90px', height: '14px' }}></span> : (result.host || 'Chưa ghi nhận')}
+                    </span>
                   </div>
                   <div className="detail-row">
                     <span className="detail-label">Ngày đăng ký tên miền</span>
-                    <span className={`detail-val ${isMalicious ? 'text-red font-bold' : ''}`}>{result.created || 'Chưa ghi nhận'}</span>
+                    <span className={`detail-val ${isMalicious && !isScanning ? 'text-red font-bold' : ''}`}>
+                      {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '110px', height: '14px' }}></span> : (result.created || 'Chưa ghi nhận')}
+                    </span>
                   </div>
-                  {result.expirationDate && (
+                  {(result.expirationDate || isScanning) && (
                     <div className="detail-row">
                       <span className="detail-label">Ngày hết hạn tên miền</span>
-                      <span className="detail-val">{result.expirationDate}</span>
+                      <span className="detail-val">
+                        {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '100px', height: '14px' }}></span> : result.expirationDate}
+                      </span>
                     </div>
                   )}
-                  {result.nameservers && (
+                  {result.nameservers && !isScanning && (
                     <div className="detail-row">
                       <span className="detail-label">Nameservers</span>
                       <span className="detail-val" style={{ fontSize: '0.78rem', textAlign: 'right', wordBreak: 'break-all' }}>{result.nameservers}</span>
                     </div>
                   )}
-                  {result.owner && result.owner !== 'Ẩn danh (Privacy Protected)' && (
+                  {result.owner && result.owner !== 'Ẩn danh (Privacy Protected)' && !isScanning && (
                     <div className="detail-row">
                       <span className="detail-label">Chủ sở hữu</span>
                       <span className="detail-val">{result.owner}</span>
@@ -862,10 +858,12 @@ export default function ScanDetail({ addToast }) {
                   )}
                   <div className="detail-row">
                     <span className="detail-label">Báo cáo cộng đồng</span>
-                    <span className={`detail-val font-bold ${result.reports > 0 ? 'text-red' : 'text-green'}`}>{result.reports} lượt</span>
+                    <span className={`detail-val font-bold ${result.reports > 0 && !isScanning ? 'text-red' : 'text-green'}`}>
+                      {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '60px', height: '14px' }}></span> : `${result.reports} lượt`}
+                    </span>
                   </div>
                 </div>
-                <button onClick={() => setShowWhoisModal(true)} className="detail-action-btn">
+                <button onClick={() => setShowWhoisModal(true)} className="detail-action-btn" disabled={isScanning}>
                   <Terminal size={14} />
                   <span>Xem WHOIS</span>
                 </button>
@@ -873,10 +871,19 @@ export default function ScanDetail({ addToast }) {
 
               <div className="detail-card glass-card">
                 <div className="detail-card-header">
-                  <Cpu size={16} className={isMalicious ? 'text-red' : 'text-green'} />
+                  <Cpu size={16} className={isScanning ? 'text-secondary' : isMalicious ? 'text-red' : 'text-green'} />
                   <h4>Đối Soát Cơ Sở Dữ Liệu</h4>
                 </div>
-                {isMalicious || result.status === 'suspicious' ? (
+                {isScanning ? (
+                  <div className="db-check-list">
+                    {['Google Safe Browsing', 'PhishTank Blacklist', 'KiGuard Cuckoo Filter', 'AI Heuristics Scanner', 'VirusTotal Engine'].map((dbName, idx) => (
+                      <div key={idx} className="db-check-item">
+                        <span className="db-name">{dbName}</span>
+                        <span className="skeleton-shimmer skeleton-badge" style={{ width: '70px', height: '22px' }}></span>
+                      </div>
+                    ))}
+                  </div>
+                ) : isMalicious || result.status === 'suspicious' ? (
                   <div className="db-check-list">
                     <div className="db-check-item danger">
                       <span className="db-name">Google Safe Browsing</span>
@@ -887,7 +894,7 @@ export default function ScanDetail({ addToast }) {
                       <span className="db-badge db-badge-red">MATCHED</span>
                     </div>
                     <div className="db-check-item danger">
-                      <span className="db-name">ChongLuaDao Core</span>
+                      <span className="db-name">shield Core</span>
                       <span className="db-badge db-badge-red">BLACKLISTED</span>
                     </div>
                     <div className="db-check-item danger">
@@ -906,7 +913,7 @@ export default function ScanDetail({ addToast }) {
                       <span className="db-badge db-badge-green">SAFE</span>
                     </div>
                     <div className="db-check-item safe">
-                      <span className="db-name">ChongLuaDao Core</span>
+                      <span className="db-name">shield Core</span>
                       <span className="db-badge db-badge-green">CLEAN</span>
                     </div>
                     <div className="db-check-item safe">
@@ -918,28 +925,71 @@ export default function ScanDetail({ addToast }) {
               </div>
             </div>
 
-            {/* Expert Tips */}
-            <div className="scan-tips-card glass-card">
-              <div className="detail-card-header">
-                <Radio size={16} className={isMalicious ? 'text-red' : 'text-green'} />
-                <h4>Khuyến Cáo An Toàn</h4>
+
+
+            {/* Report Callout Card for Unverified / Not Found Domains */}
+            {!isScanning && (result.status === 'unverified' || result.status === 'not_found') && (
+              <div className="scan-dispute-card glass-card" style={{
+                background: 'linear-gradient(135deg, rgba(239, 68, 68, 0.05) 0%, rgba(245, 158, 11, 0.08) 100%)',
+                border: '1px solid rgba(245, 158, 11, 0.25)',
+                borderRadius: '16px',
+                padding: '1.5rem 1.75rem',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '1.25rem',
+                marginTop: '1.5rem'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', flex: 1, minWidth: '280px' }}>
+                  <div style={{
+                    width: '46px',
+                    height: '46px',
+                    borderRadius: '12px',
+                    background: 'rgba(239, 68, 68, 0.1)',
+                    color: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0
+                  }}>
+                    <ShieldAlert size={24} />
+                  </div>
+                  <div>
+                    <h4 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: '#1e293b' }}>
+                      Bạn muốn báo cáo trang web này?
+                    </h4>
+                    <p style={{ margin: '0.35rem 0 0 0', fontSize: '0.85rem', color: '#64748b', lineHeight: 1.5 }}>
+                      Tên miền <strong style={{ color: '#0f172a' }}>{result.target}</strong> chưa có thông tin vi phạm trong CSDL. Nếu bạn phát hiện hành vi lừa đảo/giả mạo, hãy gửi tố cáo ngay!
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => navigate('/report', { state: { initialTarget: result.target, target: result.target, type: 'url' } })}
+                  className="dispute-action-btn"
+                  style={{
+                    background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
+                    color: '#fff',
+                    border: 'none',
+                    padding: '0.75rem 1.35rem',
+                    borderRadius: '10px',
+                    fontWeight: 700,
+                    fontSize: '0.88rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 4px 14px rgba(239, 68, 68, 0.3)',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <ShieldAlert size={16} />
+                  <span>Gửi tố cáo website này</span>
+                </button>
               </div>
-              <ul className="tips-list">
-                {result.status === 'safe' ? (
-                  <>
-                    <li>Website này hiện được đánh giá an toàn. Luôn kiểm tra chính tả URL trước khi nhập dữ liệu cá nhân.</li>
-                    <li>Tránh click vào các link lạ có đuôi mở rộng đáng ngờ như .zip, .exe, .scr.</li>
-                    <li>Nên cài đặt tiện ích mở rộng ChongLuaDao để bảo vệ liên tục.</li>
-                  </>
-                ) : (
-                  <>
-                    <li className="tip-critical">RỜI KHỎI TRANG WEB NÀY NGAY LẬP TỨC. Đây là liên kết giả mạo chứa mã độc.</li>
-                    <li className="tip-critical">Tuyệt đối không điền tên đăng nhập, mật khẩu hay thông tin ngân hàng.</li>
-                    <li>Chia sẻ cảnh báo tên miền này tới bạn bè xung quanh để phòng tránh.</li>
-                  </>
-                )}
-              </ul>
-            </div>
+            )}
 
             {/* False Positive */}
             {(isMalicious || result.status === 'suspicious') && (
@@ -959,17 +1009,19 @@ export default function ScanDetail({ addToast }) {
         ) : (
           /* STATE 5: RESULT RECEIVED - SCAM DOSSIER THEME (Phone, Bank Account) */
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '2.25rem' }}>
-            <div className={`cyber-dossier-wrapper border-${result.status} ${isMalicious ? 'cyber-dossier-malicious' : ''}`}>
-              <div className={`dossier-top-stripes stripes-${result.status}`}></div>
+            <div className={`cyber-dossier-wrapper ${isScanning ? 'border-scanning' : `border-${result.status}`} ${isMalicious && !isScanning ? 'cyber-dossier-malicious' : ''}`}>
+              <div className={`dossier-top-stripes ${isScanning ? 'stripes-scanning' : `stripes-${result.status}`}`}></div>
               <div className="dossier-watermark">
-                {cleanType === 'phone'
+                {isScanning
+                  ? 'VERIFYING'
+                  : cleanType === 'phone'
                   ? (result.status === 'safe' ? 'VERIFIED' : 'SCAM CASE')
                   : (result.status === 'safe' ? 'VERIFIED' : result.status === 'suspicious' ? 'WARNING' : 'DANGEROUS')
                 }
               </div>
 
               {/* Rubber Stamp Badge */}
-              {result.status !== 'suspicious' && (
+              {!isScanning && result.status !== 'suspicious' && (
                 <div className={`cyber-stamp-badge stamp-${result.status} ${result.status === 'safe' ? 'stamp-rect' : 'stamp-circle'}`}>
                   {result.status === 'safe' ? (
                     <div className="stamp-rect-border">
@@ -1032,111 +1084,146 @@ export default function ScanDetail({ addToast }) {
                 </div>
               </div>
 
-                {/* Unique Deck Layout for Fraud Profile */}
-                <div className="fraud-profile-deck">
-                  
-                  {/* 1. Target Card */}
-                  <div className={`fraud-target-card status-${result.status}`}>
-                    <div className="fraud-target-icon-wrapper">
-                      {result.status === 'safe' ? (
-                        <ShieldCheck size={36} className="icon-safe" />
-                      ) : result.status === 'suspicious' ? (
-                        <ShieldAlert size={36} className="icon-suspicious" />
-                      ) : (
-                        <ShieldAlert size={36} className="icon-danger" />
-                      )}
-                    </div>
-                    <div className="fraud-target-details">
-                      <span className="fraud-target-lbl">ĐỐI TƯỢNG BỊ BÁO CÁO (SCAM TARGET)</span>
-                      <h2 className="fraud-target-val font-mono">{result.target}</h2>
-                      {result.scamType && (
-                        <div className="fraud-type-sub-title">
-                          <span className="label">LOẠI HÌNH:</span>
-                          <span className="val">{result.scamType}</span>
-                        </div>
-                      )}
-                      <span className="fraud-risk-badge font-mono" style={{ color: gaugeColor, borderColor: badgeBorderColor, backgroundColor: badgeBgColor }}>
-                        MỨC ĐỘ RỦI RO: {riskScore}/100 ({riskLabel})
-                      </span>
-                    </div>
-                  </div>
+              {/* Unique Deck Layout for Fraud Profile */}
+              <div className="fraud-profile-deck">
 
-                  {/* Description Box */}
-                  <div className="fraud-description-box">
+                {/* 1. Target Card */}
+                <div className={`fraud-target-card ${isScanning ? 'status-scanning' : `status-${result.status}`}`}>
+                  <div className="fraud-target-icon-wrapper">
+                    {isScanning ? (
+                      <Loader2 size={36} className="btn-icon-spin text-secondary" />
+                    ) : result.status === 'safe' ? (
+                      <ShieldCheck size={36} className="icon-safe" />
+                    ) : result.status === 'suspicious' ? (
+                      <ShieldAlert size={36} className="icon-suspicious" />
+                    ) : (
+                      <ShieldAlert size={36} className="icon-danger" />
+                    )}
+                  </div>
+                  <div className="fraud-target-details">
+                    <span className="fraud-target-lbl">ĐỐI TƯỢNG BỊ BÁO CÁO (SCAM TARGET)</span>
+                    <h2 className="fraud-target-val font-mono">{result.target || inputValue || decodedTarget}</h2>
+                    {isScanning ? (
+                      <div style={{ marginTop: '0.4rem', display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <span className="skeleton-shimmer skeleton-pill" style={{ width: '160px', height: '22px' }}></span>
+                        <span className="skeleton-shimmer skeleton-pill" style={{ width: '130px', height: '22px' }}></span>
+                      </div>
+                    ) : (
+                      <>
+                        {result.scamType && (
+                          <div className="fraud-type-sub-title">
+                            <span className="label">LOẠI HÌNH:</span>
+                            <span className="val">{result.scamType}</span>
+                          </div>
+                        )}
+                        <span className="fraud-risk-badge font-mono" style={{ color: gaugeColor, borderColor: badgeBorderColor, backgroundColor: badgeBgColor }}>
+                          MỨC ĐỘ RỦI RO: {riskScore}/100 ({riskLabel})
+                        </span>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Description Box */}
+                <div className="fraud-description-box">
+                  {isScanning ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <span className="skeleton-shimmer skeleton-line" style={{ width: '92%', height: '15px' }}></span>
+                      <span className="skeleton-shimmer skeleton-line" style={{ width: '65%', height: '15px' }}></span>
+                    </div>
+                  ) : (
                     <p className="fraud-desc-text">{result.desc}</p>
+                  )}
+                </div>
+
+                {/* 2. Tri-Card Information Grid */}
+                <div className="fraud-info-grid">
+                  <div className="fraud-info-subcard">
+                    <div className="subcard-header">
+                      <User size={16} />
+                      <h4>ĐỊNH DANH ĐỐI TƯỢNG</h4>
+                    </div>
+                    <div className="subcard-body">
+                      <div className="subcard-row">
+                        <span className="label">Tên đối tượng:</span>
+                        <span className="val font-bold">
+                          {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '120px', height: '14px' }}></span> : (result.name || 'Chưa rõ danh tính')}
+                        </span>
+                      </div>
+                      <div className="subcard-row">
+                        <span className="label">Ngân hàng / Nhà mạng:</span>
+                        <span className="val">
+                          {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '100px', height: '14px' }}></span> : (result.bankName || 'Đang xác minh')}
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
-                  {/* 2. Tri-Card Information Grid */}
-                  <div className="fraud-info-grid">
-                    <div className="fraud-info-subcard">
-                      <div className="subcard-header">
-                        <User size={16} />
-                        <h4>ĐỊNH DANH ĐỐI TƯỢNG</h4>
+                  <div className="fraud-info-subcard">
+                    <div className="subcard-header">
+                      <Calendar size={16} />
+                      <h4>LỊCH SỬ GHI NHẬN</h4>
+                    </div>
+                    <div className="subcard-body">
+                      <div className="subcard-row">
+                        <span className="label">Nguồn dữ liệu:</span>
+                        <span className="val">
+                          {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '110px', height: '14px' }}></span> : (result.created || 'Báo cáo từ cộng đồng')}
+                        </span>
                       </div>
-                      <div className="subcard-body">
-                        <div className="subcard-row">
-                          <span className="label">Tên đối tượng:</span>
-                          <span className="val font-bold">{result.name || 'Chưa rõ danh tính'}</span>
-                        </div>
-                        <div className="subcard-row">
-                          <span className="label">Ngân hàng / Nhà mạng:</span>
-                          <span className="val">{result.bankName || 'Đang xác minh'}</span>
-                        </div>
+                      <div className="subcard-row">
+                        <span className="label">Tổng số phản ánh:</span>
+                        <span className={`val font-bold ${result.reports > 0 && !isScanning ? 'text-red' : 'text-green'}`}>
+                          {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '80px', height: '14px' }}></span> : `${result.reports} lượt báo cáo độc hại`}
+                        </span>
                       </div>
                     </div>
+                  </div>
 
-                    <div className="fraud-info-subcard">
-                      <div className="subcard-header">
-                        <Calendar size={16} />
-                        <h4>LỊCH SỬ GHI NHẬN</h4>
-                      </div>
-                      <div className="subcard-body">
-                        <div className="subcard-row">
-                          <span className="label">Nguồn dữ liệu:</span>
-                          <span className="val">{result.created || 'Báo cáo từ cộng đồng'}</span>
-                        </div>
-                        <div className="subcard-row">
-                          <span className="label">Tổng số phản ánh:</span>
-                          <span className={`val font-bold ${result.reports > 0 ? 'text-red' : 'text-green'}`}>
-                            {result.reports} lượt báo cáo độc hại
-                          </span>
-                        </div>
-                      </div>
+                  <div className="fraud-info-subcard">
+                    <div className="subcard-header">
+                      <Activity size={16} />
+                      <h4>KẾT QUẢ ĐỐI SOÁT</h4>
                     </div>
-
-                    <div className="fraud-info-subcard">
-                      <div className="subcard-header">
-                        <Activity size={16} />
-                        <h4>KẾT QUẢ ĐỐI SOÁT</h4>
+                    <div className="subcard-body">
+                      <div className="subcard-row">
+                        <span className="label">CSDL quốc gia:</span>
+                        <span className={`val font-mono ${result.status === 'safe' && !isScanning ? 'text-green' : 'text-red'}`}>
+                          {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '90px', height: '14px' }}></span> : (result.status === 'safe' ? 'SAFE_MATCH' : 'BLACKLIST_MATCH')}
+                        </span>
                       </div>
-                      <div className="subcard-body">
-                        <div className="subcard-row">
-                          <span className="label">CSDL quốc gia:</span>
-                          <span className={`val font-mono ${result.status === 'safe' ? 'text-green' : 'text-red'}`}>
-                            {result.status === 'safe' ? 'SAFE_MATCH' : 'BLACKLIST_MATCH'}
-                          </span>
-                        </div>
-                        <div className="subcard-row">
-                          <span className="label">Chỉ số uy tín:</span>
-                          <span className="val">{result.status === 'safe' ? 'Cao (High Trust)' : 'Rất thấp (No Trust)'}</span>
-                        </div>
+                      <div className="subcard-row">
+                        <span className="label">Chỉ số uy tín:</span>
+                        <span className="val">
+                          {isScanning ? <span className="skeleton-shimmer skeleton-line" style={{ width: '100px', height: '14px' }}></span> : (result.status === 'safe' ? 'Cao (High Trust)' : 'Rất thấp (No Trust)')}
+                        </span>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
 
             {/* Technical Diagnostics & Expert Tips */}
             <div className="cyber-detail-grid">
               <div className="cyber-info-block glass-card">
                 <div className="cyber-block-header">
-                  <Cpu size={16} className={isMalicious ? 'text-red' : result.status === 'suspicious' ? 'text-yellow' : 'text-green'} />
+                  <Cpu size={16} className={isScanning ? 'text-secondary' : isMalicious ? 'text-red' : result.status === 'suspicious' ? 'text-yellow' : 'text-green'} />
                   <h4>ĐỐI SOÁT CƠ SỞ DỮ LIỆU PHÒNG CHỐNG SCAM</h4>
                 </div>
-                {isMalicious || result.status === 'suspicious' ? (
+                {isScanning ? (
+                  <div className="cyber-engines-list font-mono">
+                    {['CSDL KiGuard Security', 'VNCERT Fraud Registry', 'Cục An Ninh Mạng Đề Xuất', 'AI Scam Behavior Scanner', 'Hệ Thống Xác Minh Cộng Đồng'].map((engine, idx) => (
+                      <div key={idx} className="cyber-engine-row">
+                        <span>{engine}</span>
+                        <span className="skeleton-shimmer skeleton-badge" style={{ width: '85px', height: '20px' }}></span>
+                      </div>
+                    ))}
+                  </div>
+                ) : isMalicious || result.status === 'suspicious' ? (
                   <div className="cyber-engines-list font-mono">
                     <div className="cyber-engine-row">
-                      <span>CSDL CHỐNG LỪA ĐẢO</span>
+                      <span>CSDL S.H.I.E.L.D</span>
                       <span className="engine-badge-red">BLACKLISTED MATCH</span>
                     </div>
                     <div className="cyber-engine-row">
@@ -1188,7 +1275,7 @@ export default function ScanDetail({ addToast }) {
                     <>
                       <li>Tên miền/Số điện thoại hiện chưa nằm trong danh mục lừa đảo. Tuy nhiên luôn duy trì cảnh giác khi giao dịch tài chính.</li>
                       <li>Không tải xuống các tệp tin lạ hoặc cấp quyền trợ năng trên điện thoại theo yêu cầu của đối tượng chưa rõ danh tính.</li>
-                      <li>Cài đặt tiện ích mở rộng ChongLuaDao để bảo vệ trình duyệt tự động thời gian thực.</li>
+                      <li>Cài đặt tiện ích mở rộng shield để bảo vệ trình duyệt tự động thời gian thực.</li>
                     </>
                   ) : result.status === 'suspicious' ? (
                     <>
@@ -1208,7 +1295,7 @@ export default function ScanDetail({ addToast }) {
             </div>
 
             {/* False Positive Dispute Block */}
-            {(isMalicious || result.status === 'suspicious') && (
+            {!isScanning && (isMalicious || result.status === 'suspicious') && (
               <div className="cyber-dispute-block glass-card">
                 <div className="cyber-dispute-info">
                   <span className="cyber-dispute-title">BÁO CÁO SAI LỆCH HỆ THỐNG / FALSE POSITIVE</span>

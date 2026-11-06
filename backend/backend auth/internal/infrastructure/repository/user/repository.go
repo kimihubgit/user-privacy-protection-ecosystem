@@ -98,6 +98,17 @@ func (r *mongoRepository) Update(ctx context.Context, user *entity.User) error {
 	return err
 }
 
+func (r *mongoRepository) Delete(ctx context.Context, id primitive.ObjectID) error {
+	res, err := r.collection.DeleteOne(ctx, bson.M{"_id": id})
+	if err != nil {
+		return err
+	}
+	if res.DeletedCount == 0 {
+		return mongo.ErrNoDocuments
+	}
+	return nil
+}
+
 func (r *mongoRepository) List(ctx context.Context, page, limit int64, search string) ([]entity.User, int64, error) {
 	filter := bson.M{}
 	if search != "" {

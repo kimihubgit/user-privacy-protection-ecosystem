@@ -43,12 +43,15 @@ try {
   copyDirSync('assets', 'dist/assets');
   copyDirSync('data', 'dist/data');
   copyDirSync('rules', 'dist/rules');
-  copyDirSync('src/background', 'dist/src/background');
+  copyDirSync('icons', 'dist/icons');
+  copyDirSync('_locales', 'dist/_locales');
+  console.log('Bundling background script using esbuild...');
+  execSync('npx esbuild src/background/background.js --bundle --outfile=dist/src/background/background.js --platform=browser', { stdio: 'inherit' });
+
   copyDirSync('src/content', 'dist/src/content');
-  copyDirSync('src/lib', 'dist/src/lib');
+  copyDirSync('src/test', 'dist/src/test');
   copyDirSync('src/_locales', 'dist/src/_locales');
   copyDirSync('src/shared', 'dist/src/shared');
-  copyDirSync('src/options', 'dist/src/options');
   copyDirSync('src/block', 'dist/src/block');
   copyDirSync('src/welcome', 'dist/src/welcome');
   console.log('Build complete! Output is in dist folder.');

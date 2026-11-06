@@ -1,8 +1,0 @@
-{
-  "error": {
-    "message": "Expired API Key provided: sk_live_*********************************************************************************************fXPDi8",
-    "type": "api_error",
-    "code": "api_key_expired",
-    "doc_url": "https://stripe.com/docs/error-codes/api-key-expired"
-  }
-}

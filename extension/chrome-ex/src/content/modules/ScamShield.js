@@ -5,13 +5,48 @@ const ScamShield = {
         // Query background script to check domain safety
         chrome.runtime.sendMessage({ action: "checkDomain", domain: currentDomain }, (response) => {
             if (response && response.isScam) {
-                this.showWarning(currentDomain);
+                this.showWarning(currentDomain, response.homograph);
             }
         });
     },
 
-    showWarning(domain) {
+    showWarning(domain, homographData) {
         if (document.getElementById("scam-guard-warning-overlay")) return;
+
+        const isHomograph = !!homographData;
+        const title = isHomograph ? "Cảnh báo tên miền giả mạo" : "Cảnh báo trang web lừa đảo";
+        
+        let messageHtml = '';
+        if (isHomograph) {
+            const brand = homographData.spoofedBrand ? homographData.spoofedBrand.toUpperCase() : 'thương hiệu uy tín';
+            messageHtml = `
+                <p style="margin-bottom: 12px; color: #cbd5e1; font-size: 14px; line-height: 1.5;">
+                    Trang web này đang sử dụng tên miền có ký tự tương tự để mạo danh <strong>${brand}</strong>.
+                </p>
+                <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 12px; font-size: 12.5px; text-align: left; margin-bottom: 14px; line-height: 1.6;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: #94a3b8;">Tên miền hiển thị:</span>
+                        <code style="color: #f8fafc; font-weight: 500;">${homographData.unicodeDomain || domain}</code>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color: #94a3b8;">Tên miền thực tế (Punycode):</span>
+                        <code style="color: #93c5fd; font-weight: 500;">${homographData.punycodeDomain || domain}</code>
+                    </div>
+                    <div style="color: #fca5a5; font-size: 12px; margin-top: 6px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 6px;">
+                        ${homographData.reason || 'Ký tự hiển thị không khớp với bảng mã ký tự tiêu chuẩn.'}
+                    </div>
+                </div>
+                <p style="color: #f87171; font-size: 13px; margin: 0 0 16px; font-weight: 500;">
+                    Không nhập thông tin đăng nhập hoặc dữ liệu tài chính tại đây.
+                </p>
+            `;
+        } else {
+            messageHtml = `
+                <p style="color: #cbd5e1; font-size: 14px; line-height: 1.6; margin-bottom: 18px;">
+                    Trang web <strong>${domain}</strong> nằm trong danh sách cảnh báo lừa đảo. Vui lòng không cung cấp thông tin cá nhân.
+                </p>
+            `;
+        }
 
         const overlay = document.createElement("div");
         overlay.id = "scam-guard-warning-overlay";
@@ -24,17 +59,16 @@ const ScamShield = {
                         <line x1="12" y1="17" x2="12.01" y2="17"></line>
                     </svg>
                 </div>
-                <h1 class="scam-guard-title">CẢNH BÁO LỪA ĐẢO!</h1>
-                <p class="scam-guard-message">
-                    Trang web <strong>${domain}</strong> đã bị báo cáo là trang web lừa đảo, giả mạo hoặc chứa mã độc. 
-                    Vì sự an toàn của bạn, chúng tôi khuyên bạn không nên tiếp tục truy cập hoặc nhập bất kỳ thông tin nhạy cảm nào tại đây.
-                </p>
+                <h1 class="scam-guard-title">${title}</h1>
+                <div class="scam-guard-message">
+                    ${messageHtml}
+                </div>
                 <div class="scam-guard-actions">
                     <button id="scam-guard-back-btn" class="scam-guard-btn primary">Quay lại an toàn</button>
-                    <button id="scam-guard-continue-btn" class="scam-guard-btn secondary">Tôi hiểu rủi ro, tiếp tục truy cập</button>
+                    <button id="scam-guard-continue-btn" class="scam-guard-btn secondary">Bỏ qua và tiếp tục</button>
                 </div>
                 <div class="scam-guard-footer">
-                    Bảo vệ bởi Scam Guard Extension &bull; Dữ liệu từ Hệ thống Telegram Bot
+                    Bảo vệ bởi KiGuard
                 </div>
             </div>
         `;

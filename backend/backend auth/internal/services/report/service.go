@@ -21,12 +21,13 @@ import (
 type Service interface {
 	SubmitReport(ctx context.Context, report *entity.Report) error
 	ListReports(ctx context.Context, page, limit int64, status string, reportType *int) ([]entity.Report, int64, error)
-	UpdateReportStatus(ctx context.Context, id string, status string) error
+	UpdateReportStatus(ctx context.Context, id string, status string, reviewerEmail string, reviewerName string) error
 	GetReportsByReporter(ctx context.Context, email string, ip string, page, limit int64) ([]entity.Report, int64, error)
 	GetReportStatsByReporter(ctx context.Context, email string, ip string) (map[string]int64, error)
 	GetReportByID(ctx context.Context, id string) (*entity.Report, error)
 	GetGlobalStats(ctx context.Context) (map[string]int64, error)
 	GetWeeklyStats(ctx context.Context) (dailyCounts map[string]int64, total int64, err error)
+	GetModeratorStats(ctx context.Context) (stats []repository.ModeratorStat, globalTotal int64, err error)
 }
 
 type service struct {
@@ -61,7 +62,7 @@ func (s *service) GetReportStatsByReporter(ctx context.Context, email string, ip
 	return s.reportRepo.GetStatsByReporter(ctx, email, ip)
 }
 
-func (s *service) UpdateReportStatus(ctx context.Context, id string, status string) error {
+func (s *service) UpdateReportStatus(ctx context.Context, id string, status string, reviewerEmail string, reviewerName string) error {
 	if status != entity.ReportStatusApproved && status != entity.ReportStatusRejected {
 		return errors.New("invalid status: must be approved or rejected")
 	}
@@ -78,8 +79,8 @@ func (s *service) UpdateReportStatus(ctx context.Context, id string, status stri
 		return fmt.Errorf("report is already processed: %s", reportDoc.Status)
 	}
 
-	// 1. Update status in database
-	err = s.reportRepo.UpdateStatus(ctx, id, status)
+	// 1. Update status and reviewer details in database
+	err = s.reportRepo.UpdateStatus(ctx, id, status, reviewerEmail, reviewerName)
 	if err != nil {
 		return err
 	}
@@ -228,4 +229,8 @@ func (s *service) GetGlobalStats(ctx context.Context) (map[string]int64, error) 
 
 func (s *service) GetWeeklyStats(ctx context.Context) (dailyCounts map[string]int64, total int64, err error) {
 	return s.reportRepo.GetWeeklyStats(ctx)
+}
+
+func (s *service) GetModeratorStats(ctx context.Context) (stats []repository.ModeratorStat, globalTotal int64, err error) {
+	return s.reportRepo.GetModeratorStats(ctx)
 }

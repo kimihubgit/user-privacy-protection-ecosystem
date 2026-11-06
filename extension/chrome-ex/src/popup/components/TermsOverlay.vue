@@ -147,7 +147,7 @@ export default {
 }
 
 .terms-title {
-  font-family: 'Outfit', 'Poppins', sans-serif;
+  font-family: 'Outfit', 'Inter', sans-serif;
   font-size: 20px;
   font-weight: 800;
   color: #ffffff;

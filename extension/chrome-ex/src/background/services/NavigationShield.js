@@ -1,7 +1,32 @@
 import { CONFIG } from '../../config.js';
+import { HomographDetector } from '../../shared/HomographDetector.js';
 
 export class NavigationShield {
+    static async isHomographShieldActive() {
+        const globalRes = await chrome.storage.local.get("globalEnabled");
+        if (globalRes.globalEnabled === false) return false;
+
+        const settings = await chrome.storage.local.get("homographShieldActive");
+        return settings.homographShieldActive !== false;
+    }
+
     static async checkDomain(domainOrUrl) {
+        // 1. Check Homograph / Punycode Attack if enabled
+        if (await NavigationShield.isHomographShieldActive()) {
+            try {
+                const homograph = HomographDetector.analyze(domainOrUrl);
+                if (homograph && homograph.isAttack) {
+                    console.warn(`[NavigationShield] Homograph attack detected for ${domainOrUrl}:`, homograph);
+                    return {
+                        status: 'unsafe_homograph',
+                        homograph
+                    };
+                }
+            } catch (err) {
+                console.error("[NavigationShield] Error running HomographDetector:", err);
+            }
+        }
+
         let urlToCheck = domainOrUrl;
         if (!urlToCheck.startsWith('http://') && !urlToCheck.startsWith('https://')) {
             urlToCheck = 'https://' + urlToCheck;
@@ -28,13 +53,13 @@ export class NavigationShield {
                 const data = await response.json();
                 if (data && data.status === 'unsafe') {
                     console.log(`[NavigationShield] API marked URL as UNSAFE (Blocking): ${urlToCheck}`);
-                    return 'unsafe';
+                    return { status: 'unsafe' };
                 } else if (data && data.status === 'not_found') {
                     console.log(`[NavigationShield] API marked URL as NOT_FOUND (Allowing): ${urlToCheck}`);
-                    return 'not_found';
+                    return { status: 'not_found' };
                 } else {
                     console.log(`[NavigationShield] API marked URL as SAFE (Allowing): ${urlToCheck}`);
-                    return 'safe';
+                    return { status: 'safe' };
                 }
             }
         } catch (error) {
@@ -46,7 +71,7 @@ export class NavigationShield {
         const result = await chrome.storage.local.get("scamDomains");
         const list = result.scamDomains || [];
         const isLocalScam = list.some(d => cleanDomain.includes(d));
-        return isLocalScam ? 'unsafe' : 'safe';
+        return { status: isLocalScam ? 'unsafe' : 'checking' };
     }
 
     static async isShieldActive() {
@@ -87,7 +112,7 @@ export class NavigationShield {
                 stats_total_scam_checked: (result.stats_total_scam_checked || 0) + 1
             };
             
-            if (status === 'unsafe') {
+            if (status === 'unsafe' || status === 'unsafe_homograph') {
                 stats.stats_total_scam_blocked = (result.stats_total_scam_blocked || 0) + 1;
             }
             
@@ -140,7 +165,8 @@ export class NavigationShield {
                     }
 
                     // Tự động phân tích an toàn & ghi nhật ký hoạt động
-                    const status = await NavigationShield.checkDomain(tab.url);
+                    const checkResult = await NavigationShield.checkDomain(tab.url);
+                    const status = typeof checkResult === 'object' ? checkResult.status : checkResult;
                     await NavigationShield.logActivity(domain, tab.url, status);
                 } catch (e) {
                     console.error("Lỗi ghi nhận lịch sử duyệt web ở background:", e);
@@ -162,10 +188,16 @@ export class NavigationShield {
                 if (!await NavigationShield.isShieldActive()) return;
                 if (await NavigationShield.isWhitelisted(domain)) return;
 
-                const status = await NavigationShield.checkDomain(details.url);
-                if (status === 'unsafe') {
-                    const warningUrl = chrome.runtime.getURL(`src/block/block.html?url=${encodeURIComponent(details.url)}`);
-                    chrome.tabs.update(details.tabId, { url: warningUrl });
+                const checkResult = await NavigationShield.checkDomain(details.url);
+                const status = typeof checkResult === 'object' ? checkResult.status : checkResult;
+                
+                if (status === 'unsafe' || status === 'unsafe_homograph') {
+                    let warningUrl = `src/block/block.html?url=${encodeURIComponent(details.url)}`;
+                    if (status === 'unsafe_homograph' && checkResult.homograph) {
+                        const h = checkResult.homograph;
+                        warningUrl += `&reason=homograph&spoof=${encodeURIComponent(h.spoofedBrand || '')}&unicode=${encodeURIComponent(h.unicodeDomain || '')}&desc=${encodeURIComponent(h.reason || '')}&punycode=${encodeURIComponent(h.punycodeDomain || '')}&type=${encodeURIComponent(h.attackType || '')}`;
+                    }
+                    chrome.tabs.update(details.tabId, { url: chrome.runtime.getURL(warningUrl) });
                 }
             } catch (e) {
                 console.error("Error in NavigationShield (onBeforeNavigate):", e);
@@ -173,4 +205,3 @@ export class NavigationShield {
         });
     }
 }
-

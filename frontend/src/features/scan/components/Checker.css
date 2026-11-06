@@ -445,6 +445,13 @@
   transform: scale(0.98);
 }
 
+.search-submit-btn:disabled {
+  opacity: 0.85;
+  cursor: not-allowed;
+  transform: none;
+  background-color: #1ea35f;
+}
+
 @keyframes shine-sweep {
   0% {
     left: -120%;
