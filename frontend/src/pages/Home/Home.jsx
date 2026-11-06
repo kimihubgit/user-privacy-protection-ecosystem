@@ -4,7 +4,6 @@ import ScamTypesSection from './sections/ScamTypesSection';
 import FeatureSection from './sections/FeatureSection';
 import Integrations from './sections/Integrations';
 import ConnectionFlow from './sections/ConnectionFlow';
-import SecurityDashboard from './sections/SecurityDashboard';
 import AiChatbotIntro from '../../features/chatbot/components/AiChatbotIntro';
 import DeveloperApiBanner from './sections/DeveloperApiBanner';
 import CommunitySection from './sections/CommunitySection';
@@ -20,7 +19,6 @@ export default function Home({ addToast, onAiChatToggle }) {
       <FeatureSection />
       <Integrations />
       <ConnectionFlow addToast={addToast} />
-      <SecurityDashboard addToast={addToast} />
       <AiChatbotIntro onAiChatToggle={onAiChatToggle} />
       <DeveloperApiBanner addToast={addToast} />
       <CommunitySection />

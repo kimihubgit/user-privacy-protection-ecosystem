@@ -76,6 +76,11 @@ class AnalyzerService:
             logger.info("Website nằm trong Allowlist.")
             logger.info("=" * 80)
 
+            safe_reason = (
+                osint.get("detail", {}).get("raw", {}).get("reason")
+                or "Website đã được xác minh trong cơ sở dữ liệu tín nhiệm an toàn."
+            )
+
             analysis = LLMResult(
                 analysis_type="OSINT",
                 risk_score=0,
@@ -86,19 +91,21 @@ class AnalyzerService:
                 indicators=[
                     Indicator(
                         indicator="Website nằm trong danh sách an toàn",
-                        reason="Website đã được xác minh trong cơ sở dữ liệu ChongLuaDao.",
+                        reason=safe_reason,
                         severity="Low",
                     )
                 ],
                 summary="Website nằm trong danh sách an toàn.",
                 reason=[
-                    "Website đã được xác minh trong danh sách an toàn của ChongLuaDao."
+                    safe_reason
                 ],
             )
 
+            safe_whois = self.collector_agent.whois.collect(url)
             return {
                 "collector": None,
                 "evidences": None,
+                "whois": safe_whois,
                 "analysis": analysis,
             }
 
@@ -109,36 +116,43 @@ class AnalyzerService:
             logger.warning("Website nằm trong Denylist.")
             logger.info("=" * 80)
 
+            malicious_reason = (
+                osint.get("detail", {}).get("raw", {}).get("reason")
+                or "Website đã được xác định là độc hại / lừa đảo bởi hệ thống Threat Intelligence."
+            )
+
             analysis = LLMResult(
                 analysis_type="OSINT",
                 risk_score=100,
                 status="malicious",
                 level="High",
                 confidence=1.0,
-                categories=["Phishing"],
+                categories=["Phishing", "Malicious"],
                 indicators=[
                     Indicator(
                         indicator="Website nằm trong danh sách cảnh báo",
-                        reason="Website đã được xác định là độc hại trong cơ sở dữ liệu ChongLuaDao.",
+                        reason=malicious_reason,
                         severity="High",
                     )
                 ],
                 summary="Website đã được xác định là độc hại.",
                 reason=[
-                    "Website nằm trong danh sách cảnh báo của ChongLuaDao."
+                    malicious_reason
                 ],
             )
 
+            safe_whois = self.collector_agent.whois.collect(url)
             return {
                 "collector": None,
                 "evidences": None,
+                "whois": safe_whois,
                 "analysis": analysis,
             }
 
         # ==================================================
         # NO RESULT
         # ==================================================
-        logger.info("Không tìm thấy trên ChongLuaDao.")
+        logger.info("Không có cảnh báo trước đó -> Kích hoạt thu thập chuyên sâu...")
         logger.info("Collector Started...")
 
         data = self.collector_agent.collect(url)

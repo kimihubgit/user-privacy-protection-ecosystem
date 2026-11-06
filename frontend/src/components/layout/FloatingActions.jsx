@@ -3,7 +3,6 @@ import { ArrowUp, Sun, Moon } from 'lucide-react';
 export default function FloatingActions({
   showScrollTop,
   scrollToTop,
-  isAiChatOpen,
   isDarkMode,
   toggleTheme
 }) {
@@ -15,7 +14,7 @@ export default function FloatingActions({
           onClick={scrollToTop}
           className="scroll-to-top"
           style={{
-            right: isAiChatOpen ? '24rem' : '2rem'
+            right: '2rem'
           }}
           aria-label="Scroll to top"
         >
@@ -28,9 +27,7 @@ export default function FloatingActions({
         onClick={toggleTheme}
         className="theme-toggle"
         style={{
-          right: isAiChatOpen
-            ? showScrollTop ? '31rem' : '27.5rem'
-            : showScrollTop ? '9rem' : '5.5rem'
+          right: showScrollTop ? '9rem' : '5.5rem'
         }}
         aria-label="Toggle Theme"
       >

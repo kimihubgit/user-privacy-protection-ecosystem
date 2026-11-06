@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ShieldCheck, ShieldAlert, ArrowLeft, Cpu, Globe, User, Radio, ChevronDown, RefreshCw, Terminal, Search, X, Clipboard, Calendar, Activity, Loader2, CheckCircle2, Shield, Sparkles } from 'lucide-react';
+import { ShieldCheck, ShieldAlert, ArrowLeft, Cpu, Globe, Phone, Mail, User, Radio, ChevronDown, RefreshCw, Terminal, Search, X, Clipboard, Calendar, Activity, Loader2, CheckCircle2, Shield, Sparkles } from 'lucide-react';
 import { api } from '../../../lib/api';
+import ScanFlow from './ScanFlow';
 import './ScanDetail.css';
 
 const translateDataClass = (dc) => {
@@ -32,45 +33,25 @@ const formatBreachDate = (dateStr) => {
 
 const getMockWhoisData = (domain, result) => {
   if (!domain) return '';
-  const tld = domain.split('.').pop() || 'com';
-
-  let createdDate = result?.created || '2024-05-15';
-  if (createdDate.includes('ngày trước') || createdDate.includes('mới ghi nhận') || createdDate.includes('Vừa tạo mới')) {
-    createdDate = '2026-06-10 (Đăng ký gần đây)';
+  if (result?.rawWhois && result.rawWhois.length > 50) {
+    return result.rawWhois;
   }
-
-  const host = result?.host || 'Cloudflare Inc';
-  const nameServers = host.toLowerCase().includes('cloudflare')
-    ? `CLOUDFLARE.COM (NS1.CLOUDFLARE.COM, NS2.CLOUDFLARE.COM)`
-    : host.toLowerCase().includes('alibaba')
-      ? `ALIBABA.COM (NS1.ALIBABADNS.COM, NS2.ALIBABADNS.COM)`
-      : `DEFAULT DNS (${host.toUpperCase()})`;
+  const tld = domain.split('.').pop() || 'com';
+  const createdDate = result?.created || 'Chưa ghi nhận';
+  const expiryDate = result?.expirationDate || 'Chưa ghi nhận';
+  const registrar = result?.registrar || 'Chưa ghi nhận';
+  const nameServers = result?.nameservers || `NS1.${domain.toUpperCase()}, NS2.${domain.toUpperCase()}`;
 
   return `Domain Name: ${domain.toUpperCase()}
 Registry Domain ID: 529381734_DOMAIN_${tld.toUpperCase()}-VRSN
-Registrar WHOIS Server: whois.verisign-grs.com
-Registrar URL: http://www.iana.org
-Updated Date: 2026-06-20T10:00:00Z
+Registrar: ${registrar}
 Creation Date: ${createdDate}
-Registry Expiry Date: 2027-06-10T12:00:00Z
-Registrar: ${result?.registrar || 'NameSilo LLC'}
-Registrar IANA ID: 1479
-Registrar Abuse Contact Email: abuse@${result?.registrar?.toLowerCase().replace(/\s+/g, '') || 'registrar'}.com
-Registrar Abuse Contact Phone: +1.1234567890
-Domain Status: clientTransferProhibited (https://icann.org/epp#clientTransferProhibited)
-Registry Registrant ID: REDACTED_FOR_PRIVACY
-Registrant Name: REDACTED FOR PRIVACY
-Registrant Organization: Privacy Protect LLC
-Registrant Street: REDACTED FOR PRIVACY
-Registrant City: REDACTED FOR PRIVACY
-Registrant State/Province: Arizona
-Registrant Postal Code: REDACTED FOR PRIVACY
-Registrant Country: US
-Registrant Phone: REDACTED FOR PRIVACY
-Registrant Email: REDACTED FOR PRIVACY
+Registry Expiry Date: ${expiryDate}
+Registrant Organization: ${result?.owner || 'REDACTED FOR PRIVACY'}
 Name Server: ${nameServers}
+Domain Status: clientTransferProhibited (active)
 DNSSEC: unsigned
->>> Last update of WHOIS database: 2026-06-23T14:22:11Z <<<`;
+>>> Nguồn dữ liệu: RDAP / ICANN Registry <<<`;
 };
 
 const detectCheckType = (val) => {
@@ -291,21 +272,37 @@ export default function ScanDetail({ addToast }) {
             // ignore
           }
 
-          const whoisData = null;
+          const whoisData = data.whois || data.detail?.whois || detail || null;
+
+          const formatDate = (val) => {
+            if (!val) return 'Chưa ghi nhận';
+            try {
+              const d = new Date(val);
+              if (!isNaN(d.getTime())) {
+                return d.toLocaleDateString('vi-VN');
+              }
+            } catch (e) {}
+            return String(val);
+          };
+
+          const regDate = whoisData?.registration_date || whoisData?.created_date || whoisData?.created;
+          const expDate = whoisData?.expiration_date || whoisData?.expires_date || whoisData?.expiration;
+          const nsList = whoisData?.nameservers || [];
 
           setResult({
             target: searchTarget,
             name: name,
             status: status,
             desc: desc,
-            registrar: whoisData?.registrar || detail.registrar || 'Đang cập nhật',
-            created: whoisData?.registration_date ? new Date(whoisData.registration_date).toLocaleDateString('vi-VN') : (detail.created || 'Vừa tạo mới'),
-            expirationDate: whoisData?.expiration_date ? new Date(whoisData.expiration_date).toLocaleDateString('vi-VN') : 'Đang cập nhật',
-            nameservers: whoisData?.nameservers ? whoisData.nameservers.join(', ') : 'Đang cập nhật',
-            owner: whoisData?.owner || 'Ẩn danh (Privacy Protected)',
-            ip: detail.ip || 'Đang cập nhật',
+            registrar: whoisData?.registrar && whoisData.registrar !== 'Chưa ghi nhận' ? whoisData.registrar : (detail.registrar || 'Chưa ghi nhận'),
+            created: regDate ? formatDate(regDate) : 'Chưa ghi nhận',
+            expirationDate: expDate ? formatDate(expDate) : 'Chưa ghi nhận',
+            nameservers: Array.isArray(nsList) && nsList.length > 0 ? nsList.join(', ') : (typeof nsList === 'string' ? nsList : 'Chưa ghi nhận'),
+            owner: whoisData?.owner || whoisData?.registrant_organization || 'Ẩn danh (Privacy Protected)',
+            ip: detail.ip || 'Chưa ghi nhận',
             reports: status === 'malicious' ? 1 : 0,
-            host: 'N/A'
+            host: whoisData?.registrar || 'N/A',
+            rawWhois: whoisData?.raw_text || ''
           });
         } else if (mappedType === 'phone') {
           const isScam = data.is_scam === true || data.is_safe === false;
@@ -376,7 +373,7 @@ export default function ScanDetail({ addToast }) {
     const startTime = Date.now();
     fetchRealData(trimmedTarget).finally(() => {
       const elapsed = Date.now() - startTime;
-      const minDelay = 600; // 600ms smooth shimmer display
+      const minDelay = 2600; // Allow ScanFlow steps to animate smoothly
       const remaining = Math.max(0, minDelay - elapsed);
       setTimeout(() => {
         setIsScanning(false);
@@ -542,45 +539,47 @@ export default function ScanDetail({ addToast }) {
 
       <div className="cyber-detail-container">
 
-        {/* TOP SEARCH BAR PANEL */}
-        <div className="dossier-search-container">
-          <form className="dossier-search-bar" onSubmit={(e) => { e.preventDefault(); handleStartScan(inputValue); }}>
-            <Search className="dossier-search-left-icon" size={20} />
-            <input
-              type="text"
-              className="dossier-search-input"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Nhập Liên kết Web, Số điện thoại hoặc Email..."
-              autoComplete="off"
-              autoCorrect="off"
-              autoCapitalize="off"
-              spellCheck="false"
-            />
-            {inputValue ? (
-              <button type="button" className="dossier-search-clear-btn" onClick={() => setInputValue('')} title="Xóa nội dung">
-                <X size={16} />
-              </button>
-            ) : (
-              <button type="button" className="dossier-search-paste-btn" onClick={handlePaste} title="Dán từ Clipboard">
-                <Clipboard size={16} />
-              </button>
-            )}
-            <button type="submit" className="dossier-search-submit-btn" disabled={isScanning}>
-              {isScanning ? (
-                <>
-                  <Loader2 size={16} className="btn-icon-spin" />
-                  <span>ĐANG PHÂN TÍCH...</span>
-                </>
+        {/* SUB-HEADER BREADCRUMB & ACTIVE TARGET ACTION STRIP */}
+        <div className="vt-detail-subbar">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            className="vt-detail-back-btn"
+            title="Quay lại trang chủ"
+          >
+            <ArrowLeft size={15} />
+            <span>Trang chủ</span>
+          </button>
+
+          <div className="vt-detail-meta">
+            <span className="vt-detail-label">Đang phân tích:</span>
+            <div className="vt-detail-pill">
+              {cleanType === 'phone' ? (
+                <Phone size={13} className="vt-detail-icon" />
+              ) : cleanType === 'email' ? (
+                <Mail size={13} className="vt-detail-icon" />
               ) : (
-                'PHÂN TÍCH'
+                <Globe size={13} className="vt-detail-icon" />
               )}
-            </button>
-          </form>
+              <span className="vt-detail-target-name">{decodedTarget || inputValue}</span>
+              <button
+                type="button"
+                className="vt-detail-refresh-btn"
+                onClick={() => handleStartScan(decodedTarget || inputValue)}
+                title="Quét lại mục này (Re-analyze)"
+                disabled={isScanning}
+              >
+                <RefreshCw size={12} className={isScanning ? 'btn-icon-spin' : ''} />
+                <span>Quét lại</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* CONDITION STATE RENDERING AREA */}
-        {(!hasScanned && !decodedTarget && !inputValue) ? (
+        {isScanning ? (
+          <ScanFlow target={decodedTarget || inputValue} cleanType={cleanType} />
+        ) : (!hasScanned && !decodedTarget && !inputValue) ? (
           /* IDLE STATE: Clean & Inviting Ready-to-Scan Screen */
           <div className="cyber-scanner-wrapper">
             <div className="cyber-idle-card glass-card">
@@ -608,9 +607,6 @@ export default function ScanDetail({ addToast }) {
           <div className="databreach-theme" style={{ width: '100%' }}>
             {/* Header Row */}
             <div className="databreach-header-row">
-              <button onClick={() => navigate('/')} className="dossier-back-btn" title="Quay lại">
-                <ArrowLeft size={20} />
-              </button>
               <div className="databreach-header-info">
                 <span className="databreach-category">KIỂM TRA LỘ LỌT DỮ LIỆU CÁ NHÂN / DATA BREACH CENTRAL</span>
                 <h2 className="databreach-main-title">Kết Quả Kiểm Tra Email: <span className="highlight-email">{result.target || inputValue || decodedTarget}</span></h2>
@@ -752,14 +748,6 @@ export default function ScanDetail({ addToast }) {
         ) : cleanType === 'website' ? (
           /* STATE 4: RESULT RECEIVED - WEBSITE / URL */
           <div className="scan-result-wrapper">
-
-            {/* Back + Title Row */}
-            <div className="scan-result-topbar">
-              <button onClick={() => navigate('/')} className="scan-back-btn" title="Quay lại">
-                <ArrowLeft size={18} />
-                <span>Quay lại</span>
-              </button>
-            </div>
 
             {/* Verdict Hero Card */}
             <div className={`scan-verdict-card ${isScanning ? 'verdict-scanning' : `verdict-${result.status}`}`}>
@@ -1049,9 +1037,6 @@ export default function ScanDetail({ addToast }) {
                     {cleanType === 'phone' ? 'HỒ SƠ BÁO CÁO VỤ VIỆC LỪA ĐẢO / FRAUD INVESTIGATION' : 'HỆ THỐNG AI PHÂN TÍCH AN NINH'}
                   </span>
                   <div className="dossier-title-row">
-                    <button onClick={() => navigate('/')} className="dossier-back-btn" title="Quay lại tra cứu">
-                      <ArrowLeft size={20} />
-                    </button>
                     <h3 className="dossier-title">
                       {cleanType === 'phone' ? 'Thông Tin Vụ Việc Báo Cáo' : 'Kết Quả Phân Tích Chi Tiết'}
                     </h3>

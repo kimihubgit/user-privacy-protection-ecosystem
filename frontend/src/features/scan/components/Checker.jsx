@@ -429,7 +429,7 @@ export default function Checker({ addToast }) {
                 ) : (
                   <div className="no-quick-results">
                     Không tìm thấy dữ liệu trùng khớp nhanh cho "<b style={{ color: '#23b56c' }}>{inputValue}</b>".
-                    Bạn vẫn có thể bấm nút <b>TRA CỨU</b> để phân tích sâu hơn.
+                    Bạn vẫn có thể bấm nút "<b style={{ color: '#23b56c' }}>TRA CỨU</b>" để phân tích sâu hơn.
                   </div>
                 )}
               </div>
@@ -514,7 +514,7 @@ export default function Checker({ addToast }) {
                     onClick={() => setCheckType('website')}
                   >
                     <Link2 size={14} />
-                    <span>Liên kết</span>
+                    <span>Website</span>
                   </button>
                   <button
                     type="button"

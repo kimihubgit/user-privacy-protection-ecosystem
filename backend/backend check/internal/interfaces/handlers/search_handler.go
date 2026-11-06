@@ -35,7 +35,7 @@ func NewSearchHandler(db *database.DB) *SearchHandler {
 	return &SearchHandler{
 		db: db,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: 2 * time.Second,
 		},
 	}
 }
@@ -366,6 +366,13 @@ func (h *SearchHandler) Check(c *gin.Context) {
 			}
 		}
 
+		// Fetch real WHOIS/RDAP data
+		whoisData := h.fetchWhoisRDAP(domainName)
+		if whoisData != nil {
+			response["whois"] = whoisData
+			response["detail"] = whoisData
+		}
+
 		// Insert check log
 		logsColl := h.db.Database.Collection("logs")
 		logEntry := models.CheckLog{
@@ -452,5 +459,115 @@ func (h *SearchHandler) Check(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *SearchHandler) fetchWhoisRDAP(domain string) map[string]interface{} {
+	rdapURL := "https://rdap.org/domain/" + url.PathEscape(domain)
+	req, err := http.NewRequest("GET", rdapURL, nil)
+	if err != nil {
+		return nil
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "Antigravity-Security/1.0")
+
+	resp, err := h.httpClient.Do(req)
+	if err != nil || resp.StatusCode != http.StatusOK {
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
+		return nil
+	}
+	defer resp.Body.Close()
+
+	var data map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&data); err != nil {
+		return nil
+	}
+
+	result := map[string]interface{}{
+		"domain":      domain,
+		"registrar":   "Chưa ghi nhận",
+		"created":     "",
+		"expiration":  "",
+		"nameservers": []string{},
+		"status":      []string{},
+	}
+
+	// Parse events (creation and expiration dates)
+	if events, ok := data["events"].([]interface{}); ok {
+		for _, e := range events {
+			if em, ok := e.(map[string]interface{}); ok {
+				action, _ := em["eventAction"].(string)
+				dateStr, _ := em["eventDate"].(string)
+				if action == "registration" {
+					if t, err := time.Parse(time.RFC3339, dateStr); err == nil {
+						result["created"] = t.Format("02/01/2006")
+						result["registration_date"] = t.Format(time.RFC3339)
+					} else {
+						result["created"] = dateStr
+					}
+				} else if action == "expiration" {
+					if t, err := time.Parse(time.RFC3339, dateStr); err == nil {
+						result["expiration"] = t.Format("02/01/2006")
+						result["expiration_date"] = t.Format(time.RFC3339)
+					} else {
+						result["expiration"] = dateStr
+					}
+				}
+			}
+		}
+	}
+
+	// Parse registrar entity
+	if entities, ok := data["entities"].([]interface{}); ok {
+		for _, ent := range entities {
+			if em, ok := ent.(map[string]interface{}); ok {
+				roles, _ := em["roles"].([]interface{})
+				isRegistrar := false
+				for _, r := range roles {
+					if rStr, ok := r.(string); ok && rStr == "registrar" {
+						isRegistrar = true
+						break
+					}
+				}
+				if isRegistrar {
+					if vcard, ok := em["vcardArray"].([]interface{}); ok && len(vcard) > 1 {
+						if items, ok := vcard[1].([]interface{}); ok {
+							for _, it := range items {
+								if sub, ok := it.([]interface{}); ok && len(sub) > 3 {
+									if prop, ok := sub[0].(string); ok && prop == "fn" {
+										if name, ok := sub[3].(string); ok && name != "" {
+											result["registrar"] = name
+											break
+										}
+									}
+								}
+							}
+						}
+					}
+					if result["registrar"] == "Chưa ghi nhận" {
+						if handle, ok := em["handle"].(string); ok && handle != "" {
+							result["registrar"] = handle
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Parse nameservers
+	if nsList, ok := data["nameservers"].([]interface{}); ok {
+		var nsStrings []string
+		for _, ns := range nsList {
+			if nsm, ok := ns.(map[string]interface{}); ok {
+				if ldh, ok := nsm["ldhName"].(string); ok && ldh != "" {
+					nsStrings = append(nsStrings, ldh)
+				}
+			}
+		}
+		result["nameservers"] = nsStrings
+	}
+
+	return result
 }
 

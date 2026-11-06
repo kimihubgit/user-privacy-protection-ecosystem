@@ -135,7 +135,7 @@ const THINKING_STEPS_AI = [
 
 export default function AiChatbotFullPage({ addToast }) {
   const navigate = useNavigate();
-  const { askChatbot, getAgentReply, analyzeChatImage } = useChatbot();
+  const { askChatbot, analyzeChatImage } = useChatbot();
 
   const [selectedAgentId, setSelectedAgentId] = useState('ai');
   const [conversations, setConversations] = useState([
@@ -406,21 +406,15 @@ export default function AiChatbotFullPage({ addToast }) {
         const [apiReply] = await Promise.all([analyzeChatImage(imageAttachment, text), minDelay]);
         replyText = apiReply;
         if (!replyText) {
-          replyText = `🔍 **KẾT QUẢ PHÂN TÍCH ẢNH CHỤP MÀN HÌNH (VISION AI OCR)**:\n\n` +
-            `1. **Mô tả nhận diện**: Hệ thống đã tiếp nhận và phân tích dữ liệu hình ảnh của bạn.\n` +
-            `2. **Đánh giá dấu hiệu bất thường**:\n` +
-            `   - **Tin nhắn / Đường link lạ**: Cảnh giác trước các tên miền nhái ngân hàng, cổng VNeID giả mạo hoặc đuôi file \`.APK\` độc hại.\n` +
-            `   - **Số tài khoản cá nhân**: Ngân hàng và cơ quan công an KHÔNG BAO GIỜ yêu cầu chuyển tiền qua tài khoản cá nhân.\n` +
-            `3. **Khuyến cáo hành động ngay**:\n` +
-            `   - Tuyệt đối KHÔNG bấm vào bất kỳ đường link nào hiển thị trên ảnh.\n` +
-            `   - KHÔNG cung cấp mã xác thực OTP hay mật khẩu ứng dụng ngân hàng.\n` +
-            `   - Báo cáo số tài khoản / URL độc hại này trên hệ thống S.H.I.E.L.D. để bảo vệ cộng đồng.`;
+          replyText = '⚠️ **Lỗi máy chủ AI**: Không thể xử lý và phân tích hình ảnh vào lúc này do máy chủ đang gặp sự cố hoặc gián đoạn kết nối (Server Error). Vui lòng kiểm tra lại dịch vụ AI hoặc thử lại sau!';
+          if (addToast) addToast('Lỗi máy chủ AI: Không thể phân tích hình ảnh.', 'error');
         }
       } else {
         const [apiReply] = await Promise.all([askChatbot(text, selectedAgentId, activeConv.messages), minDelay]);
         replyText = apiReply;
         if (!replyText) {
-          replyText = getAgentReply(text, selectedAgentId);
+          replyText = '⚠️ **Lỗi kết nối máy chủ AI**: Hiện tại không thể nhận phản hồi từ máy chủ AI hoặc dịch vụ đang gặp sự cố (Server Error). Vui lòng kiểm tra lại dịch vụ AI hoặc thử lại sau!';
+          if (addToast) addToast('Lỗi kết nối: Máy chủ AI không phản hồi.', 'error');
         }
       }
 
@@ -434,7 +428,8 @@ export default function AiChatbotFullPage({ addToast }) {
         return c;
       }));
     } catch {
-      const replyText = getAgentReply(text, selectedAgentId);
+      const replyText = '⚠️ **Lỗi kết nối máy chủ AI**: Đã xảy ra lỗi trong quá trình giao tiếp với máy chủ AI (Server Error). Vui lòng thử lại sau!';
+      if (addToast) addToast('Lỗi kết nối với máy chủ AI.', 'error');
       setConversations(prev => prev.map(c => {
         if (c.id === activeConvId) {
           return {

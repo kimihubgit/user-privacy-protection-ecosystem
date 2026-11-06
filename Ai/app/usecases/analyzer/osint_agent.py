@@ -117,7 +117,7 @@ class OSINTAgent:
 
         return {
 
-            "source": "ChongLuaDao",
+            "source": result.get("source", "ThreatIntel"),
 
             "result": status,
 

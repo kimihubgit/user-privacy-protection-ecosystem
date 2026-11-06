@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, Suspense, useMemo } from 'react';
+import { useState, useEffect, Suspense, useMemo } from 'react';
 import { useLocation, useNavigate, useRoutes } from 'react-router-dom';
 import { X, CheckCircle2, Shield, Key, AlertCircle } from 'lucide-react';
 
@@ -21,7 +21,6 @@ export default function App() {
   const { isLoggedIn, user, logout, isLoginOpen, setIsLoginOpen } = useAuth();
   const { toasts, addToast, removeToast } = useToast();
 
-  const [isAiChatOpen, setIsAiChatOpen] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
 
@@ -31,15 +30,6 @@ export default function App() {
       navigate('/');
     });
   };
-
-  // Reopen floating chatbot if redirected from full-page view via minimize query parameter
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    if (params.get('chat') === 'open') {
-      setTimeout(() => setIsAiChatOpen(true), 0);
-      navigate('/', { replace: true });
-    }
-  }, [location.search, navigate]);
 
   // Sync dark theme class on document body
   useEffect(() => {
@@ -105,10 +95,10 @@ export default function App() {
         addToast,
         setActiveTab,
         onLoginToggle: () => setIsLoginOpen(true),
-        onAiChatToggle: () => setIsAiChatOpen(!isAiChatOpen),
+        onAiChatToggle: () => navigate('/tro-ly-ai'),
         onLogout: handleLogout
       }),
-    [addToast, isAiChatOpen, setIsLoginOpen]
+    [addToast, navigate, setIsLoginOpen]
   );
 
   const routeElements = useRoutes(routeList);
@@ -123,7 +113,7 @@ export default function App() {
         <Header
           activeTab={activeTab}
           setActiveTab={setActiveTab}
-          onAiChatToggle={() => setIsAiChatOpen(!isAiChatOpen)}
+          onAiChatToggle={() => navigate('/tro-ly-ai')}
           onLoginToggle={() => setIsLoginOpen(!isLoginOpen)}
           addToast={addToast}
           isLoggedIn={isLoggedIn}
@@ -131,6 +121,8 @@ export default function App() {
           userAvatar={user.avatar}
           onLogout={handleLogout}
           onDashboardClick={() => navigate('/dashboard')}
+          isDarkMode={isDarkMode}
+          toggleTheme={toggleTheme}
         />
       )}
 
@@ -175,7 +167,6 @@ export default function App() {
         <FloatingActions
           showScrollTop={showScrollTop}
           scrollToTop={scrollToTop}
-          isAiChatOpen={isAiChatOpen}
           isDarkMode={isDarkMode}
           toggleTheme={toggleTheme}
         />
@@ -184,8 +175,6 @@ export default function App() {
       {/* AI Floating Chat Assistant */}
       {!isFullPage && (
         <FloatingChat
-          isAiChatOpen={isAiChatOpen}
-          setIsAiChatOpen={setIsAiChatOpen}
           showScrollTop={showScrollTop}
         />
       )}

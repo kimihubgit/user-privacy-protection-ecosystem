@@ -109,7 +109,7 @@ export default function Footer({ setActiveTab }) {
           <div className="bottom-left-info">
             <p>Bản quyền © shield 2026 | <button className="footer-policy-link" onClick={() => setActiveTab('privacy')}>Chính sách bảo mật</button></p>
             <p>Liên hệ: <a href="mailto:info@shield.vn" className="footer-email-link">info@shield.vn</a></p>
-            <p>Công ty TNHH Doanh Nghiệp Xã Hội S.H.I.E.L.D - Mã số thuế 0317043919</p>
+            <p>Công ty TNHH Doanh Nghiệp Xã Hội S.H.I.E.L.D - Mã số thuế 031xxxxxxxxxxx</p>
           </div>
 
           {/* Right Credits Column */}
@@ -118,16 +118,16 @@ export default function Footer({ setActiveTab }) {
               Trang web này được bảo vệ bởi reCAPTCHA và <a href="https://policies.google.com/privacy" target="_blank" rel="noreferrer">Chính sách Bảo mật</a> và <a href="https://policies.google.com/terms" target="_blank" rel="noreferrer">Điều khoản Dịch vụ</a> của Google được áp dụng.
             </p>
             <p className="author-credits">
-              Thiết kế bởi: <a href="#design" className="credit-link">Collective Design Agency</a>
+              Thiết kế bởi: <a href="https://kimidev.net" target="_blank" rel="noreferrerdesign" className="credit-link">Kimidev Team</a>
             </p>
             <p className="author-credits">
-              Viết mã bởi: <a href="#code" className="credit-link green">CLD Team</a>
+              Viết mã bởi: <a href="https://kimidev.net" target="_blank" rel="noreferreref=" className="credit-link green">Kimidev</a>
             </p>
           </div>
 
         </div>
 
-      </div>
-    </footer>
+      </div >
+    </footer >
   );
 }
