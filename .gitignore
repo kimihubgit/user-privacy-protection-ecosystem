@@ -9,7 +9,9 @@ web_modules/
 .env.*
 !.env.example
 !.env.dist
-backend/scripts/top10milliondomains.csv
+# Large Data files
+**/top10milliondomains.csv
+top10milliondomains.csv
 
 # Python
 .venv/
