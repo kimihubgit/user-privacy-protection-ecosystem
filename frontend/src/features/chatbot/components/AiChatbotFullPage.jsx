@@ -27,64 +27,6 @@ const AGENTS = [
   }
 ];
 
-const QUICK_PROMPTS = [
-  {
-    id: 'delivery',
-    title: 'Tư vấn thủ đoạn giao hàng',
-    subtitle: 'Cách nhận biết shipper giả mạo',
-    prompt: 'Shipper gọi điện yêu cầu chuyển khoản trước do tôi không có nhà, làm thế nào để nhận biết đây có phải shipper thật hay lừa đảo gửi hàng khống?',
-    icon: <Send size={18} style={{ color: '#23b56c' }} />,
-    bg: 'rgba(35, 181, 108, 0.08)'
-  },
-  {
-    id: 'screenshot',
-    title: 'Phân tích ảnh chụp màn hình',
-    subtitle: 'Gửi ảnh tin nhắn / biên lai để kiểm tra',
-    prompt: 'Tôi nhận được tin nhắn từ đầu số lạ nói tài khoản VNeID của tôi bị khóa và yêu cầu nhấp vào link để xác thực, đây có phải lừa đảo không?',
-    icon: <Image size={18} style={{ color: '#007aff' }} />,
-    bg: 'rgba(0, 122, 255, 0.08)'
-  },
-  {
-    id: 'report',
-    title: 'Hướng dẫn tố cáo',
-    subtitle: 'Quy trình báo cáo cơ quan chức năng',
-    prompt: 'Tôi bị lừa chuyển khoản đặt cọc mua hàng online qua Facebook, bây giờ tôi cần chuẩn bị hồ sơ gì và báo cáo ở đâu để lấy lại tiền?',
-    icon: <ShieldAlert size={18} style={{ color: '#ef4444' }} />,
-    bg: 'rgba(239, 68, 68, 0.08)'
-  }
-];
-
-const QUICK_SUGGESTION_CHIPS = [
-  {
-    label: 'Shipper giả mạo',
-    prompt: 'Shipper gọi điện yêu cầu chuyển khoản trước do tôi không có nhà, làm thế nào để nhận biết shipper giả mạo?'
-  },
-  {
-    label: 'VNeID bị khóa / Link APK',
-    prompt: 'Tin nhắn báo tài khoản VNeID bị khóa và yêu cầu nhấp link cài file APK xác thực có phải lừa đảo không?'
-  },
-  {
-    label: 'Lừa cọc mua hàng online',
-    prompt: 'Tôi bị dụ chuyển khoản đặt cọc mua hàng giá rẻ qua Facebook, làm thế nào để tra cứu STK và báo cáo?'
-  },
-  {
-    label: 'SMS Ngân hàng giả mạo',
-    prompt: 'Dấu hiệu nhận biết SMS Brandname ngân hàng giả mạo và cách phân biệt tên miền Internet Banking thật/giả?'
-  },
-  {
-    label: 'Nhiệm vụ Telegram / Việc làm ảo',
-    prompt: 'Chiêu trò tuyển cộng tác viên làm nhiệm vụ xem video, nạp tiền duyệt đơn trên Telegram hoạt động ra sao?'
-  },
-  {
-    label: 'Lộ thông tin CCCD / CMND',
-    prompt: 'Tôi lỡ chụp gửi ảnh CCCD cho kẻ gian, bây giờ cần làm gì để ngăn ngừa bị mạo danh mở tài khoản/vay tiền?'
-  },
-  {
-    label: 'Hồ sơ tố cáo công an',
-    prompt: 'Tôi bị lừa đảo chuyển khoản, cần chuẩn bị những chứng cứ và thủ tục gì để trình báo công an?'
-  }
-];
-
 const THINKING_STEPS_AI = [
   {
     icon: BrainCircuit,
@@ -659,27 +601,6 @@ export default function AiChatbotFullPage({ addToast }) {
               <p className="welcome-subtext">
                 {selectedAgent.welcome}
               </p>
-
-              {selectedAgentId === 'ai' && (
-                <div className="chat-prompts-grid">
-                  {QUICK_PROMPTS.map(p => (
-                    <div
-                      key={p.id}
-                      className="prompt-card"
-                      onClick={() => handleSendMessage(p.prompt)}
-                      style={{ background: p.bg }}
-                    >
-                      <div className="prompt-icon-wrap">
-                        {p.icon}
-                      </div>
-                      <div className="prompt-content">
-                        <h4 className="prompt-title">{p.title}</h4>
-                        <span className="prompt-subtitle">{p.subtitle}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           ) : (
             <>
@@ -765,23 +686,7 @@ export default function AiChatbotFullPage({ addToast }) {
             </div>
           )}
 
-          {/* Quick Suggestion Chips Bar */}
-          {selectedAgentId === 'ai' && (
-            <div className="chat-quick-chips-scroll">
 
-              {QUICK_SUGGESTION_CHIPS.map((chip, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  className="quick-chip-btn"
-                  onClick={() => handleSendMessage(chip.prompt)}
-                  disabled={isThinking}
-                >
-                  {chip.label}
-                </button>
-              ))}
-            </div>
-          )}
 
           <div className="chat-input-bar">
             <button

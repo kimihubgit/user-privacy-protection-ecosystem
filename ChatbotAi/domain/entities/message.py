@@ -11,6 +11,5 @@ class Message:
 
     role: str
     content: str
-
     id: str = field(default_factory=lambda: str(uuid4()))
     created_at: datetime = field(default_factory=lambda: datetime.now(UTC))

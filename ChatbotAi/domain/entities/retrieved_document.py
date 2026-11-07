@@ -5,25 +5,18 @@ from dataclasses import dataclass, field
 class RetrievedDocument:
 
     id: str
-
     content: str
-
     source: str
-
     score: float = 0.0
-
     metadata: dict = field(
         default_factory=dict,
     )
-
     @property
     def page(self):
         return self.metadata.get("page")
-
     @property
     def url(self):
         return self.metadata.get("url")
-
     @property
     def title(self):
         return self.metadata.get("title")

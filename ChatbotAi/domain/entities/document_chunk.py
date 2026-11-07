@@ -8,9 +8,6 @@ class DocumentChunk:
     """
 
     id: str
-
     namespace: str
-
     text: str
-
     metadata: dict[str, str | int | float] = field(default_factory=dict)
